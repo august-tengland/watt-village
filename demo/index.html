@@ -1,0 +1,241 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Making your first Phaser 3 Game - Part 10</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+        #canvasContainer {
+            width: 100vw; 
+            height: 100vh; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display : block;   
+            margin : auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="canvasContainer"></div>
+
+<script type="text/javascript">
+
+var config = {
+    type: Phaser.AUTO,
+    width: 1920*0.8,
+    height: 1080*0.8,
+    parent: 'canvasContainer',
+    zoom: 1,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 300 },
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+var player;
+//var bombs;
+var platforms;
+var cursors;
+var score = 0;
+var gameOver = false;
+var scoreText;
+
+var ground;
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.image('sky', 'assets/sky.png');
+    this.load.image('house', 'assets/house.png');
+    this.load.image('ground', 'assets/platform.png');
+    // this.load.image('star', 'assets/star.png');
+    //this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+    //this.load.image('rut', 'assets/rut.png');
+    this.load.spritesheet('rut', 'assets/rut_idle.png', { frameWidth: 32, frameHeight: 48 });
+}
+
+function create ()
+{
+    const gamezone = this.add.zone(config.width/2, config.height/2, config.width, config.height);
+
+
+    //  A simple background for our game
+    const sky = this.add.image(0, 0, 'sky').setScale(2.3,1.7);
+    Phaser.Display.Align.In.Center(sky,gamezone);
+
+
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = this.physics.add.staticGroup();
+
+    //  Here we create the ground.
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    var ground = platforms.create(0, 0, 'ground').setScale(4).refreshBody();
+    console.log(ground.height);
+    Phaser.Display.Align.In.BottomCenter(ground,gamezone);
+
+    //  A background for the house
+    const house = this.add.image(0, 0, 'house');
+    //  Center the background in the game
+    Phaser.Display.Align.To.TopCenter(house,ground,0,ground.height*1.5);
+   
+    // The player and its settings
+    player = this.physics.add.sprite(800, 400, 'rut');
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.setBounce(0.2);
+    player.setCollideWorldBounds(true);
+
+    const wallColor = 0x000000;
+
+    const wallLeft = this.add.rectangle(0,0,6,house.height,wallColor);
+    const wallMiddle = this.add.rectangle(0,0,55,house.height,wallColor);
+    const wallRight = this.add.rectangle(0,0,6,house.height,wallColor);
+
+    const firstFloor = this.add.rectangle(0,0,house.width,6,wallColor);
+    const secondFloor = this.add.rectangle(0,0,house.width,4,wallColor);
+    const thirdFloor = this.add.rectangle(0,0,house.width,12,wallColor);
+    const fourthFloor = this.add.rectangle(0,0,house.width,4,wallColor);
+    const roof = this.add.rectangle(0,0,house.width,6,wallColor);
+
+    Phaser.Display.Align.In.LeftCenter(wallLeft,house);
+    Phaser.Display.Align.In.Center(wallMiddle,house,-106);
+    Phaser.Display.Align.In.RightCenter(wallRight,house);
+    
+    Phaser.Display.Align.In.BottomCenter(firstFloor,house);
+    Phaser.Display.Align.In.Center(secondFloor,house,0,150);
+    Phaser.Display.Align.In.Center(thirdFloor,house);
+    Phaser.Display.Align.In.Center(fourthFloor,house,0,-123);
+    Phaser.Display.Align.In.TopCenter(roof,house);
+
+    const wallGrouping = [wallLeft,wallMiddle,wallRight,firstFloor,secondFloor,thirdFloor,fourthFloor,roof]; 
+
+    platforms.addMultiple(wallGrouping,false);
+
+    // Our player animations, including idle.
+    this.anims.create({
+        key: 'idle',
+        frames: this.anims.generateFrameNumbers('rut', { start: 1, end: 10}),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    // this.anims.create({
+    //     key: 'turn',
+    //     frames: [ { key: 'dude', frame: 4 } ],
+    //     frameRate: 20
+    // });
+
+    // this.anims.create({
+    //     key: 'right',
+    //     frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+    //     frameRate: 10,
+    //     repeat: -1
+    // });
+
+    //  Input Events
+    cursors = this.input.keyboard.createCursorKeys();
+
+    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    // stars = this.physics.add.group({
+    //     key: 'star',
+    //     repeat: 11,
+    //     setXY: { x: 12, y: 0, stepX: 70 }
+    // });
+
+    // stars.children.iterate(function (child) {
+
+    //     //  Give each star a slightly different bounce
+    //     child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+
+    // });
+
+    
+    //  The score
+    scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+    //  Collide the player and the stars with the platforms
+    this.physics.add.collider(player, platforms);
+    // this.physics.add.collider(stars, platforms);
+    
+    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    // this.physics.add.overlap(player, stars, collectStar, null, this);
+    player.anims.play('idle', true);
+
+}
+
+function update ()
+{
+    if (gameOver)
+    {
+        return;
+    }
+
+    if (cursors.left.isDown)
+    {
+        player.setFlipX(true);
+        player.setVelocityX(-120);
+    }
+    else if (cursors.right.isDown)
+    {
+        player.setFlipX(false);
+        player.setVelocityX(120);
+    }
+    else
+    {
+        player.setVelocityX(0);
+    }
+
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.setVelocityY(-330);
+    }
+}
+
+// function collectStar (player, star)
+// {
+//     star.disableBody(true, true);
+
+//     //  Add and update the score
+//     score += 10;
+//     scoreText.setText('Score: ' + score);
+
+//     if (stars.countActive(true) === 0)
+//     {
+//         //  A new batch of stars to collect
+//         stars.children.iterate(function (child) {
+
+//             child.enableBody(true, child.x, 0, true, true);
+
+//         });
+
+//         var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+
+//         var bomb = bombs.create(x, 16, 'bomb');
+//         bomb.setBounce(1);
+//         bomb.setCollideWorldBounds(true);
+//         bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+//         bomb.allowGravity = false;
+
+//     }
+// }
+
+</script>
+
+</body>
+</html>
