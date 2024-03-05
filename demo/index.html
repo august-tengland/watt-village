@@ -113,6 +113,12 @@ function create ()
     const fourthFloor = this.add.rectangle(0,0,house.width,4,wallColor);
     const roof = this.add.rectangle(0,0,house.width,6,wallColor);
 
+    const apartmentWallHeight = house.height/4.7; 
+    const apartmentWallWidth = 10;
+
+    //var apartmentWalls
+    //this.add.rectangle(0,0,6,apartmentWallHeight,0xff0000);
+
     Phaser.Display.Align.In.LeftCenter(wallLeft,house);
     Phaser.Display.Align.In.Center(wallMiddle,house,-106);
     Phaser.Display.Align.In.RightCenter(wallRight,house);
@@ -122,6 +128,9 @@ function create ()
     Phaser.Display.Align.In.Center(thirdFloor,house);
     Phaser.Display.Align.In.Center(fourthFloor,house,0,-123);
     Phaser.Display.Align.In.TopCenter(roof,house);
+
+    //Phaser.Display.Align.To.TopCenter(apartmentWallFirstLeft,firstFloor);
+
 
     const wallGrouping = [wallLeft,wallMiddle,wallRight,firstFloor,secondFloor,thirdFloor,fourthFloor,roof]; 
 
@@ -190,11 +199,19 @@ function update ()
     {
         player.setFlipX(true);
         player.setVelocityX(-120);
+        if (player.body.touching.down)
+        {
+            player.setVelocityY(-40);
+        }
     }
     else if (cursors.right.isDown)
     {
         player.setFlipX(false);
         player.setVelocityX(120);
+        if (player.body.touching.down)
+        {
+            player.setVelocityY(-40);
+        }
     }
     else
     {
