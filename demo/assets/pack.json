@@ -1,0 +1,35 @@
+{
+    "preload": {
+      "files": [
+        {
+          "type": "json",
+          "key": "animationsJSON",
+          "url": "./assets/animations/animations.json"
+        },
+        {
+          "type": "image",
+          "key": "house",
+          "url": "./assets/images/house.png"
+        },
+        {
+          "type": "image",
+          "key": "ground",
+          "url": "./assets/images/platform.png"
+        },
+        {
+          "type": "image",
+          "key": "sky",
+          "url": "./assets/images/sky.png"
+        },
+        {
+            "type": "spritesheet",
+            "key": "rut",
+            "url": "./assets/sprites/rut_idle.png",
+            "frameConfig": {
+              "frameWidth": 32,
+              "frameHeight": 48
+            }
+          }
+      ]
+    }
+  }
