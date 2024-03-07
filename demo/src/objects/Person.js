@@ -3,21 +3,29 @@ export class Person extends Phaser.GameObjects.Sprite {
   body;
 
   // variables
+   key;
    currentScene;
-   //isActivated;
    speed;
-   //dyingScoreValue;
    apartment;
    possibleLocations;
    currentLocation;
-
+   // When schedule decides, doActivity() will set this to the coming activity and the character will start walking
+   // When the character has reached the location, startActivity() will set "comingActivity" to "currentActivity" (if applicable)   
+   comingActivity; 
+   currentActivity; 
+   
   constructor(params) {
     super(params.scene, params.x, params.y, params.texture, params.frame);
 
     // variables
+    this.key = params.key;
     this.currentScene = params.scene;
     this.speed = params.speed;
     this.apartment = params.apartment;
+
+    this.comingActivity = null;
+    this.currentActivity = null; // Note: Set to sleeping maybe?
+
     this.initSprite();
     this.currentScene.add.existing(this);
   }
@@ -27,9 +35,6 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   initSprite() {
-    // variables
-    //this.isActivated = false;
-    //this.isDying = false;
 
     // sprite
     //this.setOrigin(0, 0);
@@ -55,6 +60,60 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.setClosestLocation();
   }
 
+  // **************************************************************************************
+  // --------- DO ACTIVITY ---------------------------------------------------------------
+  // **************************************************************************************
+
+  doActivity(activity) {
+    if(activity.isIdle) this.doIdleActivity(activity);
+    else this.doPrecenseActivity(activity);
+  }
+
+  doIdleActivity() {
+    console.log("idle, not implemented yet");
+  }
+
+   doPrecenseActivity(activity) {
+    if (this.currentActivity != null) {
+      var result = this.stopPrecenseActivity();
+      setTimeout(() => {
+        this.comingActivity = activity; 
+        console.log("walking to coming activity: " , this.comingActivity);
+        this.walkToLocation(activity.locationKey);
+      },this.currentActivity.exitDuration);
+    } else {
+      this.comingActivity = activity; 
+      this.walkToLocation(activity.locationKey);
+    };
+  }
+
+  startPrecenseActivity() {
+    this.currentActivity = this.comingActivity;
+    // this.currentActivity.start()
+    this.comingActivity = null;
+    console.log("doing current activity: " , this.currentActivity); 
+  }
+
+  stopPrecenseActivity() {
+    console.log("finishing current activity: " , this.currentActivity); 
+    // this.currentActivity.finish() (might take some time)
+    setTimeout(() => {
+      console.log("finished current activity: " , this.currentActivity); 
+      this.currentActivity = null; 
+    },this.currentActivity.exitDuration);
+  }
+
+
+  // **************************************************************************************
+  // ----------- WALKING ------------------------------------------------------------------
+  // **************************************************************************************
+  
+  // ASSUMPTION: Characters only walk to locations to complete an action that is there
+  // i.e: If a character has reached a position, they are suppose to do their coming activity
+  reachedPosition() {
+    this.startPrecenseActivity();
+  }
+  
   walkToLocation(endLocationKey) {
 
     // Begin by stopping any previous movement
@@ -66,7 +125,6 @@ export class Person extends Phaser.GameObjects.Sprite {
 
     //find location with corresponding key
     for (var i = 0; i < this.possibleLocations.length; i++) {
-      console.log(this.possibleLocations[i].key);
       if (this.possibleLocations[i].key == endLocationKey) {
         endLocationIndex = i;
         break;
@@ -140,6 +198,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     } else {
         this.body.setVelocityX(0);
         this.body.setVelocityY(0);
+        this.reachedPosition();
     }
   }
 

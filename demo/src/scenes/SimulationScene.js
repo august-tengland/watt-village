@@ -1,6 +1,7 @@
 
 import { Person } from '../objects/Person.js';
 import { Location } from '../objects/Location.js';
+import { Activity } from '../objects/Activity.js';
 
 export default class SimulationScene extends Phaser.Scene {
 
@@ -82,12 +83,17 @@ export default class SimulationScene extends Phaser.Scene {
 
         // ---- PEOPLE & PATHS -----------------------------------------
 
+        // create locations, (x,y) points specifying certain locations in/around the apartment
         this.locations = this.createLocations();
-        this.createLocationVisuals();
+
+        // debug tool to visualise created locations, makes rectangles at given points
+        this.locationBlocks = this.createLocationVisuals();
+
         this.person1 = new Person({
+                                key: "person1",
                                 scene: this,
-                                x: this.l100.x,
-                                y: this.l100.y,
+                                x: this.locations.get('l100').x,
+                                y: this.locations.get('l100').y,
                                 apartment: 1,
                                 speed: 100,
                                 texture: 'rut'});
@@ -97,12 +103,26 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.bindLocationsToPeople();
 
-        this.person1.walkToLocation('l112');
+        var actFridge1 = new Activity({
+                                    key: (this.person1.key + "Fridge"),
+                                    isIdle: false,
+                                    locationKey: this.locations.get('l114').key,
+                                    minDuration: 3000,
+                                    exitDuration: 500});
+
+        var actStove1 = new Activity({
+                                    key: (this.person1.key + "Stove"),
+                                    isIdle: false,
+                                    locationKey: this.locations.get('l113').key,
+                                    minDuration: 3000,
+                                    exitDuration: 1000});
+        
+        this.person1.doActivity(actFridge1);
         this.time.addEvent({ 
             delay: 6000, 
-            callback: this.person1.walkToLocation, 
+            callback: this.person1.doActivity, 
             callbackScope: this.person1, 
-            args: ['l100'] });
+            args: [ actStove1 ] });
     }
 
     update () {
@@ -113,66 +133,77 @@ export default class SimulationScene extends Phaser.Scene {
     
     }
 
+// *********************************************************************
+// ---- HELPER & LOGIC METHODS -----------------------------------------
+// *********************************************************************
+
     // Method for creating all locations and binding neighbouring ones
     // Locations are used by the characters to know where they are able to walk
     // coding: "1XYZ", where X: apartment number, Y: floor number, Z: location number (horizontal)
     
     updateTime() {
         this.registry.values.time += 1;
-        console.log(this.registry.get("time"));
+        //console.log(this.registry.get("time"));
         this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
     }
 
     createLocations() {
         // Create Locations
-        var locations = [];
+        const locations = new Map();
 
-        this.l100 = new Location({key:'l100', x: 280, y: 360, apartment: 1, floor: 0});
-        this.l101 = new Location({key:'l101', x: 375, y: 360, apartment: 1, floor: 0});
-        this.l102 = new Location({key:'l102', x: 580, y: 360, apartment: 1, floor: 0});
-        this.l110 = new Location({key:'l110', x: 280, y: 480, apartment: 1, floor: 1});
-        this.l111 = new Location({key:'l111', x: 445, y: 480, apartment: 1, floor: 1});
-        this.l112 = new Location({key:'l112', x: 580, y: 480, apartment: 1, floor: 1});
+        locations.set('l100', new Location({key:'l100', x: 280, y: 360, apartment: 1, floor: 0}));
+        locations.set('l101', new Location({key:'l101', x: 375, y: 360, apartment: 1, floor: 0}));
+        locations.set('l102', new Location({key:'l102', x: 580, y: 360, apartment: 1, floor: 0}));
+        locations.set('l110', new Location({key:'l110', x: 280, y: 480, apartment: 1, floor: 1}));
+        locations.set('l111', new Location({key:'l111', x: 390, y: 480, apartment: 1, floor: 1}));
+        locations.set('l112', new Location({key:'l112', x: 445, y: 480, apartment: 1, floor: 1}));
+        locations.set('l113', new Location({key:'l113', x: 520, y: 480, apartment: 1, floor: 1}));
+        locations.set('l114', new Location({key:'l114', x: 590, y: 480, apartment: 1, floor: 1}));
 
         // Add neighbour links
-        this.l100.setNeighbours([this.l101]);
-        this.l100.setNeighboursUpDown({up: null, down: this.l101.key});
+        locations.get('l100').setNeighbours([locations.get('l101')]);
+        locations.get('l100').setNeighboursUpDown({up: null, down: locations.get('l101').key});
         
-        this.l101.setNeighbours([this.l100, this.l111, this.l102]);
-        this.l101.setNeighboursUpDown({up: null, down: this.l111.key});
+        locations.get('l101').setNeighbours([locations.get('l100'), locations.get('l112'), locations.get('l102')]);
+        locations.get('l101').setNeighboursUpDown({up: null, down: locations.get('l112').key});
         
-        this.l102.setNeighbours([this.l101]);
-        this.l102.setNeighboursUpDown({up: null, down: this.l101.key});
+        locations.get('l102').setNeighbours([locations.get('l101')]);
+        locations.get('l102').setNeighboursUpDown({up: null, down: locations.get('l101').key});
         
-        this.l110.setNeighbours([this.l111]);
-        this.l110.setNeighboursUpDown({up: this.l111.key, down: null});
+        locations.get('l110').setNeighbours([locations.get('l111')]);
+        locations.get('l110').setNeighboursUpDown({up: locations.get('l111').key, down: null});
+
+        locations.get('l111').setNeighbours([locations.get('l110'),locations.get('l112')]);
+        locations.get('l111').setNeighboursUpDown({up: locations.get('l112').key, down: null});
         
-        this.l111.setNeighbours([this.l110, this.l101, this.l112]);
-        this.l111.setNeighboursUpDown({up: this.l101.key, down: null});
+        locations.get('l112').setNeighbours([locations.get('l111'), locations.get('l101'), locations.get('l113')]);
+        locations.get('l112').setNeighboursUpDown({up: locations.get('l101').key, down: null});
         
-        this.l112.setNeighbours([this.l111]);
-        this.l112.setNeighboursUpDown({up: this.l111.key, down: null});
+        locations.get('l113').setNeighbours([locations.get('l112'), locations.get('l114')]);
+        locations.get('l113').setNeighboursUpDown({up: locations.get('l112').key, down: null});
+
+        locations.get('l114').setNeighbours([locations.get('l113')]);
+        locations.get('l114').setNeighboursUpDown({up: locations.get('l113').key, down: null});
         
-        locations.push(this.l100, this.l101, this.l102, this.l110, this.l111, this.l112);
         return locations;
     }
     // Method to generated small rectangles to visualize the position of each position
     createLocationVisuals() {
-        this.lb100 = this.add.rectangle(this.l100.x,this.l100.y,4,4,"0x00ff00");
-        this.lb101 = this.add.rectangle(this.l101.x,this.l101.y,4,4,"0x00ff00");
-        this.lb102 = this.add.rectangle(this.l102.x,this.l102.y,4,4,"0x00ff00");
-        this.lb110 = this.add.rectangle(this.l110.x,this.l110.y,4,4,"0x00ff00");
-        this.lb111 = this.add.rectangle(this.l111.x,this.l111.y,4,4,"0x00ff00");
-        this.lb112 = this.add.rectangle(this.l112.x,this.l112.y,4,4,"0x00ff00");
+        const locationBlocks = new Map();
+
+        for(var [key, location] of this.locations) {
+            locationBlocks.set(key, this.add.rectangle(location.x,location.y,4,4,"0xff0000"));
+            locationBlocks.get(key).setDepth(2);
+        }
     }
 
     // Method to assign each person the possible locations that they can be present at
     bindLocationsToPeople() {
         this.people.children.each(function(person) {
             var locationsForPerson = [];
-            for (var i = 0; i < this.locations.length; i++) {
-                if (person.apartment == this.locations[i].apartment) {
-                    locationsForPerson.push(this.locations[i]);
+            for (var [key, location] of this.locations) {
+                if (person.apartment == location.apartment) {
+                    locationsForPerson.push(location);
                 } 
             }
             person.setPossibleLocations(locationsForPerson);
