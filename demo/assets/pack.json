@@ -13,6 +13,11 @@
         },
         {
           "type": "image",
+          "key": "houseBackdrop",
+          "url": "./assets/images/houseBackdrop.png"
+        },
+        {
+          "type": "image",
           "key": "ground",
           "url": "./assets/images/platform.png"
         },

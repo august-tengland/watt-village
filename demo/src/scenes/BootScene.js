@@ -26,26 +26,16 @@ export default class BootScene extends Phaser.Scene {
             );
             console.log("test");
             progress.destroy();
+            this.initGlobalDataManager();
             this.scene.start('SimulationScene');
         });
 
         //  load all assets
         this.load.pack('preload', './assets/pack.json', 'preload');
+    }
 
-        // this.load.image('ground', 'assets/platform.png');
-
-        // this.load.spritesheet('rut', 'assets/rut_idle.png', { frameWidth: 32, frameHeight: 48 });
-        //this.load.image('sky', 'assets/sky.png');
-        //this.load.image('house', 'assets/house.png');
-        //this.load.image('ground', 'assets/platform.png');
-        //<this.load.image('background-clouds', 'assets/images/clouds.png'); // 16-bit later
-
-        // // Spritesheets with fixed sizes. Should be replaced with atlas:
-        // this.load.spritesheet('mario', 'assets/images/mario-sprites.png', {
-        //     frameWidth: 16,
-        //     frameHeight: 32
-        // });
-
+    initGlobalDataManager() {
+        this.registry.set("time", 0);
     }
 }
 
