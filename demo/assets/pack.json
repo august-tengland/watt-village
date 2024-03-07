@@ -27,14 +27,23 @@
           "url": "./assets/images/sky.png"
         },
         {
-            "type": "spritesheet",
-            "key": "rut",
-            "url": "./assets/sprites/rut_idle.png",
-            "frameConfig": {
-              "frameWidth": 32,
-              "frameHeight": 48
-            }
+          "type": "spritesheet",
+          "key": "rut",
+          "url": "./assets/sprites/rut_idle.png",
+          "frameConfig": {
+            "frameWidth": 32,
+            "frameHeight": 48
           }
+        },
+        {
+          "type": "spritesheet",
+          "key": "stove",
+          "url": "./assets/sprites/stove.png",
+          "frameConfig": {
+            "frameWidth": 40,
+            "frameHeight": 48
+          }
+        }
       ]
     }
   }

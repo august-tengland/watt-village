@@ -239,7 +239,7 @@ export class Person extends Phaser.GameObjects.Sprite {
       // Moving between floors, bring character back
       this.setDepth(0);
     } else {
-      this.setDepth(2);
+      this.setDepth(10);
     }
   }
 

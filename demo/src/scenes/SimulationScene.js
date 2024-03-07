@@ -2,6 +2,7 @@
 import { Person } from '../objects/Person.js';
 import { Location } from '../objects/Location.js';
 import { Activity } from '../objects/Activity.js';
+import { Device } from '../objects/Device.js';
 
 export default class SimulationScene extends Phaser.Scene {
 
@@ -79,7 +80,7 @@ export default class SimulationScene extends Phaser.Scene {
         // The time 
         this.timeText = this.add.text(this.scale.width-200, 16, `Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
 
-    
+        this.devices = this.createDevices();
 
         // ---- PEOPLE & PATHS -----------------------------------------
 
@@ -99,7 +100,7 @@ export default class SimulationScene extends Phaser.Scene {
                                 texture: 'rut'});
 
         this.people.add(this.person1);
-        this.person1.setDepth(2);
+        this.person1.setDepth(10);
 
         this.bindLocationsToPeople();
 
@@ -146,6 +147,30 @@ export default class SimulationScene extends Phaser.Scene {
         //console.log(this.registry.get("time"));
         this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
     }
+
+// ----- CREATE DEVICES -----------------------------------------------
+    createDevices() {
+        // Create Devices
+        const devices = new Map();
+        devices.set('d1stove', new Device({
+                                        key:'d1stove', 
+                                        scene: this,
+                                        x: 504, 
+                                        y: 480, 
+                                        apartment: 1, 
+                                        texture: 'stove',
+                                        powerConsumption: 100,
+                                        animationKey: 'stoveActive'}));
+        //devices.get('d1stove').anims.play('stoveActive',true);     
+
+        for(var [key, device] of devices) {
+            device.setDepth(2);
+        }
+
+        return devices;
+    }
+
+// ----- CREATE LOCATIONS -----------------------------------------------
 
     createLocations() {
         // Create Locations

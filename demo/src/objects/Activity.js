@@ -8,7 +8,8 @@ export class Activity {
     locationKey; // Each activity can only take place at one location
     minDuration;
     exitDuration; // If presence activity, how long does the character need to remain for the process to end?
-   constructor(params) { 
+   
+    constructor(params) { 
      // variables
      this.isActive = false;
      this.key = params.key;
