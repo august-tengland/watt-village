@@ -13,6 +13,7 @@ export class Person extends Phaser.GameObjects.Sprite {
    // When the character has reached the location, startActivity() will set "comingActivity" to "currentActivity" (if applicable)   
    comingActivity; 
    currentActivity; 
+   schedule; // Map of time-activity pairs
    
   constructor(params) {
     super(params.scene, params.x, params.y, params.texture, params.frame);
@@ -28,8 +29,10 @@ export class Person extends Phaser.GameObjects.Sprite {
 
     this.initSprite();
     this.currentScene.add.existing(this);
+    this.handleAnimations();
   }
 
+  // NOTE: This won't be called now, probably okay
   update() {
     this.handleAnimations();
   }
@@ -43,6 +46,10 @@ export class Person extends Phaser.GameObjects.Sprite {
     // physics
     this.currentScene.physics.world.enable(this);
     this.body.setSize(32, 48);
+  }
+
+  setSchedule(schedule) {
+    this.schedule = schedule;
   }
 
   handleAnimations() {
@@ -59,6 +66,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.possibleLocations = locationList;
     this.setClosestLocation();
   }
+
 
   // **************************************************************************************
   // --------- DO ACTIVITY ---------------------------------------------------------------
@@ -89,13 +97,14 @@ export class Person extends Phaser.GameObjects.Sprite {
 
   startPrecenseActivity() {
     this.currentActivity = this.comingActivity;
-    // this.currentActivity.start()
     this.comingActivity = null;
+    this.currentActivity.startActivity();
     console.log("doing current activity: " , this.currentActivity); 
   }
 
   stopPrecenseActivity() {
     console.log("finishing current activity: " , this.currentActivity); 
+    this.currentActivity.stopActivity();
     // this.currentActivity.finish() (might take some time)
     setTimeout(() => {
       console.log("finished current activity: " , this.currentActivity); 
@@ -212,6 +221,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     const time = Math.sqrt(dx * dx + dy * dy) / this.speed * 1000;
     this.body.setVelocityX((Math.cos(angle) * this.speed));
     this.body.setVelocityY((Math.sin(angle) * this.speed));
+    this.handleAnimations();
     this.MyTimedEvent = this.currentScene.time.addEvent({ 
                                                   delay: time, 
                                                   callback: this.walkPath, 

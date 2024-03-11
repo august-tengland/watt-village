@@ -12,6 +12,17 @@
         "frameRate": 18
       },
       {
+        "key": "stoveIdle",
+        "frames": {
+          "typeOfGeneration": "generateFrameNumbers",
+          "key": "stove",
+          "start": 0,
+          "end": 0
+        },
+        "repeat": 0,
+        "frameRate": 18
+      },
+      {
         "key": "stoveActive",
         "frames": {
           "typeOfGeneration": "generateFrameNumbers",
@@ -20,6 +31,28 @@
           "end": 6
         },
         "repeat": -1,
+        "frameRate": 18
+      },
+      {
+        "key": "fridgeIdle",
+        "frames": {
+          "typeOfGeneration": "generateFrameNumbers",
+          "key": "fridge",
+          "start": 0,
+          "end": 0
+        },
+        "repeat": 0,
+        "frameRate": 18
+      },
+      {
+        "key": "fridgeActive",
+        "frames": {
+          "typeOfGeneration": "generateFrameNumbers",
+          "key": "fridge",
+          "start": 0,
+          "end": 4
+        },
+        "repeat": 0,
         "frameRate": 18
       }
     ]
