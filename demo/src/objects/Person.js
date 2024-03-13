@@ -86,7 +86,7 @@ export class Person extends Phaser.GameObjects.Sprite {
       var result = this.stopPrecenseActivity();
       setTimeout(() => {
         this.comingActivity = activity; 
-        console.log("walking to coming activity: " , this.comingActivity);
+        //console.log("walking to coming activity: " , this.comingActivity);
         this.walkToLocation(activity.locationKey);
       },this.currentActivity.exitDuration);
     } else {
@@ -99,15 +99,15 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.currentActivity = this.comingActivity;
     this.comingActivity = null;
     this.currentActivity.startActivity();
-    console.log("doing current activity: " , this.currentActivity); 
+    //console.log("doing current activity: " , this.currentActivity); 
   }
 
   stopPrecenseActivity() {
-    console.log("finishing current activity: " , this.currentActivity); 
+    //console.log("finishing current activity: " , this.currentActivity); 
     this.currentActivity.stopActivity();
     // this.currentActivity.finish() (might take some time)
     setTimeout(() => {
-      console.log("finished current activity: " , this.currentActivity); 
+      //console.log("finished current activity: " , this.currentActivity); 
       this.currentActivity = null; 
     },this.currentActivity.exitDuration);
   }
@@ -151,7 +151,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     while (locationInPath.key != this.currentLocation.key) {
       tester++;
       if(tester > 100) throw new Error('ajajaj');
-      console.log(locationInPath.key);
+      //console.log(locationInPath.key);
       pathToWalk.push(locationInPath);
 
       // TODO: Select next neighbour to add (working backwards)
@@ -198,7 +198,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   walkPath (points) {
     if(points.length > 0){
         const next = points.pop();
-        console.log("current: ", this.currentLocation.key, ", next: ",next.key);
+        //console.log("current: ", this.currentLocation.key, ", next: ",next.key);
         if (next.key != this.currentLocation.key) {
           this.setZIndex({from: this.currentLocation, to: next})
         }

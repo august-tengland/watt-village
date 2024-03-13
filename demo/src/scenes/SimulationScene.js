@@ -3,6 +3,7 @@ import { Person } from '../objects/Person.js';
 import { Location } from '../objects/Location.js';
 import { Activity } from '../objects/Activity.js';
 import { Device } from '../objects/Device.js';
+import { EnergyHandler } from '../objects/EnergyHandler.js';
 
 export default class SimulationScene extends Phaser.Scene {
 
@@ -19,6 +20,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.score = 0;
         this.gameOver = false;
         this.scoreText = undefined;
+        this.playbackSpeed = 2;
     }
     
     preload () {
@@ -32,8 +34,15 @@ export default class SimulationScene extends Phaser.Scene {
         // *****************************************************************
         // TIMER
         // *****************************************************************
+        
+        // LENGTH OF A DAY, i.e. simulation time
+        // NOTE: Should always be a multiple of 24
+        this.dayLength = 96; //24*4, 4 units per hour
+
+        this.currentDay = "day1";
+        
         this.timer = this.time.addEvent({
-            delay: 1000,
+            delay: 1000/this.playbackSpeed,
             callback: this.updateTime,
             callbackScope: this,
             loop: true
@@ -75,7 +84,7 @@ export default class SimulationScene extends Phaser.Scene {
 
         // The time 
         this.timeText = this.add.text(this.scale.width-200, 16, `Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
-
+        this.add.line(0,0,100,100,200,200,0xff0000);
 
         // ---- GAME & LOGIC OBJECTS -----------------------------------------
 
@@ -87,17 +96,24 @@ export default class SimulationScene extends Phaser.Scene {
         // create locations, (x,y) points specifying certain locations in/around the apartment
         this.locations = this.createLocations();
 
-        // debug tool to visualise created locations, makes rectangles at given points
+        // debug tool to visualize created locations, makes rectangles at given points
         this.locationBlocks = this.createLocationVisuals();
 
         // Create devices, that are utilized during specific activities
         this.devices = this.createDevices();
 
-        // Create activites, actions that characters can conduct at given places
-        this.activites = this.createActivities();
+        // Create activities, actions that characters can conduct at given places
+        this.activities = this.createActivities();
 
-        // create people
+        // Create people
         this.people = this.createPeople();
+
+        // Create energy handler, that manages updates to electricity
+        this.energyHandler = new EnergyHandler({scene: this, 
+                                                devices: this.devices, 
+                                                time: this.registry.values.time,
+                                                dayLength: this.dayLength,
+                                                currentDayKey: this.currentDay});
 
         // this.person1 = new Person({
         //                         key: "p1",
@@ -116,20 +132,6 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.assignSchedules();
         
-        // console.log(this.activites);
-        // this.person1.doActivity(this.activites.get('a1Fridge'));
-
-        // this.time.addEvent({ 
-        //     delay: 5000, 
-        //     callback: this.person1.doActivity, 
-        //     callbackScope: this.person1, 
-        //     args: [ this.activites.get('a1Stove') ] });
-
-        //     this.time.addEvent({ 
-        //         delay: 8000, 
-        //         callback: this.person1.doActivity, 
-        //         callbackScope: this.person1, 
-        //         args: [ this.activites.get('a1DinnerTable') ] });
     }
 
     update () {
@@ -153,6 +155,7 @@ export default class SimulationScene extends Phaser.Scene {
         //console.log(this.registry.get("time"));
         this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
         this.checkSchedules();
+        this.energyHandler.runUpdate(this.registry.values.time);
     }
 
     checkSchedules() {
@@ -242,6 +245,7 @@ createDevices() {
                                     apartment: 1, 
                                     texture: 'stove',
                                     powerConsumption: 100,
+                                    isIdleConsuming: false,
                                     animationKeys: {
                                         idle: 'stoveIdle',
                                         active: 'stoveActive'
@@ -256,6 +260,7 @@ createDevices() {
                                     apartment: 1, 
                                     texture: 'fridge',
                                     powerConsumption: 100,
+                                    isIdleConsuming: true,
                                     animationKeys: {
                                         idle: 'fridgeIdle',
                                         active: 'fridgeActive'
@@ -279,27 +284,27 @@ createDevices() {
             key: "a1Fridge",
             isIdle: false,
             locationKey: this.locations.get('l114').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
+            minDuration: 3000/this.playbackSpeed,
+            startDuration: 300/this.playbackSpeed,
+            exitDuration: 300/this.playbackSpeed,
             device: this.devices.get("d1Fridge")}));
 
         activities.set("a1Stove", new Activity({
             key: "a1Stove",
             isIdle: false,
             locationKey: this.locations.get('l113').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
+            minDuration: 3000/this.playbackSpeed,
+            startDuration: 300/this.playbackSpeed,
+            exitDuration: 300/this.playbackSpeed,
             device: this.devices.get("d1Stove")}));
 
             activities.set("a1DinnerTable", new Activity({
                 key: "a1DinnerTable",
                 isIdle: false,
                 locationKey: this.locations.get('l111').key,
-                minDuration: 3000,
-                startDuration: 300,
-                exitDuration: 300,
+                minDuration: 3000/this.playbackSpeed,
+                startDuration: 300/this.playbackSpeed,
+                exitDuration: 300/this.playbackSpeed,
                 device: null}));
 
         return activities;
@@ -317,7 +322,7 @@ createDevices() {
             x: this.locations.get('l100').x,
             y: this.locations.get('l100').y,
             apartment: 1,
-            speed: 140,
+            speed: 140*this.playbackSpeed,
             texture: 'rut'}));
 
         return people;
@@ -328,9 +333,9 @@ createDevices() {
     assignSchedules() {
         
         const schedule1 = new Map();
-        schedule1.set(3, this.activites.get('a1Fridge'));
-        schedule1.set(8, this.activites.get('a1Stove'));
-        schedule1.set(12, this.activites.get('a1DinnerTable'));
+        schedule1.set(3, this.activities.get('a1Fridge'));
+        schedule1.set(8, this.activities.get('a1Stove'));
+        schedule1.set(12, this.activities.get('a1DinnerTable'));
         this.people.get("p1").setSchedule(schedule1);
 }
 

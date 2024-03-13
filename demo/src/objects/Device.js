@@ -5,6 +5,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
     key; 
     currentScene;
     isActive;
+    isIdleConsuming; // if true, uses power regardless of if its "interacted with" or not
     animationKeys; 
     powerConsumption;
     // An animation that repeats simply starts and stops
@@ -18,6 +19,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
       this.key = params.key;
       this.currentScene = params.scene;
       this.isActive = false;
+      this.isIdleConsuming = params.isIdleConsuming;
       this.animationKeys = params.animationKeys;
       this.powerConsumption = params.powerConsumption;
       this.repeatAnimation = params.repeatAnimation;
@@ -31,7 +33,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
       } else {
         if(this.repeatAnimation) {
           //HI DISCORD!
-          // Instead of stopping the animatio at the current frame, 
+          // Instead of stopping the animation at the current frame, 
           // I want to set it to frame 0, that is inside the spritesheet but outside the animation;
           this.anims.stop();
           this.setFrame(0);
@@ -53,6 +55,10 @@ export class Device extends Phaser.GameObjects.Sprite  {
       this.isActive = false;
       console.log("device stopped: ", this.key);
       this.handleAnimations();
+    }
+
+    getCurrentConsumption() {
+      return (this.isActive||this.isIdleConsuming) ? this.powerConsumption : 0;
     }
 
  }
