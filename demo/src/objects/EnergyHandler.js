@@ -9,6 +9,7 @@ export class EnergyHandler {
   currentDayKey
   currentConsumption;
   energyPricesPerTimeUnit;
+  totalCost;
 
   constructor(params) { 
     // variables
@@ -18,6 +19,7 @@ export class EnergyHandler {
     this.dayLength = params.dayLength;
     this.currentDayKey = params.currentDayKey;
     this.currentConsumption = 0;
+    this.totalCost = 0;
     this.energyPricesPerTimeUnit = this.generateEnergyPrices(params.currentDayKey);
 
   }
@@ -25,6 +27,7 @@ export class EnergyHandler {
   runUpdate(newTime) {
     this.time = newTime;
     this.updateCurrentConsumption();
+    this.updateTotalCost();
   }
 
    updateCurrentConsumption(){
@@ -33,6 +36,16 @@ export class EnergyHandler {
       this.currentConsumption += device.getCurrentConsumption();
     }
     console.log("current consumption: ", this.currentConsumption);
+   }
+
+   updateTotalCost() {
+    console.log(this.scene.registry.values.individualCost);
+    console.log("current energy price:", this.energyPricesPerTimeUnit[this.time]);
+    var costThisTimeUnit = this.currentConsumption * this.energyPricesPerTimeUnit[this.time];
+    this.totalCost += costThisTimeUnit;
+    this.scene.registry.values.individualCost = this.totalCost;
+    console.log("cost this time unit:", costThisTimeUnit);
+    console.log("totalCost:", this.totalCost);
    }
 
    generateEnergyPrices(currentDayKey) {

@@ -23,7 +23,6 @@ export class Device extends Phaser.GameObjects.Sprite  {
       this.animationKeys = params.animationKeys;
       this.powerConsumption = params.powerConsumption;
       this.repeatAnimation = params.repeatAnimation;
-      
       this.currentScene.add.existing(this);
     }
 
@@ -32,9 +31,6 @@ export class Device extends Phaser.GameObjects.Sprite  {
         this.anims.play(this.animationKeys['active'],true);
       } else {
         if(this.repeatAnimation) {
-          //HI DISCORD!
-          // Instead of stopping the animation at the current frame, 
-          // I want to set it to frame 0, that is inside the spritesheet but outside the animation;
           this.anims.stop();
           this.setFrame(0);
         } else {

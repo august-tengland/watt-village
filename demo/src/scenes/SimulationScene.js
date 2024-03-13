@@ -17,17 +17,12 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.cursors = undefined;    
 
-        this.score = 0;
         this.gameOver = false;
         this.scoreText = undefined;
-        this.playbackSpeed = 2;
     }
     
     preload () {
-        //this.load.image('sky', 'assets/sky.png');
-        //this.load.image('house', 'assets/house.png');
-        //this.load.image('ground', 'assets/platform.png');
-        //this.load.spritesheet('rut', 'assets/rut_idle.png', { frameWidth: 32, frameHeight: 48 });
+        // Assets preloaded in BootScene
     }
 
     create () {
@@ -38,6 +33,8 @@ export default class SimulationScene extends Phaser.Scene {
         // LENGTH OF A DAY, i.e. simulation time
         // NOTE: Should always be a multiple of 24
         this.dayLength = 96; //24*4, 4 units per hour
+
+        this.playbackSpeed = 1;
 
         this.currentDay = "day1";
         
@@ -79,12 +76,11 @@ export default class SimulationScene extends Phaser.Scene {
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
         
-        //  The score
-        this.scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+        //  The individual cost
+        this.individualCostText = this.add.text(16, 16, `Individual Cost: ${this.registry.get("individualCost")}`, { fontSize: '32px', fill: '#000' });
 
         // The time 
         this.timeText = this.add.text(this.scale.width-200, 16, `Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
-        this.add.line(0,0,100,100,200,200,0xff0000);
 
         // ---- GAME & LOGIC OBJECTS -----------------------------------------
 
@@ -92,6 +88,10 @@ export default class SimulationScene extends Phaser.Scene {
             /*classType: Person,*/
             runChildUpdate: true
         });
+
+        this.solarPanel = this.add.image(100, 100, 'solarPanel');
+        Phaser.Display.Align.To.TopCenter(this.solarPanel,this.houseBackdrop,0,0);
+
 
         // create locations, (x,y) points specifying certain locations in/around the apartment
         this.locations = this.createLocations();
@@ -107,6 +107,8 @@ export default class SimulationScene extends Phaser.Scene {
 
         // Create people
         this.people = this.createPeople();
+
+        this.updatePlaybackSpeed();
 
         // Create energy handler, that manages updates to electricity
         this.energyHandler = new EnergyHandler({scene: this, 
@@ -146,16 +148,15 @@ export default class SimulationScene extends Phaser.Scene {
 // ---- HELPER & LOGIC METHODS -----------------------------------------
 // *********************************************************************
 
-    // Method for creating all locations and binding neighbouring ones
-    // Locations are used by the characters to know where they are able to walk
-    // coding: "1XYZ", where X: apartment number, Y: floor number, Z: location number (horizontal)
-    
+
     updateTime() {
         this.registry.values.time += 1;
         //console.log(this.registry.get("time"));
-        this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
         this.checkSchedules();
         this.energyHandler.runUpdate(this.registry.values.time);
+        this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
+        this.individualCostText.setText(`Individual Cost: ${this.registry.get("individualCost")}`, { fontSize: '32px', fill: '#000' });
+
     }
 
     checkSchedules() {
@@ -166,8 +167,27 @@ export default class SimulationScene extends Phaser.Scene {
         }
     }
 
-// ----- CREATE LOCATIONS -----------------------------------------------
+    updatePlaybackSpeed() {
+        this.anims.globalTimeScale = this.playbackSpeed;
 
+        for (var [key, person] of this.people) {
+            person.updatePlaybackSpeed(this.playbackSpeed);
+        }
+        for (var [key, activity] of this.activities) {
+             activity.updatePlaybackSpeed(this.playbackSpeed);
+        }
+    }
+
+// *********************************************************************
+// ------- CREATION METHODS  -------------------------------------------
+// *********************************************************************
+ 
+
+// ----- CREATE LOCATIONS -----------------------------------------------
+// Method for creating all locations and binding neighbouring ones
+// Locations are used by the characters to know where they are able to walk
+// coding: "1XYZ", where X: apartment number, Y: floor number, Z: location number (horizontal)
+    
 createLocations() {
     // Create Locations
     const locations = new Map();
@@ -284,27 +304,27 @@ createDevices() {
             key: "a1Fridge",
             isIdle: false,
             locationKey: this.locations.get('l114').key,
-            minDuration: 3000/this.playbackSpeed,
-            startDuration: 300/this.playbackSpeed,
-            exitDuration: 300/this.playbackSpeed,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
             device: this.devices.get("d1Fridge")}));
 
         activities.set("a1Stove", new Activity({
             key: "a1Stove",
             isIdle: false,
             locationKey: this.locations.get('l113').key,
-            minDuration: 3000/this.playbackSpeed,
-            startDuration: 300/this.playbackSpeed,
-            exitDuration: 300/this.playbackSpeed,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
             device: this.devices.get("d1Stove")}));
 
             activities.set("a1DinnerTable", new Activity({
                 key: "a1DinnerTable",
                 isIdle: false,
                 locationKey: this.locations.get('l111').key,
-                minDuration: 3000/this.playbackSpeed,
-                startDuration: 300/this.playbackSpeed,
-                exitDuration: 300/this.playbackSpeed,
+                minDuration: 3000,
+                startDuration: 300,
+                exitDuration: 300,
                 device: null}));
 
         return activities;
@@ -322,7 +342,7 @@ createDevices() {
             x: this.locations.get('l100').x,
             y: this.locations.get('l100').y,
             apartment: 1,
-            speed: 140*this.playbackSpeed,
+            speed: 140,
             texture: 'rut'}));
 
         return people;

@@ -9,6 +9,7 @@ export class Activity {
     minDuration;
     startDuration; // If presence activity, how long does the character need to remain for the process to start?
     exitDuration; // If presence activity, how long does the character need to remain for the process to end?
+    playbackSpeed;
     device; // Device that this activity activates, NOTE: One action only affects one device (or zero)
    
     constructor(params) { 
@@ -21,6 +22,14 @@ export class Activity {
      this.exitDuration = typeof params.exitDuration !== "undefined" ? params.exitDuration : 0;
      this.startDuration = typeof params.startDuration !== "undefined" ? params.startDuration : 0;
      this.device = typeof params.device !== "undefined" ? params.device : null;
+     //this.playbackSpeed = 1;
+   }
+
+   updatePlaybackSpeed(speed) {
+    this.minDuration = this.minDuration / (speed/this.playbackSpeed);
+    this.exitDuration = this.exitDuration / (speed/this.playbackSpeed);
+    this.startDuration = this.startDuration / (speed/this.playbackSpeed);
+    this.playbackSpeed = speed;
    }
 
    startActivity(){
@@ -30,6 +39,7 @@ export class Activity {
       this.device.startDevice(this.startDuration);
     }
    }
+
    stopActivity(){
     this.isActive = false;
     console.log("Activity ended: ", this.key);

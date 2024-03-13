@@ -22,6 +22,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.key = params.key;
     this.currentScene = params.scene;
     this.speed = params.speed;
+    this.playbackSpeed = 1;
     this.apartment = params.apartment;
 
     this.comingActivity = null;
@@ -37,6 +38,11 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.handleAnimations();
   }
 
+  updatePlaybackSpeed(speed) {
+    this.speed = this.speed * (speed / this.playbackSpeed);
+    this.playbackSpeed = speed; 
+  }
+ 
   initSprite() {
 
     // sprite

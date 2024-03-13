@@ -7,6 +7,11 @@
           "url": "./assets/animations/animations.json"
         },
         {
+          "type": "html",
+          "key": "form",
+          "url": "./assets/html/form.html"
+        },
+        {
           "type": "image",
           "key": "house",
           "url": "./assets/images/house.png"
@@ -25,6 +30,11 @@
           "type": "image",
           "key": "sky",
           "url": "./assets/images/sky.png"
+        },
+        {
+          "type": "image",
+          "key": "solarPanel",
+          "url": "./assets/sprites/solarPanel.png"
         },
         {
           "type": "spritesheet",
