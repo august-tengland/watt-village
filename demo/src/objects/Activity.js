@@ -34,7 +34,7 @@ export class Activity {
 
    startActivity(){
     this.isActive = true;
-    console.log("Activity started: ", this.key);
+    //console.log("Activity started: ", this.key);
     if(this.device != null) {
       this.device.startDevice(this.startDuration);
     }
@@ -42,7 +42,7 @@ export class Activity {
 
    stopActivity(){
     this.isActive = false;
-    console.log("Activity ended: ", this.key);
+    //console.log("Activity ended: ", this.key);
     if(this.device != null) {
       this.device.stopDevice();
     }

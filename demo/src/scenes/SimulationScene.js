@@ -3,7 +3,10 @@ import { Person } from '../objects/Person.js';
 import { Location } from '../objects/Location.js';
 import { Activity } from '../objects/Activity.js';
 import { Device } from '../objects/Device.js';
-import { EnergyHandler } from '../objects/EnergyHandler.js';
+import { TotalEnergyHandler } from '../objects/TotalEnergyHandler.js';
+import { IndividualEnergyHandler } from '../objects/IndividualEnergyHandler.js';
+import { HouseSolarPanelHandler } from '../objects/HouseSolarPanelHandler.js';
+
 
 export default class SimulationScene extends Phaser.Scene {
 
@@ -33,10 +36,19 @@ export default class SimulationScene extends Phaser.Scene {
         // LENGTH OF A DAY, i.e. simulation time
         // NOTE: Should always be a multiple of 24
         this.dayLength = 96; //24*4, 4 units per hour
+         
+        // TIME UNIT CONVERSION FACTOR
+        // How many in-game time units correspond to 1 hour "real time"?
+        this.tucf = this.dayLength / 24;
 
         this.playbackSpeed = 1;
 
         this.currentDay = "day1";
+
+        // What is the optimal effect of the solar panels installed on the roof?
+        this.solarPanelEffect0 = 12; //kWh (per hour)
+        this.solarPanelEffect1 = 15; //kWh (per hour)
+
         
         this.timer = this.time.addEvent({
             delay: 1000/this.playbackSpeed,
@@ -108,27 +120,17 @@ export default class SimulationScene extends Phaser.Scene {
         // Create people
         this.people = this.createPeople();
 
+        // Create energy & solar handlers
+        this.individualEnergyHandlers = this.createIndividualEnergyHandlers();
+        console.log(this.individualEnergyHandlers);
+
+        this.houseSolarPanelHandlers = this.createHouseSolarPanelHandlers();
+        console.log(this.houseSolarPanelHandlers);
+
+        this.totalEnergyHandler = this.createTotalEnergyHandler();
+        console.log(this.totalEnergyHandler);
+
         this.updatePlaybackSpeed();
-
-        // Create energy handler, that manages updates to electricity
-        this.energyHandler = new EnergyHandler({scene: this, 
-                                                devices: this.devices, 
-                                                time: this.registry.values.time,
-                                                dayLength: this.dayLength,
-                                                currentDayKey: this.currentDay});
-
-        // this.person1 = new Person({
-        //                         key: "p1",
-        //                         scene: this,
-        //                         x: this.locations.get('l100').x,
-        //                         y: this.locations.get('l100').y,
-        //                         apartment: 1,
-        //                         speed: 140,
-        //                         texture: 'rut'});
-
-        // this.people.add(this.person1);
-
-        this.people.get('p1').setDepth(10);
 
         this.bindLocationsToPeople();
 
@@ -153,7 +155,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time += 1;
         //console.log(this.registry.get("time"));
         this.checkSchedules();
-        this.energyHandler.runUpdate(this.registry.values.time);
+        this.updateHandlers();
         this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
         this.individualCostText.setText(`Individual Cost: ${this.registry.get("individualCost")}`, { fontSize: '32px', fill: '#000' });
 
@@ -162,6 +164,7 @@ export default class SimulationScene extends Phaser.Scene {
     checkSchedules() {
         for (var [key, person] of this.people) {
             if(person.schedule.has(this.registry.values.time)) {
+                //console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time));
                 person.doActivity(person.schedule.get(this.registry.values.time));
             }
         }
@@ -178,6 +181,20 @@ export default class SimulationScene extends Phaser.Scene {
         }
     }
 
+    updateHandlers() {
+
+        //this.totalEnergyHandler.runUpdate(this.registry.values.time);
+
+        for (var [key, individualEnergyHandler] of this.individualEnergyHandlers) {
+            individualEnergyHandler.runUpdate(this.registry.values.time);
+        }
+        for (var [key, houseSolarPanelHandler] of this.houseSolarPanelHandlers) {
+            houseSolarPanelHandler.runUpdate(this.registry.values.time);
+        }
+        this.totalEnergyHandler.runUpdate(this.registry.values.time);
+
+    }
+
 // *********************************************************************
 // ------- CREATION METHODS  -------------------------------------------
 // *********************************************************************
@@ -192,16 +209,79 @@ createLocations() {
     // Create Locations
     const locations = new Map();
 
-    locations.set('l100', new Location({key:'l100', x: 280, y: 360, apartment: 1, floor: 0}));
-    locations.set('l101', new Location({key:'l101', x: 375, y: 360, apartment: 1, floor: 0}));
-    locations.set('l102', new Location({key:'l102', x: 580, y: 360, apartment: 1, floor: 0}));
-    locations.set('l110', new Location({key:'l110', x: 280, y: 480, apartment: 1, floor: 1}));
-    locations.set('l111', new Location({key:'l111', x: 390, y: 480, apartment: 1, floor: 1}));
-    locations.set('l112', new Location({key:'l112', x: 445, y: 480, apartment: 1, floor: 1}));
-    locations.set('l113', new Location({key:'l113', x: 520, y: 480, apartment: 1, floor: 1}));
-    locations.set('l114', new Location({key:'l114', x: 575, y: 480, apartment: 1, floor: 1}));
+    // Initialize object with x & y coordinates for each position (in a single, small, apartment)
+    var baseValuesSmall = {
+        "0": {
+            "0": { "x": 280, "y": 360 },
+            "1": { "x": 375, "y": 360 },
+            "2": { "x": 580, "y": 360 }
+        },
+        "1": {
+            "0": { "x": 280, "y": 480 },
+            "1": { "x": 390, "y": 480 },
+            "2": { "x": 445, "y": 480 },
+            "3": { "x": 520, "y": 480 },
+            "4": { "x": 575, "y": 480 }
+        }
+    };
+
+    // Initialize object with x & y coordinates for each position (in a single, big, apartment)
+    var baseValuesBig = {
+        "0": {
+            "0": { "x": 790, "y": 360 },
+            "1": { "x": 1161, "y": 360 },
+            "2": { "x": 1250, "y": 360 }
+        },
+        "1": {
+            "0": { "x": 750, "y": 480 },
+            "1": { "x": 890, "y": 480 },
+            "2": { "x": 1000, "y": 480 },
+            "3": { "x": 1077, "y": 480 },
+            "4": { "x": 1260, "y": 480 }
+        }
+    };
+
+    
+    var offsets = {
+        "1": { "x": 0, "y": 0 },
+        "2": { "x": 0, "y": 0 },
+        "3": { "x": 0, "y": 273 },
+        "4": { "x": 0, "y": 100 }
+    }
+
+
+    locations.set('l100', new Location({key:'l100', x: baseValuesSmall['0']['0']['x']+offsets["1"]["x"], y: baseValuesSmall['0']['0']['y']+offsets["1"]["y"], apartment: 1, floor: 0}));
+    locations.set('l101', new Location({key:'l101', x: baseValuesSmall['0']['1']['x']+offsets["1"]["x"], y: baseValuesSmall['0']['1']['y']+offsets["1"]["y"], apartment: 1, floor: 0}));
+    locations.set('l102', new Location({key:'l102', x: baseValuesSmall['0']['2']['x']+offsets["1"]["x"], y: baseValuesSmall['0']['2']['y']+offsets["1"]["y"], apartment: 1, floor: 0}));
+    locations.set('l110', new Location({key:'l110', x: baseValuesSmall['1']['0']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['0']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l111', new Location({key:'l111', x: baseValuesSmall['1']['1']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['1']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l112', new Location({key:'l112', x: baseValuesSmall['1']['2']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['2']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l113', new Location({key:'l113', x: baseValuesSmall['1']['3']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['3']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l114', new Location({key:'l114', x: baseValuesSmall['1']['4']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['4']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
+
+    locations.set('l200', new Location({key:'l200', x: baseValuesBig['0']['0']['x']+offsets["2"]["x"], y: baseValuesBig['0']['0']['y']+offsets["2"]["y"], apartment: 2, floor: 0}));
+    locations.set('l201', new Location({key:'l201', x: baseValuesBig['0']['1']['x']+offsets["2"]["x"], y: baseValuesBig['0']['1']['y']+offsets["2"]["y"], apartment: 2, floor: 0}));
+    locations.set('l202', new Location({key:'l202', x: baseValuesBig['0']['2']['x']+offsets["2"]["x"], y: baseValuesBig['0']['2']['y']+offsets["2"]["y"], apartment: 2, floor: 0}));
+    locations.set('l210', new Location({key:'l210', x: baseValuesBig['1']['0']['x']+offsets["2"]["x"], y: baseValuesBig['1']['0']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l211', new Location({key:'l211', x: baseValuesBig['1']['1']['x']+offsets["2"]["x"], y: baseValuesBig['1']['1']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l212', new Location({key:'l212', x: baseValuesBig['1']['2']['x']+offsets["2"]["x"], y: baseValuesBig['1']['2']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l213', new Location({key:'l213', x: baseValuesBig['1']['3']['x']+offsets["2"]["x"], y: baseValuesBig['1']['3']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l214', new Location({key:'l214', x: baseValuesBig['1']['4']['x']+offsets["2"]["x"], y: baseValuesBig['1']['4']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
+
+
+    locations.set('l300', new Location({key:'l300', x: baseValuesSmall['0']['0']['x']+offsets["3"]["x"], y: baseValuesSmall['0']['0']['y']+offsets["3"]["y"], apartment: 3, floor: 0}));
+    locations.set('l301', new Location({key:'l301', x: baseValuesSmall['0']['1']['x']+offsets["3"]["x"], y: baseValuesSmall['0']['1']['y']+offsets["3"]["y"], apartment: 3, floor: 0}));
+    locations.set('l302', new Location({key:'l302', x: baseValuesSmall['0']['2']['x']+offsets["3"]["x"], y: baseValuesSmall['0']['2']['y']+offsets["3"]["y"], apartment: 3, floor: 0}));
+    locations.set('l310', new Location({key:'l310', x: baseValuesSmall['1']['0']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['0']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l311', new Location({key:'l311', x: baseValuesSmall['1']['1']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['1']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l312', new Location({key:'l312', x: baseValuesSmall['1']['2']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['2']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l313', new Location({key:'l313', x: baseValuesSmall['1']['3']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['3']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l314', new Location({key:'l314', x: baseValuesSmall['1']['4']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['4']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
 
     // Add neighbour links
+
+    // APARTMENT 1
+
     locations.get('l100').setNeighbours([locations.get('l101')]);
     locations.get('l100').setNeighboursUpDown({up: null, down: locations.get('l101').key});
     
@@ -225,6 +305,59 @@ createLocations() {
 
     locations.get('l114').setNeighbours([locations.get('l113')]);
     locations.get('l114').setNeighboursUpDown({up: locations.get('l113').key, down: null});
+
+    // APARTMENT 2
+
+    locations.get('l200').setNeighbours([locations.get('l201')]);
+    locations.get('l200').setNeighboursUpDown({up: null, down: locations.get('l201').key});
+
+    locations.get('l201').setNeighbours([locations.get('l200'), locations.get('l213'), locations.get('l202')]);
+    locations.get('l201').setNeighboursUpDown({up: null, down: locations.get('l213').key});
+
+    locations.get('l202').setNeighbours([locations.get('l201')]);
+    locations.get('l202').setNeighboursUpDown({up: null, down: locations.get('l201').key});
+
+    locations.get('l210').setNeighbours([locations.get('l211')]);
+    locations.get('l210').setNeighboursUpDown({up: locations.get('l211').key, down: null});
+
+    locations.get('l211').setNeighbours([locations.get('l210'), locations.get('l212')]);
+    locations.get('l211').setNeighboursUpDown({up: locations.get('l212').key, down: null});
+
+    locations.get('l212').setNeighbours([locations.get('l211'), locations.get('l213')]);
+    locations.get('l212').setNeighboursUpDown({up: locations.get('l213').key, down: null});
+
+    locations.get('l213').setNeighbours([locations.get('l212'), locations.get('l201'), locations.get('l214')]);
+    locations.get('l213').setNeighboursUpDown({up: locations.get('l201').key, down: null});
+
+    locations.get('l214').setNeighbours([locations.get('l213')]);
+    locations.get('l214').setNeighboursUpDown({up: locations.get('l213').key, down: null});
+
+    // APARTMENT 3
+
+    locations.get('l300').setNeighbours([locations.get('l301')]);
+    locations.get('l300').setNeighboursUpDown({up: null, down: locations.get('l301').key});
+
+    locations.get('l301').setNeighbours([locations.get('l300'), locations.get('l312'), locations.get('l302')]);
+    locations.get('l301').setNeighboursUpDown({up: null, down: locations.get('l312').key});
+
+    locations.get('l302').setNeighbours([locations.get('l301')]);
+    locations.get('l302').setNeighboursUpDown({up: null, down: locations.get('l301').key});
+
+    locations.get('l310').setNeighbours([locations.get('l311')]);
+    locations.get('l310').setNeighboursUpDown({up: locations.get('l311').key, down: null});
+
+    locations.get('l311').setNeighbours([locations.get('l310'),locations.get('l312')]);
+    locations.get('l311').setNeighboursUpDown({up: locations.get('l312').key, down: null});
+
+    locations.get('l312').setNeighbours([locations.get('l311'), locations.get('l301'), locations.get('l313')]);
+    locations.get('l312').setNeighboursUpDown({up: locations.get('l301').key, down: null});
+
+    locations.get('l313').setNeighbours([locations.get('l312'), locations.get('l314')]);
+    locations.get('l313').setNeighboursUpDown({up: locations.get('l312').key, down: null});
+
+    locations.get('l314').setNeighbours([locations.get('l313')]);
+    locations.get('l314').setNeighboursUpDown({up: locations.get('l313').key, down: null});
+
     
     return locations;
 }
@@ -238,18 +371,6 @@ createLocationVisuals() {
     }
 }
 
-// Method to assign each person the possible locations that they can be present at
-bindLocationsToPeople() {
-    for (var [key, person] of this.people) {
-        var locationsForPerson = [];
-        for (var [key, location] of this.locations) {
-            if (person.apartment == location.apartment) {
-                locationsForPerson.push(location);
-            } 
-        }
-        person.setPossibleLocations(locationsForPerson);
-      };
-}
 
 
 // ----- CREATE DEVICES -----------------------------------------------
@@ -257,14 +378,34 @@ bindLocationsToPeople() {
 createDevices() {
     // Create Devices
     const devices = new Map();
+
+    var basePositionsSmall = {
+        "stove": { "x": 504, "y": 480 },
+        "fridge": { "x": 596, "y": 464 }
+    }
+
+    var basePositionsBig = {
+        "stove": { "x": 885, "y": 480 },
+        "fridge": { "x": 736, "y": 465 }
+    }
+
+    var offsets = {
+        "1": { "x": 0, "y": 0 },
+        "2": { "x": 0, "y": 0 },
+        "3": { "x": 0, "y": 273 },
+        "4": { "x": 0, "y": 100 }
+    }
+
+    // --- APARTMENT 1 --------------------------------
+
     devices.set('d1Stove', new Device({
                                     key:'d1Stove', 
                                     scene: this,
-                                    x: 504, 
-                                    y: 480, 
+                                    x: basePositionsSmall['stove']['x']+offsets['1']['x'], 
+                                    y: basePositionsSmall['stove']['y']+offsets['1']['y'], 
                                     apartment: 1, 
                                     texture: 'stove',
-                                    powerConsumption: 100,
+                                    powerConsumption: 2.0/this.tucf, //kWh (per hour)
                                     isIdleConsuming: false,
                                     animationKeys: {
                                         idle: 'stoveIdle',
@@ -275,11 +416,11 @@ createDevices() {
     devices.set('d1Fridge', new Device({
                                     key:'d1Fridge', 
                                     scene: this,
-                                    x: 596, 
-                                    y: 464, 
+                                    x: basePositionsSmall['fridge']['x']+offsets['1']['x'], 
+                                    y: basePositionsSmall['fridge']['y']+offsets['1']['y'], 
                                     apartment: 1, 
                                     texture: 'fridge',
-                                    powerConsumption: 100,
+                                    powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
                                     isIdleConsuming: true,
                                     animationKeys: {
                                         idle: 'fridgeIdle',
@@ -287,7 +428,71 @@ createDevices() {
                                     },
                                     repeatAnimation: false}));
 
-    //devices.get('d1stove').anims.play('stoveActive',true);     
+    // --- APARTMENT 2 --------------------------------
+
+    devices.set('d2Stove', new Device({
+                                    key:'d2Stove', 
+                                    scene: this,
+                                    x: basePositionsBig['stove']['x']+offsets['2']['x'], 
+                                    y: basePositionsBig['stove']['y']+offsets['2']['y'], 
+                                    apartment: 2, 
+                                    texture: 'stove',
+                                    powerConsumption: 2.0/this.tucf, //kWh (per hour)
+                                    isIdleConsuming: false,
+                                    animationKeys: {
+                                        idle: 'stoveIdle',
+                                        active: 'stoveActive'
+                                    },
+                                    repeatAnimation: true}));
+
+    devices.set('d2Fridge', new Device({
+                                    key:'d2Fridge', 
+                                    scene: this,
+                                    x: basePositionsBig['fridge']['x']+offsets['2']['x'], 
+                                    y: basePositionsBig['fridge']['y']+offsets['2']['y'], 
+                                    apartment: 2, 
+                                    texture: 'fridge',
+                                    powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
+                                    isIdleConsuming: true,
+                                    animationKeys: {
+                                        idle: 'fridgeIdle',
+                                        active: 'fridgeActive'
+                                    },
+                                    repeatAnimation: false}));
+
+    // --- APARTMENT 3 --------------------------------
+
+    devices.set('d3Stove', new Device({
+                                    key:'d3Stove', 
+                                    scene: this,
+                                    x: basePositionsSmall['stove']['x']+offsets['3']['x'], 
+                                    y: basePositionsSmall['stove']['y']+offsets['3']['y'], 
+                                    apartment: 3, 
+                                    texture: 'stove',
+                                    powerConsumption: 2.0/this.tucf, //kWh (per time unit)
+                                    isIdleConsuming: false,
+                                    animationKeys: {
+                                        idle: 'stoveIdle',
+                                        active: 'stoveActive'
+                                    },
+                                    repeatAnimation: true}));
+
+    devices.set('d3Fridge', new Device({
+                                    key:'d3Fridge', 
+                                    scene: this,
+                                    x: basePositionsSmall['fridge']['x']+offsets['3']['x'], 
+                                    y: basePositionsSmall['fridge']['y']+offsets['3']['y'], 
+                                    apartment: 3, 
+                                    texture: 'fridge',
+                                    powerConsumption: 0.042/this.tucf, // kHw (time unit), = 1kWh / day
+                                    isIdleConsuming: true,
+                                    animationKeys: {
+                                        idle: 'fridgeIdle',
+                                        active: 'fridgeActive'
+                                    },
+                                    repeatAnimation: false}));
+
+ 
 
     for(var [key, device] of devices) {
         device.setDepth(2);
@@ -299,6 +504,8 @@ createDevices() {
 // ----- CREATE ACTIVITIES -----------------------------------------------
     createActivities() {
         const activities = new Map();
+
+        // APARTMENT 1 
 
         activities.set("a1Fridge", new Activity({
             key: "a1Fridge",
@@ -318,14 +525,72 @@ createDevices() {
             exitDuration: 300,
             device: this.devices.get("d1Stove")}));
 
-            activities.set("a1DinnerTable", new Activity({
-                key: "a1DinnerTable",
-                isIdle: false,
-                locationKey: this.locations.get('l111').key,
-                minDuration: 3000,
-                startDuration: 300,
-                exitDuration: 300,
-                device: null}));
+        activities.set("a1DinnerTable", new Activity({
+            key: "a1DinnerTable",
+            isIdle: false,
+            locationKey: this.locations.get('l111').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: null}));
+
+        // APARTMENT 2 
+
+        activities.set("a2Fridge", new Activity({
+            key: "a2Fridge",
+            isIdle: false,
+            locationKey: this.locations.get('l210').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: this.devices.get("d2Fridge")}));
+
+        activities.set("a2Stove", new Activity({
+            key: "a2Stove",
+            isIdle: false,
+            locationKey: this.locations.get('l211').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: this.devices.get("d2Stove")}));
+
+        activities.set("a2DinnerTable", new Activity({
+            key: "a2DinnerTable",
+            isIdle: false,
+            locationKey: this.locations.get('l212').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: null}));
+
+        // APARTMENT 3 
+
+        activities.set("a3Fridge", new Activity({
+            key: "a3Fridge",
+            isIdle: false,
+            locationKey: this.locations.get('l314').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: this.devices.get("d3Fridge")}));
+
+        activities.set("a3Stove", new Activity({
+            key: "a3Stove",
+            isIdle: false,
+            locationKey: this.locations.get('l313').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: this.devices.get("d3Stove")}));
+
+        activities.set("a3DinnerTable", new Activity({
+            key: "a3DinnerTable",
+            isIdle: false,
+            locationKey: this.locations.get('l311').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: null}));
 
         return activities;
     }
@@ -336,28 +601,185 @@ createDevices() {
 
         const people = new Map();
 
+        // APARTMENT 1 
+
         people.set("p1", new Person({
             key: "p1",
             scene: this,
             x: this.locations.get('l100').x,
             y: this.locations.get('l100').y,
             apartment: 1,
-            speed: 140,
+            speed: 200,
             texture: 'rut'}));
 
+        // APARTMENT 2 
+
+        people.set("p2", new Person({
+            key: "p2",
+            scene: this,
+            x: this.locations.get('l202').x,
+            y: this.locations.get('l202').y,
+            apartment: 2,
+            speed: 200,
+            texture: 'rut'}));
+
+
+        // APARTMENT 3 
+
+        people.set("p3", new Person({
+            key: "p3",
+            scene: this,
+            x: this.locations.get('l300').x,
+            y: this.locations.get('l300').y,
+            apartment: 3,
+            speed: 200,
+            texture: 'rut'}));
+
+        for(var [key, person] of people) {
+            person.setDepth(10);
+        }
+
         return people;
+    }
+
+    // Method to assign each person the possible locations that they can be present at
+    bindLocationsToPeople() {
+        for (var [key, person] of this.people) {
+            var locationsForPerson = [];
+            for (var [key, location] of this.locations) {
+                if (person.apartment == location.apartment) {
+                    locationsForPerson.push(location);
+                } 
+            }
+            person.setPossibleLocations(locationsForPerson);
+            //console.log("possible locations for person ", person.key, ": ", locationsForPerson);
+        };
     }
 
 // -------- ASSIGN SCHEDULES -------------------------------------------
 
     assignSchedules() {
         
+        // APARTMENT 1 
+
         const schedule1 = new Map();
         schedule1.set(3, this.activities.get('a1Fridge'));
         schedule1.set(8, this.activities.get('a1Stove'));
         schedule1.set(12, this.activities.get('a1DinnerTable'));
         this.people.get("p1").setSchedule(schedule1);
-}
+
+        // APARTMENT 2 
+
+        const schedule2 = new Map();
+        schedule2.set(1, this.activities.get('a2Fridge'));
+        schedule2.set(5, this.activities.get('a2Stove'));
+        schedule2.set(8, this.activities.get('a2DinnerTable'));
+        this.people.get("p2").setSchedule(schedule2);
+
+        // APARTMENT 3 
+
+        const schedule3 = new Map();
+        //schedule3.set(2, this.activities.get('a3Fridge'));
+        //schedule3.set(7, this.activities.get('a3Stove'));
+        //schedule3.set(11, this.activities.get('a3DinnerTable'));
+        schedule3.set(4, this.activities.get('a3DinnerTable'));
+        this.people.get("p3").setSchedule(schedule3);
+
+        //console.log(this.people.get("p1"));
+        //console.log(this.people.get("p3"));
+    }
+
+// ----- CREATE ENERGY HANDLERS --------------------------------------
+
+    createIndividualEnergyHandlers() {
+
+        const individualEnergyHandlers = new Map();
+
+        // TODO: BIND apartment-specific devices to energy handlers
+        var individualDevices1 = new Map();
+        var individualDevices2 = new Map();
+        var individualDevices3 = new Map();
+
+        
+        for(var [key, device] of this.devices) {
+            if(device.apartment == 1){
+                individualDevices1.set(device.key, device);
+            } else if(device.apartment == 2) {
+                individualDevices2.set(device.key, device);    
+            } else if(device.apartment == 3) {
+                individualDevices3.set(device.key, device);    
+            }
+        }
+
+        // Create energy handler, that manages updates to electricity
+        individualEnergyHandlers.set("ieh1", new IndividualEnergyHandler({scene: this, 
+            key: "ieh1",
+            apartment: 1,
+            house: 0,
+            devices: individualDevices1, 
+            time: this.registry.values.time,
+            dayLength: this.dayLength,
+            currentDayKey: this.currentDay}));
+        
+        individualEnergyHandlers.set("ieh2", new IndividualEnergyHandler({scene: this, 
+            key: "ieh2",
+            apartment: 2,
+            house: 1,
+            devices: individualDevices2, 
+            time: this.registry.values.time,
+            dayLength: this.dayLength,
+            currentDayKey: this.currentDay}));
+
+        individualEnergyHandlers.set("ieh3", new IndividualEnergyHandler({scene: this, 
+            key: "ieh3",
+            apartment: 3,
+            house: 0,
+            devices: individualDevices3, 
+            time: this.registry.values.time,
+            dayLength: this.dayLength,
+            currentDayKey: this.currentDay}));
+        
+        return individualEnergyHandlers;
+    }
+
+    createHouseSolarPanelHandlers() {
+
+        const houseSolarPanelHandlers = new Map();
+        
+        // Create house solar panel handlers, that manages updates to energy production
+        houseSolarPanelHandlers.set("hsph0", new HouseSolarPanelHandler({scene: this, 
+            key: "hsph0",
+            house: 0,
+            time: this.registry.values.time,
+            dayLength: this.dayLength,
+            solarPanelEffect: this.solarPanelEffect0/this.tucf,
+            currentDayKey: this.currentDay}));
+
+        houseSolarPanelHandlers.set("hsph1", new HouseSolarPanelHandler({scene: this, 
+            key: "hsph1",
+            house: 1,
+            time: this.registry.values.time,
+            dayLength: this.dayLength,
+            solarPanelEffect: this.solarPanelEffect1/this.tucf,
+            currentDayKey: this.currentDay}));
+
+        return houseSolarPanelHandlers;
+    }
+
+    createTotalEnergyHandler() {
+        
+        // Create energy handler, that aggregates energy consumption and production to calculate costs
+        var totalEnergyHandler = new TotalEnergyHandler({scene: this, 
+            devices: this.devices, 
+            time: this.registry.values.time,
+            dayLength: this.dayLength,
+            individualEnergyHandlers: this.individualEnergyHandlers,
+            houseSolarPanelHandlers: this.houseSolarPanelHandlers,
+            currentDayKey: this.currentDay});
+
+        return totalEnergyHandler;
+    }
+
 
 }
 

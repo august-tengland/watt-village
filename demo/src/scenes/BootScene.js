@@ -27,7 +27,7 @@ export default class BootScene extends Phaser.Scene {
             console.log("test");
             progress.destroy();
             this.initGlobalDataManager();
-            this.scene.start('PlannerScene');
+            this.scene.start('SimulationScene');
         });
 
         //  load all assets

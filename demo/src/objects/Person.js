@@ -27,6 +27,7 @@ export class Person extends Phaser.GameObjects.Sprite {
 
     this.comingActivity = null;
     this.currentActivity = null; // Note: Set to sleeping maybe?
+    this.schedule = null;
 
     this.initSprite();
     this.currentScene.add.existing(this);
@@ -55,6 +56,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   setSchedule(schedule) {
+    //console.log("calling setSchedule for person ", this.key);
     this.schedule = schedule;
   }
 
@@ -137,7 +139,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     // Find current (closest) location
     this.setClosestLocation();
     var endLocationIndex = -1;
-
+    //console.log(this.possibleLocations);
     //find location with corresponding key
     for (var i = 0; i < this.possibleLocations.length; i++) {
       if (this.possibleLocations[i].key == endLocationKey) {
@@ -145,22 +147,22 @@ export class Person extends Phaser.GameObjects.Sprite {
         break;
       }
     }
+
     // If key not found in possibleLocations list
     if (endLocationIndex == -1) throw new Error('Location key not found in list!');
 
     // list that includes all the locations that have to be passed
+    var pathToWalk = []
     var locationInPath = this.possibleLocations[endLocationIndex]; 
 
-    var pathToWalk = []
     // while full path not discovered
     var tester = 0;
     while (locationInPath.key != this.currentLocation.key) {
       tester++;
-      if(tester > 100) throw new Error('ajajaj');
+      //console.log(pathToWalk);
+      if(tester > 10) throw new Error(('Could not find path to location!'));
       //console.log(locationInPath.key);
       pathToWalk.push(locationInPath);
-
-      // TODO: Select next neighbour to add (working backwards)
 
       //if on the right floor, move in x-direction of starting location
       var neighbours = locationInPath.getNeighbours();  
@@ -170,8 +172,6 @@ export class Person extends Phaser.GameObjects.Sprite {
           if (this.currentLocation.x <= neighbours[i].x && neighbours[i].x <= locationInPath.x ||
               this.currentLocation.x >= neighbours[i].x && neighbours[i].x >= locationInPath.x) {
                 // found next node to add
-                //console.log("found next node to add: ", neighbours[i].key);
-                //console.log(this.currentLocation.x ," ", neighbours[i].x ," ", locationInPath.x);
                 locationInPath = neighbours[i];
                 break;
               }

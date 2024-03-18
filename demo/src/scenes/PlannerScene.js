@@ -1,6 +1,10 @@
 // This is the scene in which the player schedules activities for the day
 
+
+
 export default class PlannerScene extends Phaser.Scene {
+
+
     startKey;
     bitmapTexts = [];
   
@@ -29,10 +33,33 @@ export default class PlannerScene extends Phaser.Scene {
       
       const element = this.add.dom(400, 600).createFromCache('form');
 
+      var slider = d3
+      .sliderHorizontal()
+      .min(0)
+      .max(10)
+      .step(1)
+      .width(300)
+      .displayValue(false)
+      .on('onchange', (val) => {
+        d3.select('#value').text(val);
+      });
+  
+      d3.select('#slider')
+      .append('svg')
+      .attr('width', 500)
+      .attr('height', 100)
+      .append('g')
+      .attr('transform', 'translate(30,30)')
+      .call(slider);
+
+      console.log(slider);
+
       console.log(element);
     }
   
     update() {
+
+
       if (this.startKey.isDown) {
         //this.scene.start('HUDScene');
         this.scene.start('SimulationScene');

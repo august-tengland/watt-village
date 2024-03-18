@@ -7,7 +7,8 @@ export class Device extends Phaser.GameObjects.Sprite  {
     isActive;
     isIdleConsuming; // if true, uses power regardless of if its "interacted with" or not
     animationKeys; 
-    powerConsumption;
+    apartment;
+    powerConsumption; // In kWh
     // An animation that repeats simply starts and stops
     // A one-time animation is played in reverse when stopping device
     repeatAnimation; 
@@ -19,6 +20,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
       this.key = params.key;
       this.currentScene = params.scene;
       this.isActive = false;
+      this.apartment = params.apartment;
       this.isIdleConsuming = params.isIdleConsuming;
       this.animationKeys = params.animationKeys;
       this.powerConsumption = params.powerConsumption;
@@ -42,14 +44,14 @@ export class Device extends Phaser.GameObjects.Sprite  {
     startDevice(delayUntilStart) {
       setTimeout(() => {
         this.isActive = true;
-        console.log("device started: ", this.key);
+        //console.log("device started: ", this.key);
         this.handleAnimations();
       }, delayUntilStart);
     }
 
     stopDevice() {
       this.isActive = false;
-      console.log("device stopped: ", this.key);
+      //console.log("device stopped: ", this.key);
       this.handleAnimations();
     }
 
