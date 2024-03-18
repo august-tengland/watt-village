@@ -33,7 +33,7 @@ export class HouseSolarPanelHandler {
     }
   
     runUpdate(newTime) {
-      this.time = newTime+6*4;
+      this.time = newTime+4*4; //NOTE: Change this when troubleshooting
       this.updateSolarPanelProduction();
     }
   

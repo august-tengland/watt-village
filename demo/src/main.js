@@ -5,8 +5,8 @@ import Simulation from "./scenes/SimulationScene.js";
 
 var config = {
     type: Phaser.AUTO,
-    width: 1920*0.8,
-    height: 1080*0.8,
+    width: 1920*1.0,
+    height: 1080*1.0,
     dom: {
         createContainer: true
       },

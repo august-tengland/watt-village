@@ -20,7 +20,9 @@ export class IndividualEnergyHandler {
     currentSolarPanelGeneration;
   
     // aggregated values
-    totalCost;
+    individualCost;
+    individualSelling;
+    individualSavings;
   
     constructor(params) { 
       // variables
@@ -33,7 +35,9 @@ export class IndividualEnergyHandler {
       this.dayLength = params.dayLength;
       this.currentDayKey = params.currentDayKey;
       this.currentConsumption = 0;
-      this.totalCost = 0;
+      this.individualCost = 0;
+      this.individualSelling = 0;
+      this.individualSavings = 0;
     }
   
     runUpdate(newTime) {
@@ -49,14 +53,14 @@ export class IndividualEnergyHandler {
       console.log("current consumption for apartment ",this.apartment, ": ", this.currentConsumption);
      }
   
-     updateTotalCost() {
-      //console.log(this.scene.registry.values.individualCost);
-      //console.log("current energy price:", this.energyPricesPerTimeUnit[this.time]);
-      var costThisTimeUnit = this.currentConsumption * this.energyPricesPerTimeUnit[this.time];
-      this.totalCost += costThisTimeUnit;
-      this.scene.registry.values.individualCost = this.totalCost;
-      //console.log("cost this time unit:", costThisTimeUnit);
-      //console.log("totalCost:", this.totalCost);
+     updateTotalCost(params) { // params: {costThisTimeUnit, sellingThisTimeUnit, savingsThisTimeUnit}
+      console.log("Cost for apartment", this.apartment, "this time unit:",params['costThisTimeUnit']);
+      console.log("Selling for apartment", this.apartment, "this time unit:",params['sellingThisTimeUnit']);
+      console.log("Savings for apartment", this.apartment, "this time unit:",params['savingsThisTimeUnit']);
+
+      this.individualCost += params['costThisTimeUnit'];
+      this.individualSelling += params['sellingThisTimeUnit'];
+      this.individualSavings += params['savingsThisTimeUnit'];
      }
 
    }

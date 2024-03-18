@@ -45,6 +45,9 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.currentDay = "day1";
 
+        // Used to change the absolute positions of most things in the scene
+        this.offsets = this.setOffsets();
+
         // What is the optimal effect of the solar panels installed on the roof?
         this.solarPanelEffect0 = 12; //kWh (per hour)
         this.solarPanelEffect1 = 15; //kWh (per hour)
@@ -65,14 +68,14 @@ export default class SimulationScene extends Phaser.Scene {
         this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
     
         //  A simple background for our game
-        this.sky = this.add.image(0, 0, 'sky').setScale(2.3,1.7);
+        this.sky = this.add.image(0, 0, 'sky').setScale(2.6,2);
         Phaser.Display.Align.In.Center(this.sky,this.gamezone);
     
         //  The platforms group contains the ground and the 2 ledges we can jump on
         this.platforms = this.physics.add.staticGroup();
     
         //  Here we create the ground.
-        this.ground = this.platforms.create(0, 0, 'ground').setScale(4).refreshBody();
+        this.ground = this.platforms.create(0, 0, 'ground').setScale(5,4).refreshBody();
         Phaser.Display.Align.In.BottomCenter(this.ground,this.gamezone);
     
         //  A background for the house
@@ -150,6 +153,19 @@ export default class SimulationScene extends Phaser.Scene {
 // ---- HELPER & LOGIC METHODS -----------------------------------------
 // *********************************************************************
 
+    setOffsets() {
+
+        var baseOffset = {"x": 192, "y": 216 };
+
+        var offsets = {
+            "1": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
+            "2": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
+            "3": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 273 },
+            "4": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 100 }
+        }
+        
+        return offsets;
+    }
 
     updateTime() {
         this.registry.values.time += 1;
@@ -241,42 +257,34 @@ createLocations() {
         }
     };
 
-    
-    var offsets = {
-        "1": { "x": 0, "y": 0 },
-        "2": { "x": 0, "y": 0 },
-        "3": { "x": 0, "y": 273 },
-        "4": { "x": 0, "y": 100 }
-    }
+
+    locations.set('l100', new Location({key:'l100', x: baseValuesSmall['0']['0']['x']+this.offsets["1"]["x"], y: baseValuesSmall['0']['0']['y']+this.offsets["1"]["y"], apartment: 1, floor: 0}));
+    locations.set('l101', new Location({key:'l101', x: baseValuesSmall['0']['1']['x']+this.offsets["1"]["x"], y: baseValuesSmall['0']['1']['y']+this.offsets["1"]["y"], apartment: 1, floor: 0}));
+    locations.set('l102', new Location({key:'l102', x: baseValuesSmall['0']['2']['x']+this.offsets["1"]["x"], y: baseValuesSmall['0']['2']['y']+this.offsets["1"]["y"], apartment: 1, floor: 0}));
+    locations.set('l110', new Location({key:'l110', x: baseValuesSmall['1']['0']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['0']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l111', new Location({key:'l111', x: baseValuesSmall['1']['1']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['1']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l112', new Location({key:'l112', x: baseValuesSmall['1']['2']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['2']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l113', new Location({key:'l113', x: baseValuesSmall['1']['3']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['3']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
+    locations.set('l114', new Location({key:'l114', x: baseValuesSmall['1']['4']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['4']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
+
+    locations.set('l200', new Location({key:'l200', x: baseValuesBig['0']['0']['x']+this.offsets["2"]["x"], y: baseValuesBig['0']['0']['y']+this.offsets["2"]["y"], apartment: 2, floor: 0}));
+    locations.set('l201', new Location({key:'l201', x: baseValuesBig['0']['1']['x']+this.offsets["2"]["x"], y: baseValuesBig['0']['1']['y']+this.offsets["2"]["y"], apartment: 2, floor: 0}));
+    locations.set('l202', new Location({key:'l202', x: baseValuesBig['0']['2']['x']+this.offsets["2"]["x"], y: baseValuesBig['0']['2']['y']+this.offsets["2"]["y"], apartment: 2, floor: 0}));
+    locations.set('l210', new Location({key:'l210', x: baseValuesBig['1']['0']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['0']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l211', new Location({key:'l211', x: baseValuesBig['1']['1']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['1']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l212', new Location({key:'l212', x: baseValuesBig['1']['2']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['2']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l213', new Location({key:'l213', x: baseValuesBig['1']['3']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['3']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
+    locations.set('l214', new Location({key:'l214', x: baseValuesBig['1']['4']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['4']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
 
 
-    locations.set('l100', new Location({key:'l100', x: baseValuesSmall['0']['0']['x']+offsets["1"]["x"], y: baseValuesSmall['0']['0']['y']+offsets["1"]["y"], apartment: 1, floor: 0}));
-    locations.set('l101', new Location({key:'l101', x: baseValuesSmall['0']['1']['x']+offsets["1"]["x"], y: baseValuesSmall['0']['1']['y']+offsets["1"]["y"], apartment: 1, floor: 0}));
-    locations.set('l102', new Location({key:'l102', x: baseValuesSmall['0']['2']['x']+offsets["1"]["x"], y: baseValuesSmall['0']['2']['y']+offsets["1"]["y"], apartment: 1, floor: 0}));
-    locations.set('l110', new Location({key:'l110', x: baseValuesSmall['1']['0']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['0']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l111', new Location({key:'l111', x: baseValuesSmall['1']['1']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['1']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l112', new Location({key:'l112', x: baseValuesSmall['1']['2']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['2']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l113', new Location({key:'l113', x: baseValuesSmall['1']['3']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['3']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l114', new Location({key:'l114', x: baseValuesSmall['1']['4']['x']+offsets["1"]["x"], y: baseValuesSmall['1']['4']['y']+offsets["1"]["y"], apartment: 1, floor: 1}));
-
-    locations.set('l200', new Location({key:'l200', x: baseValuesBig['0']['0']['x']+offsets["2"]["x"], y: baseValuesBig['0']['0']['y']+offsets["2"]["y"], apartment: 2, floor: 0}));
-    locations.set('l201', new Location({key:'l201', x: baseValuesBig['0']['1']['x']+offsets["2"]["x"], y: baseValuesBig['0']['1']['y']+offsets["2"]["y"], apartment: 2, floor: 0}));
-    locations.set('l202', new Location({key:'l202', x: baseValuesBig['0']['2']['x']+offsets["2"]["x"], y: baseValuesBig['0']['2']['y']+offsets["2"]["y"], apartment: 2, floor: 0}));
-    locations.set('l210', new Location({key:'l210', x: baseValuesBig['1']['0']['x']+offsets["2"]["x"], y: baseValuesBig['1']['0']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l211', new Location({key:'l211', x: baseValuesBig['1']['1']['x']+offsets["2"]["x"], y: baseValuesBig['1']['1']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l212', new Location({key:'l212', x: baseValuesBig['1']['2']['x']+offsets["2"]["x"], y: baseValuesBig['1']['2']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l213', new Location({key:'l213', x: baseValuesBig['1']['3']['x']+offsets["2"]["x"], y: baseValuesBig['1']['3']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l214', new Location({key:'l214', x: baseValuesBig['1']['4']['x']+offsets["2"]["x"], y: baseValuesBig['1']['4']['y']+offsets["2"]["y"], apartment: 2, floor: 1}));
-
-
-    locations.set('l300', new Location({key:'l300', x: baseValuesSmall['0']['0']['x']+offsets["3"]["x"], y: baseValuesSmall['0']['0']['y']+offsets["3"]["y"], apartment: 3, floor: 0}));
-    locations.set('l301', new Location({key:'l301', x: baseValuesSmall['0']['1']['x']+offsets["3"]["x"], y: baseValuesSmall['0']['1']['y']+offsets["3"]["y"], apartment: 3, floor: 0}));
-    locations.set('l302', new Location({key:'l302', x: baseValuesSmall['0']['2']['x']+offsets["3"]["x"], y: baseValuesSmall['0']['2']['y']+offsets["3"]["y"], apartment: 3, floor: 0}));
-    locations.set('l310', new Location({key:'l310', x: baseValuesSmall['1']['0']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['0']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l311', new Location({key:'l311', x: baseValuesSmall['1']['1']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['1']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l312', new Location({key:'l312', x: baseValuesSmall['1']['2']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['2']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l313', new Location({key:'l313', x: baseValuesSmall['1']['3']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['3']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l314', new Location({key:'l314', x: baseValuesSmall['1']['4']['x']+offsets["3"]["x"], y: baseValuesSmall['1']['4']['y']+offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l300', new Location({key:'l300', x: baseValuesSmall['0']['0']['x']+this.offsets["3"]["x"], y: baseValuesSmall['0']['0']['y']+this.offsets["3"]["y"], apartment: 3, floor: 0}));
+    locations.set('l301', new Location({key:'l301', x: baseValuesSmall['0']['1']['x']+this.offsets["3"]["x"], y: baseValuesSmall['0']['1']['y']+this.offsets["3"]["y"], apartment: 3, floor: 0}));
+    locations.set('l302', new Location({key:'l302', x: baseValuesSmall['0']['2']['x']+this.offsets["3"]["x"], y: baseValuesSmall['0']['2']['y']+this.offsets["3"]["y"], apartment: 3, floor: 0}));
+    locations.set('l310', new Location({key:'l310', x: baseValuesSmall['1']['0']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['0']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l311', new Location({key:'l311', x: baseValuesSmall['1']['1']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['1']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l312', new Location({key:'l312', x: baseValuesSmall['1']['2']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['2']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l313', new Location({key:'l313', x: baseValuesSmall['1']['3']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['3']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
+    locations.set('l314', new Location({key:'l314', x: baseValuesSmall['1']['4']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['4']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
 
     // Add neighbour links
 
@@ -401,8 +409,8 @@ createDevices() {
     devices.set('d1Stove', new Device({
                                     key:'d1Stove', 
                                     scene: this,
-                                    x: basePositionsSmall['stove']['x']+offsets['1']['x'], 
-                                    y: basePositionsSmall['stove']['y']+offsets['1']['y'], 
+                                    x: basePositionsSmall['stove']['x']+this.offsets['1']['x'], 
+                                    y: basePositionsSmall['stove']['y']+this.offsets['1']['y'], 
                                     apartment: 1, 
                                     texture: 'stove',
                                     powerConsumption: 2.0/this.tucf, //kWh (per hour)
@@ -416,8 +424,8 @@ createDevices() {
     devices.set('d1Fridge', new Device({
                                     key:'d1Fridge', 
                                     scene: this,
-                                    x: basePositionsSmall['fridge']['x']+offsets['1']['x'], 
-                                    y: basePositionsSmall['fridge']['y']+offsets['1']['y'], 
+                                    x: basePositionsSmall['fridge']['x']+this.offsets['1']['x'], 
+                                    y: basePositionsSmall['fridge']['y']+this.offsets['1']['y'], 
                                     apartment: 1, 
                                     texture: 'fridge',
                                     powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
@@ -433,8 +441,8 @@ createDevices() {
     devices.set('d2Stove', new Device({
                                     key:'d2Stove', 
                                     scene: this,
-                                    x: basePositionsBig['stove']['x']+offsets['2']['x'], 
-                                    y: basePositionsBig['stove']['y']+offsets['2']['y'], 
+                                    x: basePositionsBig['stove']['x']+this.offsets['2']['x'], 
+                                    y: basePositionsBig['stove']['y']+this.offsets['2']['y'], 
                                     apartment: 2, 
                                     texture: 'stove',
                                     powerConsumption: 2.0/this.tucf, //kWh (per hour)
@@ -448,8 +456,8 @@ createDevices() {
     devices.set('d2Fridge', new Device({
                                     key:'d2Fridge', 
                                     scene: this,
-                                    x: basePositionsBig['fridge']['x']+offsets['2']['x'], 
-                                    y: basePositionsBig['fridge']['y']+offsets['2']['y'], 
+                                    x: basePositionsBig['fridge']['x']+this.offsets['2']['x'], 
+                                    y: basePositionsBig['fridge']['y']+this.offsets['2']['y'], 
                                     apartment: 2, 
                                     texture: 'fridge',
                                     powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
@@ -465,8 +473,8 @@ createDevices() {
     devices.set('d3Stove', new Device({
                                     key:'d3Stove', 
                                     scene: this,
-                                    x: basePositionsSmall['stove']['x']+offsets['3']['x'], 
-                                    y: basePositionsSmall['stove']['y']+offsets['3']['y'], 
+                                    x: basePositionsSmall['stove']['x']+this.offsets['3']['x'], 
+                                    y: basePositionsSmall['stove']['y']+this.offsets['3']['y'], 
                                     apartment: 3, 
                                     texture: 'stove',
                                     powerConsumption: 2.0/this.tucf, //kWh (per time unit)
@@ -480,8 +488,8 @@ createDevices() {
     devices.set('d3Fridge', new Device({
                                     key:'d3Fridge', 
                                     scene: this,
-                                    x: basePositionsSmall['fridge']['x']+offsets['3']['x'], 
-                                    y: basePositionsSmall['fridge']['y']+offsets['3']['y'], 
+                                    x: basePositionsSmall['fridge']['x']+this.offsets['3']['x'], 
+                                    y: basePositionsSmall['fridge']['y']+this.offsets['3']['y'], 
                                     apartment: 3, 
                                     texture: 'fridge',
                                     powerConsumption: 0.042/this.tucf, // kHw (time unit), = 1kWh / day
