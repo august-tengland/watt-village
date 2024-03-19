@@ -50,17 +50,20 @@ export class IndividualEnergyHandler {
       for(var [key, device] of this.devices) {
         this.currentConsumption += device.getCurrentConsumption();
       }
-      console.log("current consumption for apartment ",this.apartment, ": ", this.currentConsumption);
+      //console.log("current consumption for apartment ",this.apartment, ": ", this.currentConsumption);
      }
   
      updateTotalCost(params) { // params: {costThisTimeUnit, sellingThisTimeUnit, savingsThisTimeUnit}
-      console.log("Cost for apartment", this.apartment, "this time unit:",params['costThisTimeUnit']);
-      console.log("Selling for apartment", this.apartment, "this time unit:",params['sellingThisTimeUnit']);
-      console.log("Savings for apartment", this.apartment, "this time unit:",params['savingsThisTimeUnit']);
+      //console.log("Cost for apartment", this.apartment, "this time unit:",params['costThisTimeUnit']);
+      //console.log("Selling for apartment", this.apartment, "this time unit:",params['sellingThisTimeUnit']);
+      //console.log("Savings for apartment", this.apartment, "this time unit:",params['savingsThisTimeUnit']);
 
       this.individualCost += params['costThisTimeUnit'];
       this.individualSelling += params['sellingThisTimeUnit'];
       this.individualSavings += params['savingsThisTimeUnit'];
+      if(this.apartment == 1) {
+        this.scene.events.emit('individualStatsChanged', this.individualCost, this.individualSelling, this.individualSavings);
+      }
      }
 
    }

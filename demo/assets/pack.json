@@ -13,6 +13,26 @@
         },
         {
           "type": "image",
+          "key": "HUDIndividualStats",
+          "url": "./assets/HUD/HUDIndividualStats.png"
+        },
+        {
+          "type": "image",
+          "key": "HUDCommunityStats",
+          "url": "./assets/HUD/HUDCommunityStats.png"
+        },
+        {
+          "type": "image",
+          "key": "HUDEnergyPrices",
+          "url": "./assets/HUD/HUDEnergyPrices.png"
+        },
+        {
+          "type": "image",
+          "key": "HUDSolarProduction",
+          "url": "./assets/HUD/HUDSolarProduction.png"
+        },
+        {
+          "type": "image",
           "key": "house",
           "url": "./assets/images/house.png"
         },

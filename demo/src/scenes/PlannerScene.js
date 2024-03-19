@@ -61,9 +61,9 @@ export default class PlannerScene extends Phaser.Scene {
 
 
       if (this.startKey.isDown) {
-        //this.scene.start('HUDScene');
+        this.scene.start('HUDScene');
         this.scene.start('SimulationScene');
-        //this.scene.bringToTop('HUDScene');
+        this.scene.bringToTop('HUDScene');
       }
     }
   

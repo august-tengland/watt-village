@@ -22,20 +22,11 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.gameOver = false;
         this.scoreText = undefined;
-    }
-    
-    preload () {
-        // Assets preloaded in BootScene
-    }
 
-    create () {
-        // *****************************************************************
-        // TIMER
-        // *****************************************************************
-        
         // LENGTH OF A DAY, i.e. simulation time
         // NOTE: Should always be a multiple of 24
-        this.dayLength = 96; //24*4, 4 units per hour
+        this.dayLength = 24*6; // 6 units per hour
+        this.registry.values.dayLength = this.dayLength;
          
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
@@ -45,13 +36,21 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.currentDay = "day1";
 
-        // Used to change the absolute positions of most things in the scene
-        this.offsets = this.setOffsets();
-
         // What is the optimal effect of the solar panels installed on the roof?
         this.solarPanelEffect0 = 12; //kWh (per hour)
         this.solarPanelEffect1 = 15; //kWh (per hour)
+    }
+    
+    preload () {
+        // Assets preloaded in BootScene
+    }
 
+    create () {
+        // Used to change the absolute positions of most things in the scene
+        this.offsets = this.setOffsets();
+        // *****************************************************************
+        // TIMER
+        // *****************************************************************
         
         this.timer = this.time.addEvent({
             delay: 1000/this.playbackSpeed,
@@ -90,12 +89,6 @@ export default class SimulationScene extends Phaser.Scene {
         
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
-        
-        //  The individual cost
-        this.individualCostText = this.add.text(16, 16, `Individual Cost: ${this.registry.get("individualCost")}`, { fontSize: '32px', fill: '#000' });
-
-        // The time 
-        this.timeText = this.add.text(this.scale.width-200, 16, `Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
 
         // ---- GAME & LOGIC OBJECTS -----------------------------------------
 
@@ -169,12 +162,9 @@ export default class SimulationScene extends Phaser.Scene {
 
     updateTime() {
         this.registry.values.time += 1;
-        //console.log(this.registry.get("time"));
+        this.events.emit('timeChanged',this.registry.values.time);
         this.checkSchedules();
         this.updateHandlers();
-        this.timeText.setText(`Time: ${this.registry.get("time")}`, { fontSize: '32px', fill: '#000' });
-        this.individualCostText.setText(`Individual Cost: ${this.registry.get("individualCost")}`, { fontSize: '32px', fill: '#000' });
-
     }
 
     checkSchedules() {

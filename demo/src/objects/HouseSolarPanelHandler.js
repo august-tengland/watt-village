@@ -69,8 +69,8 @@ export class HouseSolarPanelHandler {
             }
           }
         }
-        console.log(solarScheduleData);
-        console.log(solarScheduleArray);
+        //console.log(solarScheduleData);
+        //console.log(solarScheduleArray);
         return solarScheduleArray;
      }
    }

@@ -57,6 +57,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
 
     getCurrentConsumption() {
       return (this.isActive||this.isIdleConsuming) ? this.powerConsumption : 0;
+      // Check how long the device has been active, maybe something with system time
     }
 
  }

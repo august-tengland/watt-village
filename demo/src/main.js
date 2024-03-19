@@ -1,6 +1,7 @@
 import Boot from "./scenes/BootScene.js";
 import Menu from "./scenes/MenuScene.js";
 import Planner from "./scenes/PlannerScene.js";
+import HUD from "./scenes/HUDScene.js";
 import Simulation from "./scenes/SimulationScene.js";
 
 var config = {
@@ -19,7 +20,7 @@ var config = {
             debug: false
         }
     },
-    scene: [Boot,Menu,Planner,Simulation]
+    scene: [Boot,Menu,Planner,HUD,Simulation]
 };
 
 var game = new Phaser.Game(config);

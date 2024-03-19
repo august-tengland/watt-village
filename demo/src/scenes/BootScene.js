@@ -24,10 +24,12 @@ export default class BootScene extends Phaser.Scene {
                 this,
                 this.cache.json.get('animationsJSON')
             );
-            console.log("test");
             progress.destroy();
             this.initGlobalDataManager();
+            this.scene.start('HUDScene');
             this.scene.start('SimulationScene');
+            this.scene.bringToTop('HUDScene');
+            //this.scene.start('PlannerScene');
         });
 
         //  load all assets
@@ -36,7 +38,7 @@ export default class BootScene extends Phaser.Scene {
 
     initGlobalDataManager() {
         this.registry.set("time", 0);
-        this.registry.set("individualCost", 0);
+        this.registry.set("dayLength", 0);
     }
 }
 

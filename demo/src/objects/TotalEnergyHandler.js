@@ -7,7 +7,7 @@ export class TotalEnergyHandler {
   devices;
   time;
   dayLength;
-  solarPanelEffect;
+  totalSolarPanelEffect;
   currentDayKey;
   // pointers
   individualEnergyHandlers;
@@ -41,6 +41,8 @@ export class TotalEnergyHandler {
     this.individualEnergyHandlers = params.individualEnergyHandlers;
     this.houseSolarPanelHandlers = params.houseSolarPanelHandlers;
 
+    this.totalSolarPanelEffect = this.getTotalSolarPanelEffect();
+
     this.currentTotalConsumption = 0;
     this.currentTotalSolarProduction = 0;
     this.currentConsumptionPerHouse = [0,0];
@@ -60,6 +62,16 @@ export class TotalEnergyHandler {
     this.updateTotalCost();
   }
 
+  getTotalSolarPanelEffect() {
+
+    var totalSolarPanelEffect = 0;
+
+    for(var [key, hsph] of this.houseSolarPanelHandlers) {
+      totalSolarPanelEffect += hsph.solarPanelEffect;
+    }
+    return totalSolarPanelEffect;
+  }
+
   updateCurrentConsumption() {
 
     this.currentConsumptionPerHouse = [0,0];
@@ -75,10 +87,11 @@ export class TotalEnergyHandler {
     // Calculate the fraction in which each house is responsible 
     for(var [key, ieh] of this.individualEnergyHandlers) {
       this.currentConsumptionFractions[ieh.apartment - 1] = ieh.currentConsumption / this.currentTotalConsumption;
-      console.log("fraction of consumption by apartment", ieh.apartment, ": ", this.currentConsumptionFractions[ieh.apartment - 1]);
+      //console.log("fraction of consumption by apartment", ieh.apartment, ": ", this.currentConsumptionFractions[ieh.apartment - 1]);
     }
     
-    console.log("total current consumption: ", this.currentTotalConsumption);
+    //console.log("total current consumption: ", this.currentTotalConsumption);
+    this.scene.events.emit('currentConsumptionChanged', this.currentTotalConsumption);
    }
 
    updateCurrentSolarProduction() {
@@ -89,28 +102,34 @@ export class TotalEnergyHandler {
       this.currentSolarProductionPerHouse[hsph.house] = hsph.currentSolarProduction;
       this.currentTotalSolarProduction += hsph.currentSolarProduction;
     }
-    console.log("current production for house 0: ", this.currentSolarProductionPerHouse[0]);
-    console.log("current production for house 1: ", this.currentSolarProductionPerHouse[1]);
-    console.log("total production: ", this.currentTotalSolarProduction);
+    //console.log("current production for house 0: ", this.currentSolarProductionPerHouse[0]);
+    //console.log("current production for house 1: ", this.currentSolarProductionPerHouse[1]);
+    //console.log("total production: ", this.currentTotalSolarProduction);
+    this.scene.events.emit('currentProductionChanged', this.currentTotalSolarProduction, this.totalSolarPanelEffect);
    }
 
 
    updateTotalCost() {
     
     var energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
-    console.log("current energy difference: ", energyDiff);
+    //console.log("current energy difference: ", energyDiff);
     // The cost that would have been incurred if no solar production was present
     var potentialCostThisTimeUnit = this.currentTotalConsumption * this.energyPricesPerTimeUnit['buy'][this.time]
 
     if (energyDiff >= 0) { // If consuming more than producing
-      console.log("current energy price (buy):", this.energyPricesPerTimeUnit['buy'][this.time]);
+      //console.log("current energy price (buy):", this.energyPricesPerTimeUnit['buy'][this.time]);
       
       // The cost that was actually incurred, including savings from solar production
       var actualCostThisTimeUnit = energyDiff * this.energyPricesPerTimeUnit['buy'][this.time];      
-      console.log("Total cost for this time unit:", actualCostThisTimeUnit);
+      //console.log("Total cost for this time unit:", actualCostThisTimeUnit);
 
-      this.actualCostThisTimeUnit += actualCostThisTimeUnit;
-      
+      this.totalCost += actualCostThisTimeUnit;
+      console.log("actual:", actualCostThisTimeUnit);
+      console.log("potential:", potentialCostThisTimeUnit);
+      console.log("diff:", potentialCostThisTimeUnit - actualCostThisTimeUnit);
+      console.log("savings:", this.totalSavings)
+      this.totalSavings += (potentialCostThisTimeUnit - actualCostThisTimeUnit);
+
       for(var [key, ieh] of this.individualEnergyHandlers) {
         var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.currentConsumptionFractions[ieh.apartment-1];
         var actualIndividualCostThisTimeUnit = actualCostThisTimeUnit*this.currentConsumptionFractions[ieh.apartment-1];
@@ -121,11 +140,14 @@ export class TotalEnergyHandler {
       }
 
     } else { // If producing more than consuming
-      console.log("current energy price (sell):", this.energyPricesPerTimeUnit['sell'][this.time]);
+      //console.log("current energy price (sell):", this.energyPricesPerTimeUnit['sell'][this.time]);
 
       // The money that was made selling excess electricity
       var SellingThisTimeUnit = -1 * energyDiff * this.energyPricesPerTimeUnit['sell'][this.time];      
-      console.log("Total selling for this time unit:", SellingThisTimeUnit);
+      //console.log("Total selling for this time unit:", SellingThisTimeUnit);
+
+      this.totalSelling += SellingThisTimeUnit;
+      this.totalSavings += (potentialCostThisTimeUnit + SellingThisTimeUnit);
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
         var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.currentConsumptionFractions[ieh.apartment-1];
@@ -136,6 +158,7 @@ export class TotalEnergyHandler {
                         'savingsThisTimeUnit': potentialIndividualCostThisTimeUnit + individualSellingThisTimeUnit});
             }
     }
+    this.scene.events.emit('totalStatsChanged', this.totalCost, this.totalSelling, this.totalSavings);
    }
 
    generateEnergyPrices(currentDayKey) {
@@ -196,8 +219,8 @@ export class TotalEnergyHandler {
           }
         }
       }
-      console.log(solarScheduleData);
-      console.log(solarScheduleArray);
+      //console.log(solarScheduleData);
+      //console.log(solarScheduleArray);
       return solarScheduleArray;
    }
  }
