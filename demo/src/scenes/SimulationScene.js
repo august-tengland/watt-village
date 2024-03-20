@@ -445,19 +445,19 @@ createDevices() {
                                     repeatAnimation: false}));
 
     devices.set('d1WashingMachine', new Device({
-        key:'d1WashingMachine', 
-        scene: this,
-        x: basePositionsSmall['washingMachine']['x']+this.offsets['1']['x'], 
-        y: basePositionsSmall['washingMachine']['y']+this.offsets['1']['y'], 
-        apartment: 1, 
-        texture: 'stove',
-        powerConsumption: 2.0/this.tucf, // kHw per hour
-        isIdleConsuming: false,
-        animationKeys: {
-            idle: 'stoveIdle',
-            active: 'stoveActive'
-        },
-        repeatAnimation: false}));
+                                    key:'d1WashingMachine', 
+                                    scene: this,
+                                    x: basePositionsSmall['washingMachine']['x']+this.offsets['1']['x'], 
+                                    y: basePositionsSmall['washingMachine']['y']+this.offsets['1']['y'], 
+                                    apartment: 1, 
+                                    texture: 'stove',
+                                    powerConsumption: 2.0/this.tucf, // kHw per hour
+                                    isIdleConsuming: false,
+                                    animationKeys: {
+                                        idle: 'stoveIdle',
+                                        active: 'stoveActive'
+                                    },
+                                    repeatAnimation: true}));
 
     // --- APARTMENT 2 --------------------------------
 
@@ -540,7 +540,7 @@ createDevices() {
 
         activities.set("a1Fridge", new Activity({
             key: "a1Fridge",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l114').key,
             minDuration: 3000,
             startDuration: 300,
@@ -549,7 +549,7 @@ createDevices() {
 
         activities.set("a1Stove", new Activity({
             key: "a1Stove",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l113').key,
             minDuration: 3000,
             startDuration: 300,
@@ -558,18 +558,27 @@ createDevices() {
 
         activities.set("a1DinnerTable", new Activity({
             key: "a1DinnerTable",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l111').key,
             minDuration: 3000,
             startDuration: 300,
             exitDuration: 300,
             device: null}));
 
+        activities.set("a1WashingMachine", new Activity({
+            key: "a1WashingMachine",
+            isIdleActivity: true,
+            locationKey: this.locations.get('l102').key,
+            minDuration: 3000,
+            startDuration: 300,
+            exitDuration: 300,
+            device: this.devices.get("d1WashingMachine")}));
+
         // APARTMENT 2 
 
         activities.set("a2Fridge", new Activity({
             key: "a2Fridge",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l210').key,
             minDuration: 3000,
             startDuration: 300,
@@ -578,7 +587,7 @@ createDevices() {
 
         activities.set("a2Stove", new Activity({
             key: "a2Stove",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l211').key,
             minDuration: 3000,
             startDuration: 300,
@@ -587,7 +596,7 @@ createDevices() {
 
         activities.set("a2DinnerTable", new Activity({
             key: "a2DinnerTable",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l212').key,
             minDuration: 3000,
             startDuration: 300,
@@ -598,7 +607,7 @@ createDevices() {
 
         activities.set("a3Fridge", new Activity({
             key: "a3Fridge",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l314').key,
             minDuration: 3000,
             startDuration: 300,
@@ -607,7 +616,7 @@ createDevices() {
 
         activities.set("a3Stove", new Activity({
             key: "a3Stove",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l313').key,
             minDuration: 3000,
             startDuration: 300,
@@ -616,7 +625,7 @@ createDevices() {
 
         activities.set("a3DinnerTable", new Activity({
             key: "a3DinnerTable",
-            isIdle: false,
+            isIdleActivity: false,
             locationKey: this.locations.get('l311').key,
             minDuration: 3000,
             startDuration: 300,
@@ -697,6 +706,7 @@ createDevices() {
         schedule1.set(3, this.activities.get('a1Fridge'));
         schedule1.set(8, this.activities.get('a1Stove'));
         schedule1.set(12, this.activities.get('a1DinnerTable'));
+        schedule1.set(4, this.activities.get('a1WashingMachine'));
         this.people.get("p1").setSchedule(schedule1);
 
         // APARTMENT 2 

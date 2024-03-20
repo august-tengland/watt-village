@@ -81,17 +81,25 @@ export class Person extends Phaser.GameObjects.Sprite {
   // **************************************************************************************
 
   doActivity(activity) {
-    if(activity.isIdle) this.doIdleActivity(activity);
-    else this.doPrecenseActivity(activity);
+    if(activity.isIdleActivity) this.doIdleActivity(activity);
+    else this.doPresenceActivity(activity);
   }
 
-  doIdleActivity() {
-    console.log("idle, not implemented yet");
+  doIdleActivity(activity) {
+    console.log(activity);
+    activity.startActivity();
+    setTimeout(() => {
+      console.log(activity.minDuration);
+      this.stopIdleActivity(activity);
+    },activity.minDuration);
+  }
+  stopIdleActivity(activity) {
+    activity.stopActivity();
   }
 
-   doPrecenseActivity(activity) {
+   doPresenceActivity(activity) {
     if (this.currentActivity != null) {
-      var result = this.stopPrecenseActivity();
+      var result = this.stopPresenceActivity();
       setTimeout(() => {
         this.comingActivity = activity; 
         //console.log("walking to coming activity: " , this.comingActivity);
@@ -103,14 +111,14 @@ export class Person extends Phaser.GameObjects.Sprite {
     };
   }
 
-  startPrecenseActivity() {
+  startPresenceActivity() {
     this.currentActivity = this.comingActivity;
     this.comingActivity = null;
     this.currentActivity.startActivity();
     //console.log("doing current activity: " , this.currentActivity); 
   }
 
-  stopPrecenseActivity() {
+  stopPresenceActivity() {
     //console.log("finishing current activity: " , this.currentActivity); 
     this.currentActivity.stopActivity();
     // this.currentActivity.finish() (might take some time)
@@ -128,7 +136,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   // ASSUMPTION: Characters only walk to locations to complete an action that is there
   // i.e: If a character has reached a position, they are suppose to do their coming activity
   reachedPosition() {
-    this.startPrecenseActivity();
+    this.startPresenceActivity();
   }
   
   walkToLocation(endLocationKey) {

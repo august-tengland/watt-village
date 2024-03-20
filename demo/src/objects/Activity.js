@@ -4,7 +4,7 @@ export class Activity {
 
     key; 
     isActive;
-    isIdle; // Does this activity require character precense or not?
+    isIdleActivity; // Does this activity require character precense or not?
     locationKey; // Each activity can only take place at one location
     minDuration;
     startDuration; // If presence activity, how long does the character need to remain for the process to start?
@@ -16,13 +16,13 @@ export class Activity {
      // variables
      this.isActive = false;
      this.key = params.key;
-     this.isIdle = params.isIdle;
+     this.isIdleActivity = params.isIdleActivity;
      this.locationKey = params.locationKey;
-     this.minDuration = params.minDuration;
+     this.minDuration = typeof params.minDuration !== "undefined" ? params.minDuration : 0;
      this.exitDuration = typeof params.exitDuration !== "undefined" ? params.exitDuration : 0;
      this.startDuration = typeof params.startDuration !== "undefined" ? params.startDuration : 0;
      this.device = typeof params.device !== "undefined" ? params.device : null;
-     //this.playbackSpeed = 1;
+     this.playbackSpeed = 1;
    }
 
    updatePlaybackSpeed(speed) {
@@ -34,7 +34,7 @@ export class Activity {
 
    startActivity(){
     this.isActive = true;
-    //console.log("Activity started: ", this.key);
+    console.log("Activity started: ", this.key);
     if(this.device != null) {
       this.device.startDevice(this.startDuration);
     }
@@ -42,7 +42,7 @@ export class Activity {
 
    stopActivity(){
     this.isActive = false;
-    //console.log("Activity ended: ", this.key);
+    console.log("Activity ended: ", this.key);
     if(this.device != null) {
       this.device.stopDevice();
     }

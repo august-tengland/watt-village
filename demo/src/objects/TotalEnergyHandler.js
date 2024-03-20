@@ -126,10 +126,10 @@ export class TotalEnergyHandler {
       //console.log("Total cost for this time unit:", actualCostThisTimeUnit);
 
       this.totalCost += actualCostThisTimeUnit;
-      console.log("actual:", actualCostThisTimeUnit);
-      console.log("potential:", potentialCostThisTimeUnit);
-      console.log("diff:", potentialCostThisTimeUnit - actualCostThisTimeUnit);
-      console.log("savings:", this.totalSavings)
+      //console.log("actual:", actualCostThisTimeUnit);
+      //console.log("potential:", potentialCostThisTimeUnit);
+      //console.log("diff:", potentialCostThisTimeUnit - actualCostThisTimeUnit);
+      //console.log("savings:", this.totalSavings)
       this.totalSavings += (potentialCostThisTimeUnit - actualCostThisTimeUnit);
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
