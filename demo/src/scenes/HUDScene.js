@@ -29,36 +29,54 @@ export default class HUDScene extends Phaser.Scene {
     Phaser.Display.Align.To.RightCenter(this.HUDSolarProduction,this.HUDEnergyPrices, 20);
 
     this.labelTextElements = new Map([
-        ['time', this.addText(1800, 100, 'time:')],
+        ['time', this.addText(1800, 100, 'Time',24)],
         ['currentIndividualStats', this.addText(0, 0, 'Individual\nStats',18)],
         ['currentTotalStats', this.addText(0, 0, 'Community\nStats',18)],
-        ['currentConsumption', this.addText(0, 0, 'Energy\nPrices',18)],
+        ['currentEnergyPrices', this.addText(0, 0, 'Energy\nPrices',18)],
         ['currentSolarProduction', this.addText(0, 0, 'Solar\nProduction',18)]
     ]);
 
     Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentIndividualStats'),this.HUDIndividualStats, -80);
     Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentTotalStats'),this.HUDCommunityStats, -95);
-    Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentConsumption'),this.HUDEnergyPrices, -70);
+    Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentEnergyPrices'),this.HUDEnergyPrices, -70);
     Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentSolarProduction'),this.HUDSolarProduction, -60);
+    
+    Phaser.Display.Align.To.RightTop(this.labelTextElements.get('time'),this.HUDSolarProduction, 32);
 
 
     this.valueTextElements = new Map([
-        ['time', this.addText(50, 450, 'time: 0')],
-        ['currentIndividualStats', this.addText(0, 200, 'current individual stats: 0')],
-        ['currentTotalStats', this.addText(0, 200, 'current total stats: 0')],
-        ['currentSolarProduction', this.addText(0, 200, 'current solar production: 0')],
-        ['currentConsumption', this.addText(0, 200, 'current consumption: 0')],
+        ['time', this.addText(50, 450, '00:00',24)],
+        ['currentIndividualStatsBuy', this.addText(0, 200, '0.00',20)],
+        ['currentIndividualStatsSell', this.addText(0, 200, '0.00',20)],
+        ['currentIndividualStatsSave', this.addText(0, 200, '0.00',20)],
+        ['currentTotalStatsBuy', this.addText(0, 200, '0.00',20)],
+        ['currentTotalStatsSell', this.addText(0, 200, '0.00',20)],
+        ['currentTotalStatsSave', this.addText(0, 200, '0.00',20)],
+        ['currentEnergyPrices', this.addText(0, 200, '0.00/0.00',20)],
+        ['currentSolarProduction', this.addText(0, 200, '0.00/0.00',20)],
     ]);
 
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentIndividualStatsBuy'),this.HUDIndividualStats, -230);
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentIndividualStatsSell'),this.HUDIndividualStats, -328);
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentIndividualStatsSave'),this.HUDIndividualStats, -436);
+    
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentTotalStatsBuy'),this.HUDCommunityStats, -242);
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentTotalStatsSell'),this.HUDCommunityStats, -340);
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentTotalStatsSave'),this.HUDCommunityStats, -448);
+    
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentEnergyPrices'),this.HUDEnergyPrices, -180);
+    
+    Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentSolarProduction'),this.HUDSolarProduction, -180);
+    
+    Phaser.Display.Align.To.RightBottom(this.valueTextElements.get('time'),this.HUDSolarProduction, 30);
 
-  
       // create events
       const simulation = this.scene.get('SimulationScene');
       simulation.events.on('timeChanged', this.updateTime, this);
       simulation.events.on('individualStatsChanged', this.updateIndividualStats, this);
       simulation.events.on('totalStatsChanged', this.updateTotalStats, this);
       simulation.events.on('currentProductionChanged', this.updateCurrentSolarProduction, this);
-      simulation.events.on('currentConsumptionChanged', this.updateCurrentConsumption, this);
+      simulation.events.on('currentEnergyPricesChanged', this.updateEnergyPrices, this);
 
     }
   
@@ -68,21 +86,26 @@ export default class HUDScene extends Phaser.Scene {
   
     updateTime(time) {
       var digitalTime = this.convertTimeUnitsToDigital(time);
-      this.valueTextElements.get('time').setText(`time: ${digitalTime['hour']}:${digitalTime['minute']}`);
+      this.valueTextElements.get('time').setText(`${digitalTime['hour']}:${digitalTime['minute']}`);
     }
     updateIndividualStats(individualCost, individualSelling, individualSavings){
-        this.valueTextElements.get('currentIndividualStats').setText(`individual stats: buy:${individualCost.toFixed(2)} sell:${individualSelling.toFixed(2)} save:${individualSavings.toFixed(2)}`);
+        this.valueTextElements.get('currentIndividualStatsBuy').setText(`${individualCost.toFixed(2)}`);
+        this.valueTextElements.get('currentIndividualStatsSell').setText(`${individualSelling.toFixed(2)}`);
+        this.valueTextElements.get('currentIndividualStatsSave').setText(`${individualSavings.toFixed(2)}`);
+
     }
     updateTotalStats(totalCost, totalSelling, totalSavings){
-        this.valueTextElements.get('currentTotalStats').setText(`total stats: buy:${totalCost.toFixed(2)} sell:${totalSelling.toFixed(2)} save:${totalSavings.toFixed(2)}`);
+      this.valueTextElements.get('currentTotalStatsBuy').setText(`${totalCost.toFixed(2)}`);
+      this.valueTextElements.get('currentTotalStatsSell').setText(`${totalSelling.toFixed(2)}`);
+      this.valueTextElements.get('currentTotalStatsSave').setText(`${totalSavings.toFixed(2)}`);
     }
     updateCurrentSolarProduction(currentProduction, maxCapacity) {
         // Note: Present data as production in kW/h, not kW/timeUnit
-      this.valueTextElements.get('currentSolarProduction').setText(`current solar production: ${currentProduction.toFixed(2)}/${maxCapacity.toFixed(2)}`);
+      this.valueTextElements.get('currentSolarProduction').setText(`${currentProduction.toFixed(2)}/${maxCapacity.toFixed(2)}`);
     }
-    updateCurrentConsumption(currentConsumption) {
+    updateEnergyPrices(currentBuyingPrice, currentSellingPrice) {
         // Note: Present data as production in kW/h, not kW/timeUnit
-      this.valueTextElements.get('currentConsumption').setText(`current consumption: ${currentConsumption.toFixed(2)}`);
+      this.valueTextElements.get('currentEnergyPrices').setText(`${currentBuyingPrice.toFixed(2)}/${currentSellingPrice.toFixed(2)}`);
     }
 
     convertTimeUnitsToDigital(time){

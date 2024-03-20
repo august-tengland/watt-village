@@ -74,18 +74,24 @@ export default class SimulationScene extends Phaser.Scene {
         this.platforms = this.physics.add.staticGroup();
     
         //  Here we create the ground.
-        this.ground = this.platforms.create(0, 0, 'ground').setScale(5,4).refreshBody();
+        this.ground = this.platforms.create(0, 0, 'ground').setScale(7).refreshBody();
         Phaser.Display.Align.In.BottomCenter(this.ground,this.gamezone);
     
-        //  A background for the house
-        this.houseBackdrop = this.add.image(0, 0, 'houseBackdrop');
-        this.house = this.add.image(0, 0, 'house');
-        this.house.setDepth(1);
+        //  Backdrop for the houses
+        this.houseSmallBackdrop = this.add.image(0, 0, 'houseSmallBackdrop');
+        this.houseBigBackdrop = this.add.image(0, 0, 'houseBigBackdrop');
+        //  Foreground of the houses
+        this.houseSmall = this.add.image(0, 0, 'houseSmall');
+        this.houseBig = this.add.image(0, 0, 'houseBig');
+
+        this.houseSmall.setDepth(1);
+        this.houseBig.setDepth(1);
         
-        //  Center the background in the game
-        Phaser.Display.Align.To.TopCenter(this.houseBackdrop,this.ground,0,this.ground.height*1.5);
-        Phaser.Display.Align.To.TopCenter(this.house,this.ground,0,this.ground.height*1.5);
-       
+        Phaser.Display.Align.To.TopCenter(this.houseSmallBackdrop,this.ground,-280,this.ground.height*2.5);
+        Phaser.Display.Align.To.TopCenter(this.houseBigBackdrop,this.ground,380,this.ground.height*2.5);
+        
+        Phaser.Display.Align.In.Center(this.houseSmall,this.houseSmallBackdrop);
+        Phaser.Display.Align.In.Center(this.houseBig,this.houseBigBackdrop);
         
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -97,9 +103,8 @@ export default class SimulationScene extends Phaser.Scene {
             runChildUpdate: true
         });
 
-        this.solarPanel = this.add.image(100, 100, 'solarPanel');
-        Phaser.Display.Align.To.TopCenter(this.solarPanel,this.houseBackdrop,0,0);
-
+        // Create solar panels (that don't do anything)
+        this.solarPanels = this.createSolarPanels();
 
         // create locations, (x,y) points specifying certain locations in/around the apartment
         this.locations = this.createLocations();
@@ -148,12 +153,12 @@ export default class SimulationScene extends Phaser.Scene {
 
     setOffsets() {
 
-        var baseOffset = {"x": 192, "y": 216 };
+        var baseOffset = {"x": 254, "y": 166 };
 
         var offsets = {
             "1": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
-            "2": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
-            "3": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 273 },
+            "2": { "x": baseOffset['x'] + 84, "y": baseOffset['y'] + 0 },
+            "3": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 277 },
             "4": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 100 }
         }
         
@@ -205,6 +210,24 @@ export default class SimulationScene extends Phaser.Scene {
 // ------- CREATION METHODS  -------------------------------------------
 // *********************************************************************
  
+
+createSolarPanels() {
+    var solarPanels = new Map([
+        ['small1', this.add.image(0, 0, 'solarPanel')],
+        ['small2', this.add.image(0, 0, 'solarPanel')],
+        ['big1', this.add.image(0, 0, 'solarPanel')],
+        ['big2', this.add.image(0, 0, 'solarPanel')],
+        ['big3', this.add.image(0, 0, 'solarPanel')],
+    ]);
+    Phaser.Display.Align.To.TopLeft(solarPanels.get('small1'),this.houseSmallBackdrop,0,0);
+    Phaser.Display.Align.To.TopRight(solarPanels.get('small2'),this.houseSmallBackdrop,0,0);
+    Phaser.Display.Align.To.TopLeft(solarPanels.get('big1'),this.houseBigBackdrop,0,0);
+    Phaser.Display.Align.To.TopCenter(solarPanels.get('big2'),this.houseBigBackdrop,0,0);
+    Phaser.Display.Align.To.TopRight(solarPanels.get('big3'),this.houseBigBackdrop,0,0);
+
+    return solarPanels;
+
+}
 
 // ----- CREATE LOCATIONS -----------------------------------------------
 // Method for creating all locations and binding neighbouring ones
@@ -378,20 +401,15 @@ createDevices() {
     const devices = new Map();
 
     var basePositionsSmall = {
-        "stove": { "x": 504, "y": 480 },
-        "fridge": { "x": 596, "y": 464 }
+        "stove": { "x": 502, "y": 480 },
+        "fridge": { "x": 596, "y": 464 },
+        "washingMachine": { "x": 520, "y": 350 }
     }
 
     var basePositionsBig = {
         "stove": { "x": 885, "y": 480 },
-        "fridge": { "x": 736, "y": 465 }
-    }
-
-    var offsets = {
-        "1": { "x": 0, "y": 0 },
-        "2": { "x": 0, "y": 0 },
-        "3": { "x": 0, "y": 273 },
-        "4": { "x": 0, "y": 100 }
+        "fridge": { "x": 736, "y": 465 },
+        "washingMachine": { "x": 865, "y": 350 }
     }
 
     // --- APARTMENT 1 --------------------------------
@@ -425,6 +443,21 @@ createDevices() {
                                         active: 'fridgeActive'
                                     },
                                     repeatAnimation: false}));
+
+    devices.set('d1WashingMachine', new Device({
+        key:'d1WashingMachine', 
+        scene: this,
+        x: basePositionsSmall['washingMachine']['x']+this.offsets['1']['x'], 
+        y: basePositionsSmall['washingMachine']['y']+this.offsets['1']['y'], 
+        apartment: 1, 
+        texture: 'stove',
+        powerConsumption: 2.0/this.tucf, // kHw per hour
+        isIdleConsuming: false,
+        animationKeys: {
+            idle: 'stoveIdle',
+            active: 'stoveActive'
+        },
+        repeatAnimation: false}));
 
     // --- APARTMENT 2 --------------------------------
 

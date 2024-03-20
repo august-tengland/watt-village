@@ -110,7 +110,9 @@ export class TotalEnergyHandler {
 
 
    updateTotalCost() {
-    
+
+    this.scene.events.emit('currentEnergyPricesChanged', this.energyPricesPerTimeUnit['buy'][this.time], this.energyPricesPerTimeUnit['sell'][this.time]);
+
     var energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
     //console.log("current energy difference: ", energyDiff);
     // The cost that would have been incurred if no solar production was present

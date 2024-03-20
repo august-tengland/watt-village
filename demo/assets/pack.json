@@ -33,13 +33,23 @@
         },
         {
           "type": "image",
-          "key": "house",
-          "url": "./assets/images/house.png"
+          "key": "houseSmall",
+          "url": "./assets/images/houseSmall.png"
         },
         {
           "type": "image",
-          "key": "houseBackdrop",
-          "url": "./assets/images/houseBackdrop.png"
+          "key": "houseBig",
+          "url": "./assets/images/houseBig.png"
+        },
+        {
+          "type": "image",
+          "key": "houseSmallBackdrop",
+          "url": "./assets/images/houseSmallBackdrop.png"
+        },
+        {
+          "type": "image",
+          "key": "houseBigBackdrop",
+          "url": "./assets/images/houseBigBackdrop.png"
         },
         {
           "type": "image",
