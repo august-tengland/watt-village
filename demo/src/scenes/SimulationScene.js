@@ -6,6 +6,7 @@ import { Device } from '../objects/Device.js';
 import { TotalEnergyHandler } from '../objects/TotalEnergyHandler.js';
 import { IndividualEnergyHandler } from '../objects/IndividualEnergyHandler.js';
 import { HouseSolarPanelHandler } from '../objects/HouseSolarPanelHandler.js';
+import { ScheduleHandler } from '../objects/scheduleHandler.js';
 
 
 export default class SimulationScene extends Phaser.Scene {
@@ -39,13 +40,12 @@ export default class SimulationScene extends Phaser.Scene {
         // What is the optimal effect of the solar panels installed on the roof?
         this.solarPanelEffect0 = 12; //kWh (per hour)
         this.solarPanelEffect1 = 15; //kWh (per hour)
+
+        this.scheduleHandler = new ScheduleHandler({scene: this, currentDayKey: this.currentDay, tucf: this.tucf});
     }
     
-    preload () {
-        // Assets preloaded in BootScene
-    }
-
     create () {
+        console.log("create called");
         // Used to change the absolute positions of most things in the scene
         this.offsets = this.setOffsets();
         // *****************************************************************
@@ -645,6 +645,7 @@ createDevices() {
 
         people.set("p1", new Person({
             key: "p1",
+            isControlledPerson: true,
             scene: this,
             x: this.locations.get('l100').x,
             y: this.locations.get('l100').y,
@@ -678,7 +679,7 @@ createDevices() {
         for(var [key, person] of people) {
             person.setDepth(10);
         }
-
+        
         return people;
     }
 
@@ -700,8 +701,17 @@ createDevices() {
 
     assignSchedules() {
         
+        for (var [key, person] of this.people) {
+            if(person.isControlledPerson) {
+                const schedule = this.scheduleHandler.createControlledSchedule(person.key, {"08": "a1Fridge"});
+                person.setSchedule(schedule);
+            } else {
+                const schedule = this.scheduleHandler.getSchedule(person.key);
+                person.setSchedule(schedule);
+            }
+        };
         // APARTMENT 1 
-
+/*
         const schedule1 = new Map();
         schedule1.set(3, this.activities.get('a1Fridge'));
         schedule1.set(8, this.activities.get('a1Stove'));
@@ -725,7 +735,7 @@ createDevices() {
         //schedule3.set(11, this.activities.get('a3DinnerTable'));
         schedule3.set(4, this.activities.get('a3DinnerTable'));
         this.people.get("p3").setSchedule(schedule3);
-
+*/
         //console.log(this.people.get("p1"));
         //console.log(this.people.get("p3"));
     }

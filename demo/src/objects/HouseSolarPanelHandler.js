@@ -42,13 +42,9 @@ export class HouseSolarPanelHandler {
      }
 
      generateSolarSchedule(currentDayKey) {
-      var solarScheduleData = null;
-      fetch("./src/data/solarSchedule.json")
-        .then((response) => response.json())
-        .then((json) => {
-          solarScheduleData = json[this.currentDayKey];
-          this.solarSchedulePerTimeUnit = this.convertSolarScheduleToArray(solarScheduleData);
-        });
+      const json = this.scene.cache.json.get('solarScheduleJSON');
+      const solarScheduleData = json[currentDayKey];
+      return this.convertSolarScheduleToArray(solarScheduleData);
      }
   
      // Converts the loaded json file to array

@@ -164,13 +164,9 @@ export class TotalEnergyHandler {
    }
 
    generateEnergyPrices(currentDayKey) {
-    var energyPricesData = null;
-    fetch("./src/data/energyPrices.json")
-      .then((response) => response.json())
-      .then((json) => {
-        energyPricesData = json[this.currentDayKey];
-        this.energyPricesPerTimeUnit = this.convertEnergyPricesToArray(energyPricesData);
-      });
+    const json = this.scene.cache.json.get('energyPricesJSON');
+    const energyPricesData = json[currentDayKey];
+    return this.convertEnergyPricesToArray(energyPricesData);
    }
 
    // Converts the loaded json file to array

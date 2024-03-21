@@ -20,6 +20,7 @@ export class Person extends Phaser.GameObjects.Sprite {
 
     // variables
     this.key = params.key;
+    this.isControlledPerson = typeof params.isControlledPerson !== "undefined" ? params.isControlledPerson : false;
     this.currentScene = params.scene;
     this.speed = params.speed;
     this.playbackSpeed = 1;

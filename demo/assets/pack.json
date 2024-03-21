@@ -7,6 +7,21 @@
           "url": "./assets/animations/animations.json"
         },
         {
+          "type": "json",
+          "key": "dailySchedulesJSON",
+          "url": "./assets/data/dailySchedules.json"
+        },
+        {
+          "type": "json",
+          "key": "energyPricesJSON",
+          "url": "./assets/data/energyPrices.json"
+        },
+        {
+          "type": "json",
+          "key": "solarScheduleJSON",
+          "url": "./assets/data/solarSchedule.json"
+        },
+        {
           "type": "html",
           "key": "form",
           "url": "./assets/html/form.html"
