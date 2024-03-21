@@ -87,8 +87,8 @@ export default class SimulationScene extends Phaser.Scene {
         this.houseSmall.setDepth(1);
         this.houseBig.setDepth(1);
         
-        Phaser.Display.Align.To.TopCenter(this.houseSmallBackdrop,this.ground,-280,this.ground.height*2.5);
-        Phaser.Display.Align.To.TopCenter(this.houseBigBackdrop,this.ground,380,this.ground.height*2.5);
+        Phaser.Display.Align.To.TopCenter(this.houseSmallBackdrop,this.ground,-280,this.ground.height*2.3);
+        Phaser.Display.Align.To.TopCenter(this.houseBigBackdrop,this.ground,420,this.ground.height*2.3);
         
         Phaser.Display.Align.In.Center(this.houseSmall,this.houseSmallBackdrop);
         Phaser.Display.Align.In.Center(this.houseBig,this.houseBigBackdrop);
@@ -153,13 +153,13 @@ export default class SimulationScene extends Phaser.Scene {
 
     setOffsets() {
 
-        var baseOffset = {"x": 254, "y": 166 };
+        var baseOffset = {"x": 243, "y": 168 };
 
         var offsets = {
             "1": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
-            "2": { "x": baseOffset['x'] + 84, "y": baseOffset['y'] + 0 },
+            "2": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] + -1 },
             "3": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 277 },
-            "4": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 100 }
+            "4": { "x": baseOffset['x'] + 145, "y": baseOffset['y'] + 277-1 }
         }
         
         return offsets;
@@ -174,9 +174,10 @@ export default class SimulationScene extends Phaser.Scene {
 
     checkSchedules() {
         for (var [key, person] of this.people) {
-            if(person.schedule.has(this.registry.values.time)) {
-                //console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time));
-                person.doActivity(person.schedule.get(this.registry.values.time));
+            console.log("schedule for person", key, ": ", person.schedule);
+            if(person.schedule.has(this.registry.values.time.toString())) {
+                console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
+                person.doActivity(person.schedule.get(this.registry.values.time.toString()));
             }
         }
     }
@@ -239,7 +240,7 @@ createLocations() {
     const locations = new Map();
 
     // Initialize object with x & y coordinates for each position (in a single, small, apartment)
-    var baseValuesSmall = {
+    const baseValuesSmall = {
         "0": {
             "0": { "x": 280, "y": 360 },
             "1": { "x": 375, "y": 360 },
@@ -250,16 +251,17 @@ createLocations() {
             "1": { "x": 390, "y": 480 },
             "2": { "x": 445, "y": 480 },
             "3": { "x": 520, "y": 480 },
-            "4": { "x": 575, "y": 480 }
+            "4": { "x": 575, "y": 480 },
+            "5": { "x": 600, "y": 480 }
         }
     };
 
     // Initialize object with x & y coordinates for each position (in a single, big, apartment)
-    var baseValuesBig = {
+    const baseValuesBig = {
         "0": {
             "0": { "x": 790, "y": 360 },
             "1": { "x": 1161, "y": 360 },
-            "2": { "x": 1250, "y": 360 }
+            "2": { "x": 1250, "y": 360 } 
         },
         "1": {
             "0": { "x": 750, "y": 480 },
@@ -270,116 +272,108 @@ createLocations() {
         }
     };
 
+    for (var apartment = 1; apartment <= 4; apartment++) {
+        const baseValues = apartment % 2 == 0 ? baseValuesBig : baseValuesSmall;  
+        for (const [floor, floorValues] of Object.entries(baseValues)) {
+            for (const [locationEndKey, locationCoordinates] of Object.entries(floorValues)) {
+                var locationKey = "l" + apartment + floor + locationEndKey;
+                //console.log(locationKey);
+                //console.log(locationCoordinates);
+                locations.set(locationKey, new Location({key:locationKey, x: locationCoordinates['x']+this.offsets[apartment]["x"], y: locationCoordinates['y']+this.offsets[apartment]["y"], apartment: apartment, floor: floor}));
+                //console.log(locations.get(locationKey));
+            }       
+        }    
+    }
 
-    locations.set('l100', new Location({key:'l100', x: baseValuesSmall['0']['0']['x']+this.offsets["1"]["x"], y: baseValuesSmall['0']['0']['y']+this.offsets["1"]["y"], apartment: 1, floor: 0}));
-    locations.set('l101', new Location({key:'l101', x: baseValuesSmall['0']['1']['x']+this.offsets["1"]["x"], y: baseValuesSmall['0']['1']['y']+this.offsets["1"]["y"], apartment: 1, floor: 0}));
-    locations.set('l102', new Location({key:'l102', x: baseValuesSmall['0']['2']['x']+this.offsets["1"]["x"], y: baseValuesSmall['0']['2']['y']+this.offsets["1"]["y"], apartment: 1, floor: 0}));
-    locations.set('l110', new Location({key:'l110', x: baseValuesSmall['1']['0']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['0']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l111', new Location({key:'l111', x: baseValuesSmall['1']['1']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['1']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l112', new Location({key:'l112', x: baseValuesSmall['1']['2']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['2']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l113', new Location({key:'l113', x: baseValuesSmall['1']['3']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['3']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
-    locations.set('l114', new Location({key:'l114', x: baseValuesSmall['1']['4']['x']+this.offsets["1"]["x"], y: baseValuesSmall['1']['4']['y']+this.offsets["1"]["y"], apartment: 1, floor: 1}));
+    const neighboursSmall = {
+        "0": {
+            "0": ["01"],
+            "1": ["00","12","02"],
+            "2": ["01"]
+        },
+        "1": {
+            "0": ["11"],
+            "1": ["10","12"],
+            "2": ["11","01","13"],
+            "3": ["12","14"],
+            "4": ["13","15"],
+            "5": ["14"]
+        }
+    };
 
-    locations.set('l200', new Location({key:'l200', x: baseValuesBig['0']['0']['x']+this.offsets["2"]["x"], y: baseValuesBig['0']['0']['y']+this.offsets["2"]["y"], apartment: 2, floor: 0}));
-    locations.set('l201', new Location({key:'l201', x: baseValuesBig['0']['1']['x']+this.offsets["2"]["x"], y: baseValuesBig['0']['1']['y']+this.offsets["2"]["y"], apartment: 2, floor: 0}));
-    locations.set('l202', new Location({key:'l202', x: baseValuesBig['0']['2']['x']+this.offsets["2"]["x"], y: baseValuesBig['0']['2']['y']+this.offsets["2"]["y"], apartment: 2, floor: 0}));
-    locations.set('l210', new Location({key:'l210', x: baseValuesBig['1']['0']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['0']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l211', new Location({key:'l211', x: baseValuesBig['1']['1']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['1']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l212', new Location({key:'l212', x: baseValuesBig['1']['2']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['2']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l213', new Location({key:'l213', x: baseValuesBig['1']['3']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['3']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
-    locations.set('l214', new Location({key:'l214', x: baseValuesBig['1']['4']['x']+this.offsets["2"]["x"], y: baseValuesBig['1']['4']['y']+this.offsets["2"]["y"], apartment: 2, floor: 1}));
+    const neighboursUpDownSmall = {
+        "0": {
+            "0": { "up": null, "down": "01" },
+            "1": { "up": null, "down": "12" },
+            "2": { "up": null, "down": "01" }
+        },
+        "1": {
+            "0": { "up": "11", "down": null },
+            "1": { "up": "12", "down": null },
+            "2": { "up": "01", "down": null },
+            "3": { "up": "12", "down": null },
+            "4": { "up": "13", "down": null },
+            "5": { "up": "14", "down": null }
+        }
+    };
+
+    const neighboursBig = {
+        "0": {
+            "0": ["01"],
+            "1": ["00","12","02"],
+            "2": ["01"]
+        },
+        "1": {
+            "0": ["11"],
+            "1": ["10","12"],
+            "2": ["11","01","13"],
+            "3": ["12","14"],
+            "4": ["13"]
+        }
+    };
+
+    const neighboursUpDownBig = {
+        "0": {
+            "0": { "up": null, "down": "01" },
+            "1": { "up": null, "down": "13" },
+            "2": { "up": null, "down": "01" }
+        },
+        "1": {
+            "0": { "up": "11", "down": null },
+            "1": { "up": "12", "down": null },
+            "2": { "up": "13", "down": null },
+            "3": { "up": "01", "down": null },
+            "4": { "up": "13", "down": null },
+        }
+    };
 
 
-    locations.set('l300', new Location({key:'l300', x: baseValuesSmall['0']['0']['x']+this.offsets["3"]["x"], y: baseValuesSmall['0']['0']['y']+this.offsets["3"]["y"], apartment: 3, floor: 0}));
-    locations.set('l301', new Location({key:'l301', x: baseValuesSmall['0']['1']['x']+this.offsets["3"]["x"], y: baseValuesSmall['0']['1']['y']+this.offsets["3"]["y"], apartment: 3, floor: 0}));
-    locations.set('l302', new Location({key:'l302', x: baseValuesSmall['0']['2']['x']+this.offsets["3"]["x"], y: baseValuesSmall['0']['2']['y']+this.offsets["3"]["y"], apartment: 3, floor: 0}));
-    locations.set('l310', new Location({key:'l310', x: baseValuesSmall['1']['0']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['0']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l311', new Location({key:'l311', x: baseValuesSmall['1']['1']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['1']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l312', new Location({key:'l312', x: baseValuesSmall['1']['2']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['2']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l313', new Location({key:'l313', x: baseValuesSmall['1']['3']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['3']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
-    locations.set('l314', new Location({key:'l314', x: baseValuesSmall['1']['4']['x']+this.offsets["3"]["x"], y: baseValuesSmall['1']['4']['y']+this.offsets["3"]["y"], apartment: 3, floor: 1}));
+    for (var apartment = 1; apartment <= 4; apartment++) {
+        const locationSuffix = "l" + apartment;
+        const neighbours = apartment % 2 == 0 ? neighboursBig : neighboursSmall;  
+        const neighboursUpDown = apartment % 2 == 0 ? neighboursUpDownBig : neighboursUpDownSmall;  
+        for (const [floor, floorValues] of Object.entries(neighbours)) {
+            for (const [locationEndKey, neighbourPrefixList] of Object.entries(floorValues)) {
+                const neighbourList = [];
+                const neighbourUpDownObject = {};
+                const locationKey = locationSuffix + floor + locationEndKey;
 
-    // Add neighbour links
+                neighbourPrefixList.forEach((neighbourPrefix) => {
+                    neighbourList.push(locations.get(locationSuffix + neighbourPrefix));
+                });
+                locations.get(locationKey).setNeighbours(neighbourList);
 
-    // APARTMENT 1
-
-    locations.get('l100').setNeighbours([locations.get('l101')]);
-    locations.get('l100').setNeighboursUpDown({up: null, down: locations.get('l101').key});
-    
-    locations.get('l101').setNeighbours([locations.get('l100'), locations.get('l112'), locations.get('l102')]);
-    locations.get('l101').setNeighboursUpDown({up: null, down: locations.get('l112').key});
-    
-    locations.get('l102').setNeighbours([locations.get('l101')]);
-    locations.get('l102').setNeighboursUpDown({up: null, down: locations.get('l101').key});
-    
-    locations.get('l110').setNeighbours([locations.get('l111')]);
-    locations.get('l110').setNeighboursUpDown({up: locations.get('l111').key, down: null});
-
-    locations.get('l111').setNeighbours([locations.get('l110'),locations.get('l112')]);
-    locations.get('l111').setNeighboursUpDown({up: locations.get('l112').key, down: null});
-    
-    locations.get('l112').setNeighbours([locations.get('l111'), locations.get('l101'), locations.get('l113')]);
-    locations.get('l112').setNeighboursUpDown({up: locations.get('l101').key, down: null});
-    
-    locations.get('l113').setNeighbours([locations.get('l112'), locations.get('l114')]);
-    locations.get('l113').setNeighboursUpDown({up: locations.get('l112').key, down: null});
-
-    locations.get('l114').setNeighbours([locations.get('l113')]);
-    locations.get('l114').setNeighboursUpDown({up: locations.get('l113').key, down: null});
-
-    // APARTMENT 2
-
-    locations.get('l200').setNeighbours([locations.get('l201')]);
-    locations.get('l200').setNeighboursUpDown({up: null, down: locations.get('l201').key});
-
-    locations.get('l201').setNeighbours([locations.get('l200'), locations.get('l213'), locations.get('l202')]);
-    locations.get('l201').setNeighboursUpDown({up: null, down: locations.get('l213').key});
-
-    locations.get('l202').setNeighbours([locations.get('l201')]);
-    locations.get('l202').setNeighboursUpDown({up: null, down: locations.get('l201').key});
-
-    locations.get('l210').setNeighbours([locations.get('l211')]);
-    locations.get('l210').setNeighboursUpDown({up: locations.get('l211').key, down: null});
-
-    locations.get('l211').setNeighbours([locations.get('l210'), locations.get('l212')]);
-    locations.get('l211').setNeighboursUpDown({up: locations.get('l212').key, down: null});
-
-    locations.get('l212').setNeighbours([locations.get('l211'), locations.get('l213')]);
-    locations.get('l212').setNeighboursUpDown({up: locations.get('l213').key, down: null});
-
-    locations.get('l213').setNeighbours([locations.get('l212'), locations.get('l201'), locations.get('l214')]);
-    locations.get('l213').setNeighboursUpDown({up: locations.get('l201').key, down: null});
-
-    locations.get('l214').setNeighbours([locations.get('l213')]);
-    locations.get('l214').setNeighboursUpDown({up: locations.get('l213').key, down: null});
-
-    // APARTMENT 3
-
-    locations.get('l300').setNeighbours([locations.get('l301')]);
-    locations.get('l300').setNeighboursUpDown({up: null, down: locations.get('l301').key});
-
-    locations.get('l301').setNeighbours([locations.get('l300'), locations.get('l312'), locations.get('l302')]);
-    locations.get('l301').setNeighboursUpDown({up: null, down: locations.get('l312').key});
-
-    locations.get('l302').setNeighbours([locations.get('l301')]);
-    locations.get('l302').setNeighboursUpDown({up: null, down: locations.get('l301').key});
-
-    locations.get('l310').setNeighbours([locations.get('l311')]);
-    locations.get('l310').setNeighboursUpDown({up: locations.get('l311').key, down: null});
-
-    locations.get('l311').setNeighbours([locations.get('l310'),locations.get('l312')]);
-    locations.get('l311').setNeighboursUpDown({up: locations.get('l312').key, down: null});
-
-    locations.get('l312').setNeighbours([locations.get('l311'), locations.get('l301'), locations.get('l313')]);
-    locations.get('l312').setNeighboursUpDown({up: locations.get('l301').key, down: null});
-
-    locations.get('l313').setNeighbours([locations.get('l312'), locations.get('l314')]);
-    locations.get('l313').setNeighboursUpDown({up: locations.get('l312').key, down: null});
-
-    locations.get('l314').setNeighbours([locations.get('l313')]);
-    locations.get('l314').setNeighboursUpDown({up: locations.get('l313').key, down: null});
-
-    
+                for (const [direction, neighbourPrefix] of Object.entries(neighboursUpDown[floor][locationEndKey])) {
+                    if (neighbourPrefix == null) neighbourUpDownObject[direction] = null;
+                    else neighbourUpDownObject[direction] = locationSuffix + neighbourPrefix;
+                }
+                //console.log("current location:", locationKey);
+                //console.log("neighbour list:", neighbourList);
+                //console.log("neighbours up & down:", neighbourUpDownObject);
+                locations.get(locationKey).setNeighboursUpDown(neighbourUpDownObject);
+            }       
+        }    
+    }
     return locations;
 }
 // Method to generated small rectangles to visualize the position of each position
@@ -702,13 +696,14 @@ createDevices() {
     assignSchedules() {
         
         for (var [key, person] of this.people) {
+            var schedule = null;
             if(person.isControlledPerson) {
-                const schedule = this.scheduleHandler.createControlledSchedule(person.key, {"08": "a1Fridge"});
+                schedule = this.scheduleHandler.createControlledSchedule(person.key, {"8": "a1Fridge"}, this.activities);
                 person.setSchedule(schedule);
             } else {
-                const schedule = this.scheduleHandler.getSchedule(person.key);
-                person.setSchedule(schedule);
+                schedule = this.scheduleHandler.getSchedule(person.key, this.activities);
             }
+            person.setSchedule(schedule);
         };
         // APARTMENT 1 
 /*

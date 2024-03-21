@@ -35,12 +35,26 @@ export class ScheduleHandler {
         return scheduleDataPerTimeUnit;
     }
   
-    getSchedule(personKey) {
+    getSchedule(personKey, activityMap) {
+        const schedule = new Map();
         console.log("Creating schedule for person:", personKey);
-        return this.scheduleDataPerTimeUnit[personKey];
+        console.log(this.scheduleDataPerTimeUnit[personKey]);
+        const scheduleFromJson = this.scheduleDataPerTimeUnit[personKey];
+        for (const [time, activityKey] of Object.entries(scheduleFromJson)) {
+            // Get full activity from reference to activity map
+           schedule.set(time, activityMap.get(activityKey))
+        }
+        return schedule;
     }
 
-    createControlledSchedule(personKey, definedActivities) {
+    createControlledSchedule(personKey, definedActivities, activityMap) {
+        const schedule = new Map();
         console.log("Creating controlled schedule for person:", personKey);
+        console.log(definedActivities);
+        for (const [time, activityKey] of Object.entries(definedActivities)) {
+            // Get full activity from reference to activity map
+           schedule.set(time, activityMap.get(activityKey))
+        }
+        return schedule;
     }
    }
