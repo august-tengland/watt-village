@@ -96,6 +96,10 @@ export default class SimulationScene extends Phaser.Scene {
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
 
+        this.powerLine = this.add.sprite(500,680,'powerLine').setScale(2);
+        this.powerLine.anims.play("powerLineActive");
+        this.powerLine.setDepth(2);
+
         // ---- GAME & LOGIC OBJECTS -----------------------------------------
 
         this.people = this.add.group({
@@ -173,13 +177,14 @@ export default class SimulationScene extends Phaser.Scene {
     }
 
     checkSchedules() {
+        /*
         for (var [key, person] of this.people) {
             console.log("schedule for person", key, ": ", person.schedule);
             if(person.schedule.has(this.registry.values.time.toString())) {
                 console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
                 person.doActivity(person.schedule.get(this.registry.values.time.toString()));
             }
-        }
+        }*/
     }
 
     updatePlaybackSpeed() {

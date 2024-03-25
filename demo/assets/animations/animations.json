@@ -12,6 +12,17 @@
         "frameRate": 18
       },
       {
+        "key": "powerLineActive",
+        "frames": {
+          "typeOfGeneration": "generateFrameNumbers",
+          "key": "powerLine",
+          "start": 0,
+          "end": 4
+        },
+        "repeat": -1,
+        "frameRate": 18
+      },
+      {
         "key": "stoveIdle",
         "frames": {
           "typeOfGeneration": "generateFrameNumbers",

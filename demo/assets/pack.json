@@ -107,6 +107,15 @@
             "frameWidth": 40,
             "frameHeight": 78
           }
+        },
+        {
+          "type": "spritesheet",
+          "key": "powerLine",
+          "url": "./assets/sprites/powerLine.png",
+          "frameConfig": {
+            "frameWidth": 20,
+            "frameHeight": 2
+          }
         }
       ]
     }
