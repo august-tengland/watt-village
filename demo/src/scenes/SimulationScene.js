@@ -33,32 +33,44 @@ export default class SimulationScene extends Phaser.Scene {
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
 
+        // Controls playback speed of entire gameplay
         this.playbackSpeed = 1;
+
+        // Controls speed of animations
+        this.speedyAnimations = true;
+        this.setSpeedyAnimations(this.speedyAnimations);
 
         this.currentDay = "day1";
 
-        // What is the optimal effect of the solar panels installed on the roof?
-        this.solarPanelEffect0 = 12; //kWh (per hour)
-        this.solarPanelEffect1 = 15; //kWh (per hour)
+        this.numMovingCharacters = 0;
+
+        this.characterSpeed = 200;
+
+        // What is the optimal effect of the solar panels installed on the roof? (per house)
+        this.solarPanelEffects = [12, 15]; //kWh (per hour)
+
+        var offsetsArray = this.setOffsets();
+        this.baseOffset = offsetsArray[0];
+        this.offsets = offsetsArray[1]; 
 
         this.scheduleHandler = new ScheduleHandler({scene: this, currentDayKey: this.currentDay, tucf: this.tucf});
     }
     
     create () {
-        console.log("create called");
-        // Used to change the absolute positions of most things in the scene
-        this.offsets = this.setOffsets();
         // *****************************************************************
-        // TIMER
+        // TIMER & EVENT HANDLERS 
         // *****************************************************************
         
-        this.timer = this.time.addEvent({
+        this.gameTimer = this.time.addEvent({
             delay: 1000/this.playbackSpeed,
             callback: this.updateTime,
             callbackScope: this,
             loop: true
         });
+        
+        this.events.on('personStartedMoving', this.handlePersonStartedMoving, this);
 
+        this.events.on('personStoppedMoving', this.handlePersonStoppedMoving, this);
 
         // *****************************************************************
         // GAME OBJECTS
@@ -80,25 +92,36 @@ export default class SimulationScene extends Phaser.Scene {
         //  Backdrop for the houses
         this.houseSmallBackdrop = this.add.image(0, 0, 'houseSmallBackdrop');
         this.houseBigBackdrop = this.add.image(0, 0, 'houseBigBackdrop');
-        //  Foreground of the houses
+        //  House content
         this.houseSmall = this.add.image(0, 0, 'houseSmall');
         this.houseBig = this.add.image(0, 0, 'houseBig');
 
-        this.houseSmall.setDepth(1);
-        this.houseBig.setDepth(1);
+        // Foreground for the houses
+        this.houseSmallForeground = this.add.image(0, 0, 'houseSmallForeground');
+        this.houseBigForeground = this.add.image(0, 0, 'houseBigForeground');
+
+        this.houseSmallBackdrop.setDepth(2);
+        this.houseBigBackdrop.setDepth(2);
+        this.houseSmall.setDepth(4);
+        this.houseBig.setDepth(4);
+        this.houseSmallForeground.setDepth(15);
+        this.houseBigForeground.setDepth(15);
         
         Phaser.Display.Align.To.TopCenter(this.houseSmallBackdrop,this.ground,-280,this.ground.height*2.3);
         Phaser.Display.Align.To.TopCenter(this.houseBigBackdrop,this.ground,420,this.ground.height*2.3);
         
         Phaser.Display.Align.In.Center(this.houseSmall,this.houseSmallBackdrop);
         Phaser.Display.Align.In.Center(this.houseBig,this.houseBigBackdrop);
+
+        Phaser.Display.Align.In.Center(this.houseSmallForeground,this.houseSmallBackdrop);
+        Phaser.Display.Align.In.Center(this.houseBigForeground,this.houseBigBackdrop);
         
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.powerLine = this.add.sprite(500,680,'powerLine').setScale(2);
         this.powerLine.anims.play("powerLineActive");
-        this.powerLine.setDepth(2);
+        this.powerLine.setDepth(5);
 
         // ---- GAME & LOGIC OBJECTS -----------------------------------------
 
@@ -163,29 +186,47 @@ export default class SimulationScene extends Phaser.Scene {
             "1": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
             "2": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] + -1 },
             "3": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 277 },
-            "4": { "x": baseOffset['x'] + 145, "y": baseOffset['y'] + 277-1 }
+            "4": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] + 277-1 }
         }
         
-        return offsets;
+        return [baseOffset, offsets];
     }
 
     updateTime() {
         this.registry.values.time += 1;
         this.events.emit('timeChanged',this.registry.values.time);
-        this.checkSchedules();
         this.updateHandlers();
+        this.checkSchedules();
     }
 
     checkSchedules() {
-        /*
+        
         for (var [key, person] of this.people) {
-            console.log("schedule for person", key, ": ", person.schedule);
             if(person.schedule.has(this.registry.values.time.toString())) {
                 console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
                 person.doActivity(person.schedule.get(this.registry.values.time.toString()));
             }
-        }*/
+        }
     }
+
+
+    handlePersonStartedMoving(personKey) {
+        this.numMovingCharacters += 1;
+        console.log(personKey,"started moving");
+        console.log("increase: " + this.numMovingCharacters);
+        this.setSpeedyAnimations(false);
+        this.gameTimer.paused = true;
+    }
+    handlePersonStoppedMoving(personKey) {
+        console.log(personKey,"stopped moving");
+        console.log("decrease: " + this.numMovingCharacters);
+        this.numMovingCharacters -= 1;
+        if (this.numMovingCharacters == 0) {
+            this.setSpeedyAnimations(true);
+            this.gameTimer.paused = false;
+        }
+    }
+
 
     updatePlaybackSpeed() {
         this.anims.globalTimeScale = this.playbackSpeed;
@@ -198,9 +239,13 @@ export default class SimulationScene extends Phaser.Scene {
         }
     }
 
+    setSpeedyAnimations(isSpeedy) {
+        this.speedyAnimations = isSpeedy;
+        this.anims.globalTimeScale = isSpeedy ? 4 : 1;
+    }
+
     updateHandlers() {
 
-        //this.totalEnergyHandler.runUpdate(this.registry.values.time);
 
         for (var [key, individualEnergyHandler] of this.individualEnergyHandlers) {
             individualEnergyHandler.runUpdate(this.registry.values.time);
@@ -257,7 +302,13 @@ createLocations() {
             "2": { "x": 445, "y": 480 },
             "3": { "x": 520, "y": 480 },
             "4": { "x": 575, "y": 480 },
-            "5": { "x": 600, "y": 480 }
+            "5": { "x": 660, "y": 480 }
+        },
+        "2": {
+            "0": { "x": -270, "y": 770 },
+            "1": { "x": 50, "y": 770 },
+            "2": { "x": 660, "y": 770 },
+            "3": { "x": 720, "y": 770 }
         }
     };
 
@@ -269,11 +320,18 @@ createLocations() {
             "2": { "x": 1250, "y": 360 } 
         },
         "1": {
-            "0": { "x": 750, "y": 480 },
-            "1": { "x": 890, "y": 480 },
-            "2": { "x": 1000, "y": 480 },
-            "3": { "x": 1077, "y": 480 },
-            "4": { "x": 1260, "y": 480 }
+            "0": { "x": 650, "y": 480 },
+            "1": { "x": 750, "y": 480 },
+            "2": { "x": 890, "y": 480 },
+            "3": { "x": 1000, "y": 480 },
+            "4": { "x": 1077, "y": 480 },
+            "5": { "x": 1260, "y": 480 }
+        },
+        "2": {
+            "0": { "x": -270, "y": 770 },
+            "1": { "x": 50, "y": 770 },
+            "2": { "x": 600, "y": 770 },
+            "3": { "x": 650, "y": 770 }
         }
     };
 
@@ -282,10 +340,13 @@ createLocations() {
         for (const [floor, floorValues] of Object.entries(baseValues)) {
             for (const [locationEndKey, locationCoordinates] of Object.entries(floorValues)) {
                 var locationKey = "l" + apartment + floor + locationEndKey;
-                //console.log(locationKey);
-                //console.log(locationCoordinates);
-                locations.set(locationKey, new Location({key:locationKey, x: locationCoordinates['x']+this.offsets[apartment]["x"], y: locationCoordinates['y']+this.offsets[apartment]["y"], apartment: apartment, floor: floor}));
-                //console.log(locations.get(locationKey));
+                
+                if (floor < 2) { // Include y-offset
+                    locations.set(locationKey, new Location({key:locationKey, x: locationCoordinates['x']+this.offsets[apartment]["x"], y: locationCoordinates['y']+this.offsets[apartment]["y"], apartment: apartment, floor: floor}));                  
+                } else { // Ignore y-offset (common ground level)
+                    locations.set(locationKey, new Location({key:locationKey, x: locationCoordinates['x']+this.offsets[apartment]["x"], y: locationCoordinates['y']+this.baseOffset["y"], apartment: apartment, floor: floor}));
+                  
+                }
             }       
         }    
     }
@@ -303,6 +364,12 @@ createLocations() {
             "3": ["12","14"],
             "4": ["13","15"],
             "5": ["14"]
+        },
+        "2" :{
+            "0": ["21"],
+            "1": ["20", "23"],
+            "2": ["15","23"],
+            "3": ["21","22"]
         }
     };
 
@@ -313,42 +380,62 @@ createLocations() {
             "2": { "up": null, "down": "01" }
         },
         "1": {
-            "0": { "up": "11", "down": null },
-            "1": { "up": "12", "down": null },
-            "2": { "up": "01", "down": null },
-            "3": { "up": "12", "down": null },
-            "4": { "up": "13", "down": null },
-            "5": { "up": "14", "down": null }
+            "0": { "up": "11", "down": "11" },
+            "1": { "up": "12", "down": "12" },
+            "2": { "up": "01", "down": "13" },
+            "3": { "up": "12", "down": "14" },
+            "4": { "up": "13", "down": "15" },
+            "5": { "up": "14", "down": "22" }
+        },
+        "2": {
+            "0": { "up": "21", "down": null },
+            "1": { "up": "23", "down": null },
+            "2": { "up": "15", "down": null },
+            "3": { "up": "22", "down": null }
         }
     };
 
     const neighboursBig = {
         "0": {
             "0": ["01"],
-            "1": ["00","12","02"],
+            "1": ["00","14","02"],
             "2": ["01"]
         },
         "1": {
-            "0": ["11"],
+            "0": ["23","11"],
             "1": ["10","12"],
-            "2": ["11","01","13"],
+            "2": ["11","13"],
             "3": ["12","14"],
-            "4": ["13"]
+            "4": ["13","01","15"],
+            "5": ["14"]
+        },
+        "2" :{
+            "0": ["21"],
+            "1": ["20", "22"],
+            "2": ["21","23"],
+            "3": ["22","10"]
         }
     };
 
     const neighboursUpDownBig = {
         "0": {
             "0": { "up": null, "down": "01" },
-            "1": { "up": null, "down": "13" },
+            "1": { "up": null, "down": "14" },
             "2": { "up": null, "down": "01" }
         },
         "1": {
-            "0": { "up": "11", "down": null },
-            "1": { "up": "12", "down": null },
-            "2": { "up": "13", "down": null },
-            "3": { "up": "01", "down": null },
-            "4": { "up": "13", "down": null },
+            "0": { "up": "11", "down": "23" },
+            "1": { "up": "12", "down": "10" },
+            "2": { "up": "13", "down": "11" },
+            "3": { "up": "14", "down": "12" },
+            "4": { "up": "01", "down": "13" },
+            "5": { "up": "14", "down": "14" },
+        },
+        "2": {
+            "0": { "up": "21", "down": null },
+            "1": { "up": "22", "down": null },
+            "2": { "up": "23", "down": null },
+            "3": { "up": "10", "down": null }
         }
     };
 
@@ -387,7 +474,7 @@ createLocationVisuals() {
 
     for(var [key, location] of this.locations) {
         locationBlocks.set(key, this.add.rectangle(location.x,location.y,4,4,"0xff0000"));
-        locationBlocks.get(key).setDepth(2);
+        locationBlocks.get(key).setDepth(20);
     }
 }
 
@@ -399,135 +486,73 @@ createDevices() {
     // Create Devices
     const devices = new Map();
 
-    var basePositionsSmall = {
+    const deviceInfo = {
+        "stove": {
+            texture: 'stove',
+            powerConsumption: 2.0/this.tucf,
+            isIdleConsuming: false,
+            animationKeys: {
+                idle: 'stoveIdle',
+                active: 'stoveActive'
+            },
+            repeatAnimation: true
+        },
+        "fridge": {
+            texture: 'fridge',
+            powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
+            isIdleConsuming: true,
+            animationKeys: {
+                idle: 'fridgeIdle',
+                active: 'fridgeActive'
+            },
+            repeatAnimation: false
+        },
+        "washingMachine": {
+            texture: 'stove',
+            powerConsumption: 2.0/this.tucf, // kHw (per hour), = 1kWh / day
+            isIdleConsuming: false,
+            animationKeys: {
+                idle: 'stove',
+                active: 'stove'
+            },
+            repeatAnimation: true
+        }
+    }
+
+    const basePositionsSmall = {
         "stove": { "x": 502, "y": 480 },
         "fridge": { "x": 596, "y": 464 },
         "washingMachine": { "x": 520, "y": 350 }
     }
 
-    var basePositionsBig = {
+    const basePositionsBig = {
         "stove": { "x": 885, "y": 480 },
         "fridge": { "x": 736, "y": 465 },
         "washingMachine": { "x": 865, "y": 350 }
     }
 
-    // --- APARTMENT 1 --------------------------------
-
-    devices.set('d1Stove', new Device({
-                                    key:'d1Stove', 
-                                    scene: this,
-                                    x: basePositionsSmall['stove']['x']+this.offsets['1']['x'], 
-                                    y: basePositionsSmall['stove']['y']+this.offsets['1']['y'], 
-                                    apartment: 1, 
-                                    texture: 'stove',
-                                    powerConsumption: 2.0/this.tucf, //kWh (per hour)
-                                    isIdleConsuming: false,
-                                    animationKeys: {
-                                        idle: 'stoveIdle',
-                                        active: 'stoveActive'
-                                    },
-                                    repeatAnimation: true}));
-
-    devices.set('d1Fridge', new Device({
-                                    key:'d1Fridge', 
-                                    scene: this,
-                                    x: basePositionsSmall['fridge']['x']+this.offsets['1']['x'], 
-                                    y: basePositionsSmall['fridge']['y']+this.offsets['1']['y'], 
-                                    apartment: 1, 
-                                    texture: 'fridge',
-                                    powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
-                                    isIdleConsuming: true,
-                                    animationKeys: {
-                                        idle: 'fridgeIdle',
-                                        active: 'fridgeActive'
-                                    },
-                                    repeatAnimation: false}));
-
-    devices.set('d1WashingMachine', new Device({
-                                    key:'d1WashingMachine', 
-                                    scene: this,
-                                    x: basePositionsSmall['washingMachine']['x']+this.offsets['1']['x'], 
-                                    y: basePositionsSmall['washingMachine']['y']+this.offsets['1']['y'], 
-                                    apartment: 1, 
-                                    texture: 'stove',
-                                    powerConsumption: 2.0/this.tucf, // kHw per hour
-                                    isIdleConsuming: false,
-                                    animationKeys: {
-                                        idle: 'stoveIdle',
-                                        active: 'stoveActive'
-                                    },
-                                    repeatAnimation: true}));
-
-    // --- APARTMENT 2 --------------------------------
-
-    devices.set('d2Stove', new Device({
-                                    key:'d2Stove', 
-                                    scene: this,
-                                    x: basePositionsBig['stove']['x']+this.offsets['2']['x'], 
-                                    y: basePositionsBig['stove']['y']+this.offsets['2']['y'], 
-                                    apartment: 2, 
-                                    texture: 'stove',
-                                    powerConsumption: 2.0/this.tucf, //kWh (per hour)
-                                    isIdleConsuming: false,
-                                    animationKeys: {
-                                        idle: 'stoveIdle',
-                                        active: 'stoveActive'
-                                    },
-                                    repeatAnimation: true}));
-
-    devices.set('d2Fridge', new Device({
-                                    key:'d2Fridge', 
-                                    scene: this,
-                                    x: basePositionsBig['fridge']['x']+this.offsets['2']['x'], 
-                                    y: basePositionsBig['fridge']['y']+this.offsets['2']['y'], 
-                                    apartment: 2, 
-                                    texture: 'fridge',
-                                    powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
-                                    isIdleConsuming: true,
-                                    animationKeys: {
-                                        idle: 'fridgeIdle',
-                                        active: 'fridgeActive'
-                                    },
-                                    repeatAnimation: false}));
-
-    // --- APARTMENT 3 --------------------------------
-
-    devices.set('d3Stove', new Device({
-                                    key:'d3Stove', 
-                                    scene: this,
-                                    x: basePositionsSmall['stove']['x']+this.offsets['3']['x'], 
-                                    y: basePositionsSmall['stove']['y']+this.offsets['3']['y'], 
-                                    apartment: 3, 
-                                    texture: 'stove',
-                                    powerConsumption: 2.0/this.tucf, //kWh (per time unit)
-                                    isIdleConsuming: false,
-                                    animationKeys: {
-                                        idle: 'stoveIdle',
-                                        active: 'stoveActive'
-                                    },
-                                    repeatAnimation: true}));
-
-    devices.set('d3Fridge', new Device({
-                                    key:'d3Fridge', 
-                                    scene: this,
-                                    x: basePositionsSmall['fridge']['x']+this.offsets['3']['x'], 
-                                    y: basePositionsSmall['fridge']['y']+this.offsets['3']['y'], 
-                                    apartment: 3, 
-                                    texture: 'fridge',
-                                    powerConsumption: 0.042/this.tucf, // kHw (time unit), = 1kWh / day
-                                    isIdleConsuming: true,
-                                    animationKeys: {
-                                        idle: 'fridgeIdle',
-                                        active: 'fridgeActive'
-                                    },
-                                    repeatAnimation: false}));
-
- 
-
-    for(var [key, device] of devices) {
-        device.setDepth(2);
+    for (var apartment = 1; apartment <= 4; apartment++) {
+        const deviceSuffix = "d" + apartment;
+        const basePositions = apartment % 2 == 0 ? basePositionsBig : basePositionsSmall;  
+        for (const [deviceName, DeviceValues] of Object.entries(deviceInfo)) {
+            const deviceKey = deviceSuffix + deviceName;
+            const postitions = {
+                x: basePositions[deviceName]['x'] + this.offsets[apartment]['x'],
+                y: basePositions[deviceName]['y'] + this.offsets[apartment]['y']
+            }
+            devices.set(deviceKey, new Device({key: deviceKey, 
+                                               scene: this, 
+                                               apartment: apartment, 
+                                               ...postitions, 
+                                               ...DeviceValues}));
+        }
     }
 
+    for(var [key, device] of devices) {
+        device.setDepth(5);
+    }
+
+    
     return devices;
 }
 
@@ -535,101 +560,77 @@ createDevices() {
     createActivities() {
         const activities = new Map();
 
-        // APARTMENT 1 
+        const activityInfo = {
+            "fridge": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 300,
+                exitDuration: 300,
+                deviceType: "fridge" 
+            },
+            "stove": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 300,
+                exitDuration: 300,
+                deviceType: "stove" 
+            },
+            "dinnerTable": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 300,
+                exitDuration: 300,
+                deviceType: null 
+            },
+            "washingMachine": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 300,
+                exitDuration: 300,
+                deviceType: "washingMachine"
+            },
+            "goToWork": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            },
+        }
 
-        activities.set("a1Fridge", new Activity({
-            key: "a1Fridge",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l114').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d1Fridge")}));
+        const baseLocationSuffixSmall = {
+            "stove": "13", 
+            "fridge": "14",
+            "dinnerTable": "11",
+            "washingMachine": "02",
+            "goToWork": "20"
+        }
+    
+        const baseLocationSuffixBig = {
+            "stove": "12", 
+            "fridge": "11",
+            "dinnerTable": "13",
+            "washingMachine": "02",
+            "goToWork": "20"
+        }
 
-        activities.set("a1Stove", new Activity({
-            key: "a1Stove",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l113').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d1Stove")}));
-
-        activities.set("a1DinnerTable", new Activity({
-            key: "a1DinnerTable",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l111').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: null}));
-
-        activities.set("a1WashingMachine", new Activity({
-            key: "a1WashingMachine",
-            isIdleActivity: true,
-            locationKey: this.locations.get('l102').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d1WashingMachine")}));
-
-        // APARTMENT 2 
-
-        activities.set("a2Fridge", new Activity({
-            key: "a2Fridge",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l210').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d2Fridge")}));
-
-        activities.set("a2Stove", new Activity({
-            key: "a2Stove",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l211').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d2Stove")}));
-
-        activities.set("a2DinnerTable", new Activity({
-            key: "a2DinnerTable",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l212').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: null}));
-
-        // APARTMENT 3 
-
-        activities.set("a3Fridge", new Activity({
-            key: "a3Fridge",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l314').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d3Fridge")}));
-
-        activities.set("a3Stove", new Activity({
-            key: "a3Stove",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l313').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: this.devices.get("d3Stove")}));
-
-        activities.set("a3DinnerTable", new Activity({
-            key: "a3DinnerTable",
-            isIdleActivity: false,
-            locationKey: this.locations.get('l311').key,
-            minDuration: 3000,
-            startDuration: 300,
-            exitDuration: 300,
-            device: null}));
+        for (var apartment = 1; apartment <= 4; apartment++) {
+            const activitySuffix = "a" + apartment;
+            const baseLocationSuffix = apartment % 2 == 0 ? baseLocationSuffixBig : baseLocationSuffixSmall;  
+            for (const [activityName, activityValues] of Object.entries(activityInfo)) {
+                if(activityName in baseLocationSuffix) {
+                    const activityKey = activitySuffix + activityName;
+                    const device = activityValues.deviceType ? this.devices.get("d" + apartment + activityValues.deviceType) : null; 
+                    const locationKey = "l" + apartment + baseLocationSuffix[activityName];
+                    activities.set(activityKey, new Activity({key: activityKey, 
+                                                              scene: this, 
+                                                              apartment: apartment, 
+                                                              device: device, 
+                                                              locationKey: locationKey, 
+                                                              ...activityValues}));    
+                }
+            }
+        }
 
         return activities;
     }
@@ -649,7 +650,7 @@ createDevices() {
             x: this.locations.get('l100').x,
             y: this.locations.get('l100').y,
             apartment: 1,
-            speed: 200,
+            speed: this.characterSpeed,
             texture: 'rut'}));
 
         // APARTMENT 2 
@@ -660,7 +661,7 @@ createDevices() {
             x: this.locations.get('l202').x,
             y: this.locations.get('l202').y,
             apartment: 2,
-            speed: 200,
+            speed: this.characterSpeed,
             texture: 'rut'}));
 
 
@@ -672,7 +673,7 @@ createDevices() {
             x: this.locations.get('l300').x,
             y: this.locations.get('l300').y,
             apartment: 3,
-            speed: 200,
+            speed: this.characterSpeed,
             texture: 'rut'}));
 
         for(var [key, person] of people) {
@@ -703,7 +704,7 @@ createDevices() {
         for (var [key, person] of this.people) {
             var schedule = null;
             if(person.isControlledPerson) {
-                schedule = this.scheduleHandler.createControlledSchedule(person.key, {"8": "a1Fridge"}, this.activities);
+                schedule = this.scheduleHandler.createControlledSchedule(person.key, {"1": "a1goToWork"}, this.activities);
                 person.setSchedule(schedule);
             } else {
                 schedule = this.scheduleHandler.getSchedule(person.key, this.activities);
@@ -746,49 +747,19 @@ createDevices() {
 
         const individualEnergyHandlers = new Map();
 
-        // TODO: BIND apartment-specific devices to energy handlers
-        var individualDevices1 = new Map();
-        var individualDevices2 = new Map();
-        var individualDevices3 = new Map();
-
-        
-        for(var [key, device] of this.devices) {
-            if(device.apartment == 1){
-                individualDevices1.set(device.key, device);
-            } else if(device.apartment == 2) {
-                individualDevices2.set(device.key, device);    
-            } else if(device.apartment == 3) {
-                individualDevices3.set(device.key, device);    
-            }
+        for (var apartment = 1; apartment <= 4; apartment++) {
+            const iehKey = "ieh" + apartment;
+            const house = apartment % 2 == 0 ? 1 : 0;
+            individualEnergyHandlers.set(iehKey, new IndividualEnergyHandler({
+                scene: this, 
+                key: iehKey,
+                apartment: apartment,
+                house: house,
+                devices: new Map([...this.devices].filter(([k, v]) => v.apartment == apartment )), 
+                time: this.registry.values.time,
+                dayLength: this.dayLength,
+                currentDayKey: this.currentDay}));
         }
-
-        // Create energy handler, that manages updates to electricity
-        individualEnergyHandlers.set("ieh1", new IndividualEnergyHandler({scene: this, 
-            key: "ieh1",
-            apartment: 1,
-            house: 0,
-            devices: individualDevices1, 
-            time: this.registry.values.time,
-            dayLength: this.dayLength,
-            currentDayKey: this.currentDay}));
-        
-        individualEnergyHandlers.set("ieh2", new IndividualEnergyHandler({scene: this, 
-            key: "ieh2",
-            apartment: 2,
-            house: 1,
-            devices: individualDevices2, 
-            time: this.registry.values.time,
-            dayLength: this.dayLength,
-            currentDayKey: this.currentDay}));
-
-        individualEnergyHandlers.set("ieh3", new IndividualEnergyHandler({scene: this, 
-            key: "ieh3",
-            apartment: 3,
-            house: 0,
-            devices: individualDevices3, 
-            time: this.registry.values.time,
-            dayLength: this.dayLength,
-            currentDayKey: this.currentDay}));
         
         return individualEnergyHandlers;
     }
@@ -796,24 +767,19 @@ createDevices() {
     createHouseSolarPanelHandlers() {
 
         const houseSolarPanelHandlers = new Map();
-        
-        // Create house solar panel handlers, that manages updates to energy production
-        houseSolarPanelHandlers.set("hsph0", new HouseSolarPanelHandler({scene: this, 
-            key: "hsph0",
-            house: 0,
-            time: this.registry.values.time,
-            dayLength: this.dayLength,
-            solarPanelEffect: this.solarPanelEffect0/this.tucf,
-            currentDayKey: this.currentDay}));
 
-        houseSolarPanelHandlers.set("hsph1", new HouseSolarPanelHandler({scene: this, 
-            key: "hsph1",
-            house: 1,
-            time: this.registry.values.time,
-            dayLength: this.dayLength,
-            solarPanelEffect: this.solarPanelEffect1/this.tucf,
-            currentDayKey: this.currentDay}));
+        for (var house = 0; house <= 1; house++) {
+            const hsphKey = "hsph" + house;
+            houseSolarPanelHandlers.set(hsphKey, new HouseSolarPanelHandler({
+                scene: this, 
+                key: hsphKey,
+                house: house,
+                time: this.registry.values.time,
+                dayLength: this.dayLength,
+                solarPanelEffect: this.solarPanelEffects[house]/this.tucf,
+                currentDayKey: this.currentDay}));
 
+        }
         return houseSolarPanelHandlers;
     }
 

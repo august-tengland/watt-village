@@ -68,6 +68,16 @@
         },
         {
           "type": "image",
+          "key": "houseSmallForeground",
+          "url": "./assets/images/houseSmallForeground.png"
+        },
+        {
+          "type": "image",
+          "key": "houseBigForeground",
+          "url": "./assets/images/houseBigForeground.png"
+        },
+        {
+          "type": "image",
           "key": "ground",
           "url": "./assets/images/platform.png"
         },

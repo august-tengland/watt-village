@@ -2,12 +2,12 @@
 {
     "day1": {
         "p2": {
-            "8": "a2Fridge",
-            "9": "a2Stove"
+            "1": "a2goToWork",
+            "2": "a2stove"
         },
         "p3": {
-            "8.5": "a3Fridge",
-            "9.5": "a3Stove"
+            "1.5": "a3fridge",
+            "2.5": "a3stove"
         }
     }
 }

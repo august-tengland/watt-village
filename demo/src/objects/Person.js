@@ -99,6 +99,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
    doPresenceActivity(activity) {
+    this.scene.events.emit('personStartedMoving', this.key);
     if (this.currentActivity != null) {
       var result = this.stopPresenceActivity();
       setTimeout(() => {
@@ -137,7 +138,9 @@ export class Person extends Phaser.GameObjects.Sprite {
   // ASSUMPTION: Characters only walk to locations to complete an action that is there
   // i.e: If a character has reached a position, they are suppose to do their coming activity
   reachedPosition() {
+    this.scene.events.emit('personStoppedMoving', this.key);
     this.startPresenceActivity();
+    // EMIT START!
   }
   
   walkToLocation(endLocationKey) {
@@ -148,16 +151,17 @@ export class Person extends Phaser.GameObjects.Sprite {
     // Find current (closest) location
     this.setClosestLocation();
     var endLocationIndex = -1;
-    //console.log(this.possibleLocations);
     //find location with corresponding key
     for (var i = 0; i < this.possibleLocations.length; i++) {
-      if (this.possibleLocations[i].key == endLocationKey) {
+      if (this.possibleLocations[i].key === endLocationKey) {
         endLocationIndex = i;
         break;
       }
     }
 
     // If key not found in possibleLocations list
+    //console.log(this.possibleLocations);
+    //console.log(endLocationKey);
     if (endLocationIndex == -1) throw new Error('Location key not found in list!');
 
     // list that includes all the locations that have to be passed
@@ -170,7 +174,7 @@ export class Person extends Phaser.GameObjects.Sprite {
       tester++;
       //console.log(pathToWalk);
       if(tester > 10) throw new Error(('Could not find path to location!'));
-      //console.log(locationInPath.key);
+      console.log(locationInPath.key);
       pathToWalk.push(locationInPath);
 
       //if on the right floor, move in x-direction of starting location
@@ -260,9 +264,11 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   setZIndex(params) {
-    if (params.to.floor != params.from.floor) {
+    if (params.to.floor == 2 || params.from.floor == 2) {
+      this.setDepth(1);
+    } else if (params.to.floor != params.from.floor) {
       // Moving between floors, bring character back
-      this.setDepth(0);
+      this.setDepth(3);
     } else {
       this.setDepth(10);
     }
