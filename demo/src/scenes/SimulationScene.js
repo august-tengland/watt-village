@@ -34,16 +34,22 @@ export default class SimulationScene extends Phaser.Scene {
         this.tucf = this.dayLength / 24;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 1;
+        this.playbackSpeed = 2;
 
         // Controls speed of animations
         this.speedyAnimations = true;
         this.setSpeedyAnimations(this.speedyAnimations);
 
+        // Starting time for scene
+        this.registry.values.time = 6*this.tucf;
+
+        // Determines which schedules to follow 
         this.currentDay = "day1";
 
+        // Used to keep track of whether timer should be on or off (i.e. "speedup")
         this.numMovingCharacters = 0;
 
+        // Base speed value for all characters
         this.characterSpeed = 200;
 
         // What is the optimal effect of the solar panels installed on the roof? (per house)
@@ -71,6 +77,8 @@ export default class SimulationScene extends Phaser.Scene {
         this.events.on('personStartedMoving', this.handlePersonStartedMoving, this);
 
         this.events.on('personStoppedMoving', this.handlePersonStoppedMoving, this);
+
+        this.events.emit('timeChanged',this.registry.values.time);
 
         // *****************************************************************
         // GAME OBJECTS
@@ -320,7 +328,7 @@ createLocations() {
             "2": { "x": 1250, "y": 360 } 
         },
         "1": {
-            "0": { "x": 650, "y": 480 },
+            "0": { "x": 660, "y": 480 },
             "1": { "x": 750, "y": 480 },
             "2": { "x": 890, "y": 480 },
             "3": { "x": 1000, "y": 480 },
@@ -328,10 +336,10 @@ createLocations() {
             "5": { "x": 1260, "y": 480 }
         },
         "2": {
-            "0": { "x": -270, "y": 770 },
-            "1": { "x": 50, "y": 770 },
+            "0": { "x": -410, "y": 770 },
+            "1": { "x": -100, "y": 770 },
             "2": { "x": 600, "y": 770 },
-            "3": { "x": 650, "y": 770 }
+            "3": { "x": 660, "y": 770 }
         }
     };
 
@@ -363,7 +371,7 @@ createLocations() {
             "2": ["11","01","13"],
             "3": ["12","14"],
             "4": ["13","15"],
-            "5": ["14"]
+            "5": ["14","22"]
         },
         "2" :{
             "0": ["21"],
@@ -596,6 +604,41 @@ createDevices() {
                 exitDuration: 0,
                 deviceType: null 
             },
+            "bathroom": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            },
+            "couch": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            },
+            "tv": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            },
+            "book": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            },
+            "bed": {
+                isIdleActivity: false,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            },
         }
 
         const baseLocationSuffixSmall = {
@@ -603,7 +646,12 @@ createDevices() {
             "fridge": "14",
             "dinnerTable": "11",
             "washingMachine": "02",
-            "goToWork": "20"
+            "goToWork": "20",
+            "bathroom": "02",
+            "bed": "10",
+            "couch": "00",
+            "tv": "00",
+            "book": "00"
         }
     
         const baseLocationSuffixBig = {
@@ -611,7 +659,12 @@ createDevices() {
             "fridge": "11",
             "dinnerTable": "13",
             "washingMachine": "02",
-            "goToWork": "20"
+            "goToWork": "20",
+            "bathroom": "00",
+            "bed": "15",
+            "couch": "02",
+            "tv": "02",
+            "book": "02"
         }
 
         for (var apartment = 1; apartment <= 4; apartment++) {
@@ -647,8 +700,8 @@ createDevices() {
             key: "p1",
             isControlledPerson: true,
             scene: this,
-            x: this.locations.get('l100').x,
-            y: this.locations.get('l100').y,
+            x: this.locations.get('l110').x,
+            y: this.locations.get('l110').y,
             apartment: 1,
             speed: this.characterSpeed,
             texture: 'rut'}));
@@ -658,8 +711,8 @@ createDevices() {
         people.set("p2", new Person({
             key: "p2",
             scene: this,
-            x: this.locations.get('l202').x,
-            y: this.locations.get('l202').y,
+            x: this.locations.get('l215').x,
+            y: this.locations.get('l215').y,
             apartment: 2,
             speed: this.characterSpeed,
             texture: 'rut'}));
@@ -670,9 +723,20 @@ createDevices() {
         people.set("p3", new Person({
             key: "p3",
             scene: this,
-            x: this.locations.get('l300').x,
-            y: this.locations.get('l300').y,
+            x: this.locations.get('l310').x,
+            y: this.locations.get('l310').y,
             apartment: 3,
+            speed: this.characterSpeed,
+            texture: 'rut'}));
+
+        // APARTMENT 4
+
+        people.set("p4", new Person({
+            key: "p4",
+            scene: this,
+            x: this.locations.get('l415').x,
+            y: this.locations.get('l415').y,
+            apartment: 4,
             speed: this.characterSpeed,
             texture: 'rut'}));
 
@@ -704,7 +768,8 @@ createDevices() {
         for (var [key, person] of this.people) {
             var schedule = null;
             if(person.isControlledPerson) {
-                schedule = this.scheduleHandler.createControlledSchedule(person.key, {"1": "a1goToWork"}, this.activities);
+                var timestep = (8*this.tucf).toString();
+                schedule = this.scheduleHandler.createControlledSchedule(person.key, {timestep: "a1goToWork"}, this.activities);
                 person.setSchedule(schedule);
             } else {
                 schedule = this.scheduleHandler.getSchedule(person.key, this.activities);

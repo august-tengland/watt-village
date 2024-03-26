@@ -28,6 +28,31 @@
         },
         {
           "type": "image",
+          "key": "bigRut",
+          "url": "./assets/images/bigRut.png"
+        },
+        {
+          "type": "image",
+          "key": "plannerBackground",
+          "url": "./assets/images/plannerBackground.png"
+        },
+        {
+          "type": "image",
+          "key": "plannerInterface",
+          "url": "./assets/images/plannerInterface.png"
+        },
+        {
+          "type": "image",
+          "key": "plannerInterfaceDark",
+          "url": "./assets/images/plannerInterfaceDark.png"
+        },
+        {
+          "type": "image",
+          "key": "graphButton",
+          "url": "./assets/sprites/graphButton.png"
+        },
+        {
+          "type": "image",
           "key": "HUDIndividualStats",
           "url": "./assets/HUD/HUDIndividualStats.png"
         },
@@ -90,6 +115,15 @@
           "type": "image",
           "key": "solarPanel",
           "url": "./assets/sprites/solarPanel.png"
+        },
+        {
+          "type": "spritesheet",
+          "key": "graphButtons",
+          "url": "./assets/sprites/graphButtons.png",
+          "frameConfig": {
+            "frameWidth": 180,
+            "frameHeight": 26
+          }
         },
         {
           "type": "spritesheet",

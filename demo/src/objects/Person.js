@@ -173,22 +173,30 @@ export class Person extends Phaser.GameObjects.Sprite {
     while (locationInPath.key != this.currentLocation.key) {
       tester++;
       //console.log(pathToWalk);
-      if(tester > 10) throw new Error(('Could not find path to location!'));
+      if(tester > 14) throw new Error(('Could not find path to location!'));
       console.log(locationInPath.key);
+      console.log(this.currentLocation.key);
+
       pathToWalk.push(locationInPath);
 
       //if on the right floor, move in x-direction of starting location
       var neighbours = locationInPath.getNeighbours();  
-
+      console.log(neighbours);
       if(locationInPath.floor == this.currentLocation.floor) {
-        for (var i = 0; i < neighbours.length; i++) {
-          if (this.currentLocation.x <= neighbours[i].x && neighbours[i].x <= locationInPath.x ||
-              this.currentLocation.x >= neighbours[i].x && neighbours[i].x >= locationInPath.x) {
+        console.log("heeey");
+        var neighboursSameFloor = neighbours.filter((location) => location.floor == locationInPath.floor );
+        for (var i = 0; i < neighboursSameFloor.length; i++) {
+          if (this.currentLocation.x <= neighboursSameFloor[i].x && neighboursSameFloor[i].x <= locationInPath.x ||
+              this.currentLocation.x >= neighboursSameFloor[i].x && neighboursSameFloor[i].x >= locationInPath.x) {
                 // found next node to add
-                locationInPath = neighbours[i];
+                locationInPath = neighboursSameFloor[i];
                 break;
               }
+          
         }
+        // Uh Oh, this is not great
+        locationInPath = neighboursSameFloor[0];
+        break;
       } else if (locationInPath.floor < this.currentLocation.floor) { // from lower floor (1) to higher floor (0)
           for (var i = 0; i < neighbours.length; i++) {
             if (neighbours[i].key == locationInPath.neighbourDownKey) {

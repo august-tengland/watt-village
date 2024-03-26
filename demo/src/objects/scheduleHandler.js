@@ -28,11 +28,20 @@ export class ScheduleHandler {
         var scheduleDataPerTimeUnit = {};
         for (const [personKey, scheduleValue] of Object.entries(scheduleData)) {
             scheduleDataPerTimeUnit[personKey] = {};
-            for (const [timestepKey, timestepValue] of Object.entries(scheduleValue)) {
-                scheduleDataPerTimeUnit[personKey][timestepKey*this.tucf] = timestepValue; 
+            for (const [timestepKey, timestepActivity] of Object.entries(scheduleValue)) {
+                var timestep = this.convertTimestep(timestepKey); 
+                var activityKey = "a" + personKey.substring(1) + timestepActivity;
+                scheduleDataPerTimeUnit[personKey][timestep] = activityKey; 
             }
         }
         return scheduleDataPerTimeUnit;
+    }
+
+    convertTimestep(timestepKey) { // timestepKey on the form HH:MM
+        var hour = parseInt(timestepKey.substring(0,2), 10);
+        var minute = parseInt(timestepKey.substring(3), 10);
+        console.log(hour*this.tucf + minute/60*this.tucf);
+        return (hour*this.tucf + minute/60*this.tucf);
     }
   
     getSchedule(personKey, activityMap) {
