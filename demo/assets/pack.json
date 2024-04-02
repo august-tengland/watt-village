@@ -48,11 +48,6 @@
         },
         {
           "type": "image",
-          "key": "graphButton",
-          "url": "./assets/sprites/graphButton.png"
-        },
-        {
-          "type": "image",
           "key": "HUDIndividualStats",
           "url": "./assets/HUD/HUDIndividualStats.png"
         },
@@ -116,6 +111,16 @@
           "key": "solarPanel",
           "url": "./assets/sprites/solarPanel.png"
         },
+        {
+          "type": "spritesheet",
+          "key": "startButton",
+          "url": "./assets/sprites/startButton.png",
+          "frameConfig": {
+            "frameWidth": 260,
+            "frameHeight": 40
+          }
+        },
+
         {
           "type": "spritesheet",
           "key": "graphButtons",

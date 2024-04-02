@@ -64,7 +64,7 @@ export class AnimationHelper {
     }
   
     createGameAnimations() {
-      //console.log(this.animationData);
+      ////console.log(this.animationData);
       for (let data of this.animationData.anims) {
         let frames;
         let framesArray;

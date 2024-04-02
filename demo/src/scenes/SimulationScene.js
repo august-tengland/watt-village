@@ -32,16 +32,20 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
+        this.dayStartingHour = 18; // at which hour does the scene start/stop at?
+
+        // Starting time for scene
+        this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 2;
+        this.playbackSpeed = 1;
+        
+        // Controls the time interval for each in-game time unit
+        this.updateSpeed = 500;
 
         // Controls speed of animations
         this.speedyAnimations = true;
         this.setSpeedyAnimations(this.speedyAnimations);
-
-        // Starting time for scene
-        this.registry.values.time = 6*this.tucf;
 
         // Determines which schedules to follow 
         this.currentDay = "day1";
@@ -50,7 +54,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.numMovingCharacters = 0;
 
         // Base speed value for all characters
-        this.characterSpeed = 200;
+        this.characterSpeed = 300;
 
         // What is the optimal effect of the solar panels installed on the roof? (per house)
         this.solarPanelEffects = [12, 15]; //kWh (per hour)
@@ -68,7 +72,7 @@ export default class SimulationScene extends Phaser.Scene {
         // *****************************************************************
         
         this.gameTimer = this.time.addEvent({
-            delay: 1000/this.playbackSpeed,
+            delay: this.updateSpeed/this.playbackSpeed,
             callback: this.updateTime,
             callbackScope: this,
             loop: true
@@ -158,13 +162,13 @@ export default class SimulationScene extends Phaser.Scene {
 
         // Create energy & solar handlers
         this.individualEnergyHandlers = this.createIndividualEnergyHandlers();
-        console.log(this.individualEnergyHandlers);
+        //console.log(this.individualEnergyHandlers);
 
         this.houseSolarPanelHandlers = this.createHouseSolarPanelHandlers();
-        console.log(this.houseSolarPanelHandlers);
+        //console.log(this.houseSolarPanelHandlers);
 
         this.totalEnergyHandler = this.createTotalEnergyHandler();
-        console.log(this.totalEnergyHandler);
+        //console.log(this.totalEnergyHandler);
 
         this.updatePlaybackSpeed();
 
@@ -211,7 +215,7 @@ export default class SimulationScene extends Phaser.Scene {
         
         for (var [key, person] of this.people) {
             if(person.schedule.has(this.registry.values.time.toString())) {
-                console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
+                //console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
                 person.doActivity(person.schedule.get(this.registry.values.time.toString()));
             }
         }
@@ -220,14 +224,14 @@ export default class SimulationScene extends Phaser.Scene {
 
     handlePersonStartedMoving(personKey) {
         this.numMovingCharacters += 1;
-        console.log(personKey,"started moving");
-        console.log("increase: " + this.numMovingCharacters);
+        //console.log(personKey,"started moving");
+        //console.log("increase: " + this.numMovingCharacters);
         this.setSpeedyAnimations(false);
         this.gameTimer.paused = true;
     }
     handlePersonStoppedMoving(personKey) {
-        console.log(personKey,"stopped moving");
-        console.log("decrease: " + this.numMovingCharacters);
+        //console.log(personKey,"stopped moving");
+        //console.log("decrease: " + this.numMovingCharacters);
         this.numMovingCharacters -= 1;
         if (this.numMovingCharacters == 0) {
             this.setSpeedyAnimations(true);
@@ -467,9 +471,9 @@ createLocations() {
                     if (neighbourPrefix == null) neighbourUpDownObject[direction] = null;
                     else neighbourUpDownObject[direction] = locationSuffix + neighbourPrefix;
                 }
-                //console.log("current location:", locationKey);
-                //console.log("neighbour list:", neighbourList);
-                //console.log("neighbours up & down:", neighbourUpDownObject);
+                ////console.log("current location:", locationKey);
+                ////console.log("neighbour list:", neighbourList);
+                ////console.log("neighbours up & down:", neighbourUpDownObject);
                 locations.get(locationKey).setNeighboursUpDown(neighbourUpDownObject);
             }       
         }    
@@ -590,8 +594,15 @@ createDevices() {
                 exitDuration: 300,
                 deviceType: null 
             },
+            "dishwasher": {
+                isIdleActivity: true,
+                minDuration: 3000,
+                startDuration: 300,
+                exitDuration: 300,
+                deviceType: null 
+            },
             "washingMachine": {
-                isIdleActivity: false,
+                isIdleActivity: true,
                 minDuration: 3000,
                 startDuration: 300,
                 exitDuration: 300,
@@ -639,32 +650,43 @@ createDevices() {
                 exitDuration: 0,
                 deviceType: null 
             },
+            "carCharge": {
+                isIdleActivity: true,
+                minDuration: 3000,
+                startDuration: 0,
+                exitDuration: 0,
+                deviceType: null 
+            }
         }
 
         const baseLocationSuffixSmall = {
             "stove": "13", 
             "fridge": "14",
             "dinnerTable": "11",
+            "dishwasher": "11",
             "washingMachine": "02",
             "goToWork": "20",
             "bathroom": "02",
             "bed": "10",
             "couch": "00",
             "tv": "00",
-            "book": "00"
+            "book": "00",
+            "carCharge": "21",
         }
     
         const baseLocationSuffixBig = {
             "stove": "12", 
             "fridge": "11",
             "dinnerTable": "13",
+            "dishwasher": "12",
             "washingMachine": "02",
             "goToWork": "20",
             "bathroom": "00",
             "bed": "15",
             "couch": "02",
             "tv": "02",
-            "book": "02"
+            "book": "02",
+            "carCharge": "21"
         }
 
         for (var apartment = 1; apartment <= 4; apartment++) {
@@ -757,19 +779,21 @@ createDevices() {
                 } 
             }
             person.setPossibleLocations(locationsForPerson);
-            //console.log("possible locations for person ", person.key, ": ", locationsForPerson);
+            ////console.log("possible locations for person ", person.key, ": ", locationsForPerson);
         };
     }
 
 // -------- ASSIGN SCHEDULES -------------------------------------------
 
     assignSchedules() {
+
+        const activityTracker = this.registry.get("activityTracker");
         
         for (var [key, person] of this.people) {
             var schedule = null;
             if(person.isControlledPerson) {
                 var timestep = (8*this.tucf).toString();
-                schedule = this.scheduleHandler.createControlledSchedule(person.key, {timestep: "a1goToWork"}, this.activities);
+                schedule = this.scheduleHandler.createControlledSchedule(person.key, activityTracker, this.activities);
                 person.setSchedule(schedule);
             } else {
                 schedule = this.scheduleHandler.getSchedule(person.key, this.activities);
@@ -802,8 +826,8 @@ createDevices() {
         schedule3.set(4, this.activities.get('a3DinnerTable'));
         this.people.get("p3").setSchedule(schedule3);
 */
-        //console.log(this.people.get("p1"));
-        //console.log(this.people.get("p3"));
+        ////console.log(this.people.get("p1"));
+        ////console.log(this.people.get("p3"));
     }
 
 // ----- CREATE ENERGY HANDLERS --------------------------------------

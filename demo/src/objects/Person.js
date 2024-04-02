@@ -57,7 +57,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   setSchedule(schedule) {
-    //console.log("calling setSchedule for person ", this.key);
+    ////console.log("calling setSchedule for person ", this.key);
     this.schedule = schedule;
   }
 
@@ -87,10 +87,10 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   doIdleActivity(activity) {
-    console.log(activity);
+    //console.log(activity);
     activity.startActivity();
     setTimeout(() => {
-      console.log(activity.minDuration);
+      //console.log(activity.minDuration);
       this.stopIdleActivity(activity);
     },activity.minDuration);
   }
@@ -104,7 +104,7 @@ export class Person extends Phaser.GameObjects.Sprite {
       var result = this.stopPresenceActivity();
       setTimeout(() => {
         this.comingActivity = activity; 
-        //console.log("walking to coming activity: " , this.comingActivity);
+        ////console.log("walking to coming activity: " , this.comingActivity);
         this.walkToLocation(activity.locationKey);
       },this.currentActivity.exitDuration);
     } else {
@@ -117,15 +117,15 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.currentActivity = this.comingActivity;
     this.comingActivity = null;
     this.currentActivity.startActivity();
-    //console.log("doing current activity: " , this.currentActivity); 
+    console.log("doing current activity: " , this.currentActivity); 
   }
 
   stopPresenceActivity() {
-    //console.log("finishing current activity: " , this.currentActivity); 
+    ////console.log("finishing current activity: " , this.currentActivity); 
     this.currentActivity.stopActivity();
     // this.currentActivity.finish() (might take some time)
     setTimeout(() => {
-      //console.log("finished current activity: " , this.currentActivity); 
+      ////console.log("finished current activity: " , this.currentActivity); 
       this.currentActivity = null; 
     },this.currentActivity.exitDuration);
   }
@@ -160,8 +160,8 @@ export class Person extends Phaser.GameObjects.Sprite {
     }
 
     // If key not found in possibleLocations list
-    //console.log(this.possibleLocations);
-    //console.log(endLocationKey);
+    ////console.log(this.possibleLocations);
+    ////console.log(endLocationKey);
     if (endLocationIndex == -1) throw new Error('Location key not found in list!');
 
     // list that includes all the locations that have to be passed
@@ -172,18 +172,18 @@ export class Person extends Phaser.GameObjects.Sprite {
     var tester = 0;
     while (locationInPath.key != this.currentLocation.key) {
       tester++;
-      //console.log(pathToWalk);
+      ////console.log(pathToWalk);
       if(tester > 14) throw new Error(('Could not find path to location!'));
-      console.log(locationInPath.key);
-      console.log(this.currentLocation.key);
+      //console.log(locationInPath.key);
+      //console.log(this.currentLocation.key);
 
       pathToWalk.push(locationInPath);
 
       //if on the right floor, move in x-direction of starting location
       var neighbours = locationInPath.getNeighbours();  
-      console.log(neighbours);
+      //console.log(neighbours);
       if(locationInPath.floor == this.currentLocation.floor) {
-        console.log("heeey");
+        //console.log("heeey");
         var neighboursSameFloor = neighbours.filter((location) => location.floor == locationInPath.floor );
         for (var i = 0; i < neighboursSameFloor.length; i++) {
           if (this.currentLocation.x <= neighboursSameFloor[i].x && neighboursSameFloor[i].x <= locationInPath.x ||
@@ -225,7 +225,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   walkPath (points) {
     if(points.length > 0){
         const next = points.pop();
-        //console.log("current: ", this.currentLocation.key, ", next: ",next.key);
+        ////console.log("current: ", this.currentLocation.key, ", next: ",next.key);
         if (next.key != this.currentLocation.key) {
           this.setZIndex({from: this.currentLocation, to: next})
         }

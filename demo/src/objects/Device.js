@@ -44,14 +44,14 @@ export class Device extends Phaser.GameObjects.Sprite  {
     startDevice(delayUntilStart) {
       setTimeout(() => {
         this.isActive = true;
-        //console.log("device started: ", this.key);
+        ////console.log("device started: ", this.key);
         this.handleAnimations();
       }, delayUntilStart);
     }
 
     stopDevice() {
       this.isActive = false;
-      //console.log("device stopped: ", this.key);
+      ////console.log("device stopped: ", this.key);
       this.handleAnimations();
     }
 

@@ -56,7 +56,7 @@ export class TotalEnergyHandler {
   }
 
   runUpdate(newTime) {
-    this.time = newTime;
+    this.time = newTime % this.dayLength;
     this.updateCurrentConsumption();
     this.updateCurrentSolarProduction();
     this.updateTotalCost();

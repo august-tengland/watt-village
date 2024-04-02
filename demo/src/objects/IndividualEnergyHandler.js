@@ -41,6 +41,7 @@ export class IndividualEnergyHandler {
     }
   
     runUpdate(newTime) {
+      this.time = newTime % this.dayLength;
       this.time = newTime;
       this.updateCurrentConsumption();
     }

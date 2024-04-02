@@ -11,6 +11,8 @@ export default class HUDScene extends Phaser.Scene {
   
     create() {
 
+    this.rectangle = this.add.rectangle(180,80,120,150,"0x1053aa");
+
     this.HUDIndividualStats = this.add.image(20, 20, 'HUDIndividualStats');
     this.HUDIndividualStats.setOrigin(0,0);
 
@@ -41,7 +43,7 @@ export default class HUDScene extends Phaser.Scene {
     Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentEnergyPrices'),this.HUDEnergyPrices, -70);
     Phaser.Display.Align.In.LeftCenter(this.labelTextElements.get('currentSolarProduction'),this.HUDSolarProduction, -60);
     
-    Phaser.Display.Align.To.RightTop(this.labelTextElements.get('time'),this.HUDSolarProduction, 32);
+    Phaser.Display.Align.To.RightTop(this.labelTextElements.get('time'),this.HUDSolarProduction, 47);
 
 
     this.valueTextElements = new Map([
@@ -68,7 +70,7 @@ export default class HUDScene extends Phaser.Scene {
     
     Phaser.Display.Align.In.LeftCenter(this.valueTextElements.get('currentSolarProduction'),this.HUDSolarProduction, -180);
     
-    Phaser.Display.Align.To.RightBottom(this.valueTextElements.get('time'),this.HUDSolarProduction, 30);
+    Phaser.Display.Align.To.RightBottom(this.valueTextElements.get('time'),this.HUDSolarProduction, 45);
 
       // create events
       const simulation = this.scene.get('SimulationScene');
@@ -111,6 +113,7 @@ export default class HUDScene extends Phaser.Scene {
     convertTimeUnitsToDigital(time){
         var dayLength = this.registry.values.dayLength;
         var tucf = dayLength / 24;
+        time = time % (dayLength);
         var hour = Math.floor(time/tucf);
         var minute = Math.round((time/tucf - hour) * 60);
         var hourString = hour.toString().padStart(2, '0');

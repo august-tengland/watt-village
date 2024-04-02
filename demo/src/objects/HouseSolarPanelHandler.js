@@ -33,7 +33,7 @@ export class HouseSolarPanelHandler {
     }
   
     runUpdate(newTime) {
-      this.time = newTime+4*4; //NOTE: Change this when troubleshooting
+      this.time = newTime % this.dayLength; 
       this.updateSolarPanelProduction();
     }
   
@@ -65,8 +65,8 @@ export class HouseSolarPanelHandler {
             }
           }
         }
-        //console.log(solarScheduleData);
-        //console.log(solarScheduleArray);
+        ////console.log(solarScheduleData);
+        ////console.log(solarScheduleArray);
         return solarScheduleArray;
      }
    }

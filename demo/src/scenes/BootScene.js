@@ -39,6 +39,7 @@ export default class BootScene extends Phaser.Scene {
     initGlobalDataManager() {
         this.registry.set("time", 0);
         this.registry.set("dayLength", 0);
+        this.registry.set("activityTracker",null);
     }
 }
 

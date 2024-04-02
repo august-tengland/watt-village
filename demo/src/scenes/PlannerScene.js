@@ -36,7 +36,11 @@ export default class PlannerScene extends Phaser.Scene {
         dinner: "Make Dinner",
         tv: "Watch TV",
         washingMachine: "Run Washing Machine",
-        dishwasher: "Run Dishwasher"
+        dishwasher: "Run Dishwasher",
+        morningRoutine: "Morning Routine",
+        goToWork: "Commute to Work",
+        work: "Work",
+        goFromWork: "Commute from Work"
       }
       
     }
@@ -79,19 +83,23 @@ export default class PlannerScene extends Phaser.Scene {
 
       this.initActivityTracker();
 
+      this.schedulerHeaders = this.getSchedulerHeaders();
+
       this.activityTimeSliders = this.getTimeSliders();
       this.activityTimeLabels = this.getActivityTimeLabels(this.activityTimeSliders,this.activityLabels);
       this.activityTimeValueLabels = this.getActivityTimeValueLabels(this.activityTimeSliders,this.activityDurations);
 
 
       this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: "day1"});
-      //console.log(this.dataVisualizer.energyPrices);
+      ////console.log(this.dataVisualizer.energyPrices);
 
       this.activePolygons = ['energyBuy','energySell','solar']; //['energyBuy','energySell','solar'];
       this.activeSchemas = ['presenceActivity', 'idleActivity']; //['presenceActivity', 'idleActivity'];
       this.schemaLabels = this.createSchemaLabels(this.activityLabels); // Used to track and add/remove 
       this.graphButtons = this.addGraphButtons();
       this.graphButtonTexts = this.addGraphButtonTexts();
+      this.startButton = this.addStartButton();
+      this.startErrorMessage = this.addStartErrorMessage(this.startButton);
       this.drawPolygons(this.activePolygons);
       this.drawSchemas(this.activeSchemas);
       this.events.emit('componentsCreated');
@@ -121,16 +129,18 @@ export default class PlannerScene extends Phaser.Scene {
     }
 
     handleSliderChanged(activityKey, value) {
-      //console.log("slider changed:", value, activityKey);
+      ////console.log("slider changed:", value, activityKey);
       const activityTracker = this.data.get('activityTracker');
-      activityTracker[activityKey].startTime = value;
+      activityTracker[activityKey].startTime = Math.round(value);
       this.data.set('activityTracker',activityTracker);
       //this.activityTracker[activityKey].startTime = value;
     }
 
     handleActivityTrackerChanged(activityTracker) {
       if (this.data.get("loadingCompleted")) {
-        
+        this.activityTimeValueLabels = this.updateActivityTimeValueLabels(
+                                                            this.activityTimeSliders, 
+                                                            this.activityTimeValueLabels);
         this.lineGraphics.clear();
         this.drawPolygons(this.activePolygons);
         this.drawSchemas(this.activeSchemas);
@@ -143,12 +153,12 @@ export default class PlannerScene extends Phaser.Scene {
       if(['solar','energyBuy','energySell'].includes(graphType)) {
         if(isActive) this.activePolygons.push(graphType);
         else this.activePolygons = this.activePolygons.filter((polygonType) => polygonType !== graphType);
-        //console.log(this.activePolygons);
+        ////console.log(this.activePolygons);
       } 
       else if (['presenceActivity','idleActivity'].includes(graphType)) {
         if(isActive) this.activeSchemas.push(graphType);
         else this.activeSchemas = this.activeSchemas.filter((schemaType) => schemaType !== graphType);
-       // console.log(this.activeSchemas);  
+       // //console.log(this.activeSchemas);  
       }  
       else {
         console.error("Couldn't find graphType of pressed button! Type:", graphType);
@@ -156,6 +166,42 @@ export default class PlannerScene extends Phaser.Scene {
       this.drawPolygons(this.activePolygons);
       this.drawSchemas(this.activeSchemas);
     }
+
+    attemptSimulationStart() {
+
+    const activityTracker = this.data.get("activityTracker");
+
+      if(this.existsScheduleOverlap(activityTracker)) {
+        //console.log("overlap");
+        this.startErrorMessage.visible = true;
+      } else {
+        //console.log("no overlap");
+        this.registry.set("activityTracker",activityTracker);
+        this.scene.start('HUDScene');
+        this.scene.start('SimulationScene');
+        this.scene.bringToTop('HUDScene');
+      }
+    }
+
+    existsScheduleOverlap(activityTracker) {
+      var existsOverlap = false;
+      const overlapTracker = new Array(24).fill(0);      ;
+      const presenceActivites = Object.values(activityTracker).filter(obj => obj.type === "presence"); 
+      for (var i = 0; i < presenceActivites.length; i++) {
+        //console.log(presenceActivites[i]);
+        for (var d = 0; d < presenceActivites[i].duration; d++) {
+          const currentTime = (presenceActivites[i].startTime + d % 24);
+          //console.log(currentTime);
+          if (overlapTracker[currentTime] > 0) {
+            existsOverlap = true;
+          } else {
+            overlapTracker[currentTime] += 1;
+          }
+        }
+      }
+      return existsOverlap;
+    }
+
 
 
     // --- Creation/Initiation methods -----------
@@ -167,7 +213,7 @@ export default class PlannerScene extends Phaser.Scene {
         carCharge: {
           type: "idle",
           startTime: null,
-          duration: 3
+          duration: 6
         },
         washingMachine: {
           type: "idle",
@@ -182,15 +228,102 @@ export default class PlannerScene extends Phaser.Scene {
         dinner: {
           type: "presence",
           startTime: null,
-          duration: 1
+          duration: 2
         },
         tv: {
           type: "presence",
           startTime: null,
           duration: 2
-        }
+        },
+        goToWork: {
+          type: "presence",
+          startTime: 7,
+          duration: 1,
+        },
+        work: {
+          type: "presence",
+          startTime: 8,
+          duration: 8,
+        },
+        goFromWork: {
+          type: "presence",
+          startTime: 16,
+          duration: 1,
+        },
+        morningRoutine: {
+          type: "presence",
+          startTime: 6,
+          duration: 1,
+        } 
       }
       this.data.set('activityTracker',activityTracker);
+    }
+
+    addStartButton() {
+      const startButton = this.add.image(290,920,"startButton")
+        .setInteractive()
+        .on('pointerdown', () => this.attemptSimulationStart() )
+        .on('pointerover', () => this.enterStartButtonHoverState())
+        .on('pointerout', () => this.enterStartButtonRestState());
+      const startButtonLabel = this.addText(0,0,"Start Day",24,"Comic Sans MS");
+      Phaser.Display.Align.In.Center(startButtonLabel, startButton);
+      return startButton;
+    }
+
+    enterStartButtonHoverState() {
+      this.startButton.setFrame(1);
+    }
+
+    enterStartButtonRestState() {
+      this.startButton.setFrame(0);
+    }
+
+    addStartErrorMessage(startButton) {
+      const errorMessageLabel = this.addText(0,0,"Error: Activities that require\npresence cannot overlap",18);
+      errorMessageLabel.setColor("#ff4321");
+      errorMessageLabel.setStyle({fontStyle: "bold"});
+      errorMessageLabel.visible = false;
+
+      Phaser.Display.Align.To.BottomCenter(errorMessageLabel, startButton,0,5);
+
+      return errorMessageLabel;
+
+    }
+
+    getSchedulerHeaders() {
+      const shBaseOffset = {x: 110, y:190};
+      const shHeadersData = {
+        shMainHeader: {
+          x: 0, y: 0, fontSize: 24,
+          text: "Schedule your daily energy activities",
+          textStyle: "Comic Sans MS"
+        },
+        shSubHeader: {
+          x: 0, y: 50, fontSize: 18,
+          text: "To maximize earnings, try to schedule\nactivities when energy prices are low\nor when you can use your own\nsolar production",
+          textStyle: "Comic Sans MS"
+        },
+        shIdle: {
+          x: 0, y: 180, fontSize: 24,
+          text: "Activites that can be done remotely",
+          textStyle: "Comic Sans MS"
+        },
+        shActive: {
+          x: 0, y: 500, fontSize: 24,
+          text: "Activites that require presence",
+          textStyle: "Comic Sans MS"
+        }
+      }
+      var schedulerHeaders = new Map();
+      for (const [shKey, shValue] of Object.entries(shHeadersData)) {
+        schedulerHeaders.set(shKey, this.addText(shValue['x']+shBaseOffset['x'],
+                                                shValue['y']+shBaseOffset['y'],
+                                                shValue['text'],
+                                                shValue['fontSize'],
+                                                shValue['textStyle']));
+      }
+
+      return schedulerHeaders;
     }
 
 
@@ -198,7 +331,7 @@ export default class PlannerScene extends Phaser.Scene {
 
       const timeSliders = new Map();
 
-      var sliderBaseOffset = {x: 280, y: 400};
+      var sliderBaseOffset = {x: 280, y: 460};
       var sliderBaseValues = {width: 300, height: 5};
       
       var sliderValues = {
@@ -239,7 +372,7 @@ export default class PlannerScene extends Phaser.Scene {
         }
       };
 
-      var yOffsets = [0,100,200,380,480];
+      var yOffsets = [0,80,160,320,400];
       var yOffsetPointer = 0;
       for (const [sliderKey, sliderValue] of Object.entries(sliderValues)) {
         timeSliders.set(sliderKey, this.getSlider({
@@ -254,7 +387,7 @@ export default class PlannerScene extends Phaser.Scene {
                                               gap: sliderValue['gap'],
                                               scene: this}));
         
-        //console.log(timeSliders.get(sliderKey));                                    
+        ////console.log(timeSliders.get(sliderKey));                                    
         yOffsetPointer++;
       }
 
@@ -278,7 +411,7 @@ export default class PlannerScene extends Phaser.Scene {
         value: (params.startingValue-params.min) / range,
 
         valuechangeCallback: (value) => {
-            //console.log("value: ", value);
+            ////console.log("value: ", value);
             value = (value * range) + params.min;
             params.scene.events.emit('sliderChanged', params.activityKey, value);
         },
@@ -309,7 +442,7 @@ export default class PlannerScene extends Phaser.Scene {
     getActivityTimeValueLabels(timeSliders) {
       const timeValueLabels = new Map();
       const activityTracker = this.data.get("activityTracker");
-      console.log(activityTracker);
+      //console.log(activityTracker);
       
       for (let timeSlider of timeSliders.values()) {
         const activityValueLabelKey = "avl" + timeSlider.name;
@@ -318,7 +451,7 @@ export default class PlannerScene extends Phaser.Scene {
         const duration = activityTracker[timeSlider.name]["duration"];
         const timeString = this.convertActivityTimeToDigital(startTime,duration);
 
-        const timeValueLabel = this.addText(0, 0, "18:00 -\n19:00", 20);
+        const timeValueLabel = this.addText(0, 0, timeString, 20);
         timeValueLabels.set(activityValueLabelKey, timeValueLabel);
         Phaser.Display.Align.To.RightCenter(timeValueLabel,timeSlider, 10, 0);
 
@@ -326,19 +459,32 @@ export default class PlannerScene extends Phaser.Scene {
       return timeValueLabels;
     }
 
+    updateActivityTimeValueLabels(timeSliders, timeValueLabels) {
+      const activityTracker = this.data.get("activityTracker");
+      //console.log("testing");
+      for (let timeSlider of timeSliders.values()) {
+        const activityValueLabelKey = "avl" + timeSlider.name;
+
+        const startTime = activityTracker[timeSlider.name]["startTime"];
+        const duration = activityTracker[timeSlider.name]["duration"];
+        const timeString = this.convertActivityTimeToDigital(startTime,duration);
+
+        timeValueLabels.get(activityValueLabelKey).setText(timeString);
+      }
+      return timeValueLabels;
+    }
+
+
     convertActivityTimeToDigital(startTime, duration){
-      console.log(startTime,duration);
-      // var dayLength = this.registry.values.dayLength;
-      // var tucf = dayLength / 24;
-      // var hour = Math.floor(time/tucf);
-      // var minute = Math.round((time/tucf - hour) * 60);
-      // var hourString = hour.toString().padStart(2, '0');
-      // var minuteString = minute.toString().padStart(2, '0');
-
-      // return {"hour": hourString, "minute": minuteString};
+      
+      var endTime = (startTime + duration) % 24;
+      if (startTime < 10) startTime = "0" + startTime;
+      var start = startTime + ":00";
+      if (endTime < 10) endTime = "0" + endTime;
+      var end = endTime + ":00";
+      //console.log(start,end);
+      return start+" -\n"+end;
   }
-
-
 
 
     drawPolygons(activePolygons) {
@@ -379,7 +525,7 @@ export default class PlannerScene extends Phaser.Scene {
       } 
 
       const activityTrackingData = this.data.get("activityTracker");
-      //console.log("activity tracker:", activityTrackingData);
+      ////console.log("activity tracker:", activityTrackingData);
 
       const schedules = {
         presenceActivity: {},
@@ -401,14 +547,14 @@ export default class PlannerScene extends Phaser.Scene {
           console.error("Supplied activity type does not exist! Type:", activityValues['type']);
         }
       }
-      //console.log("schedule:",schedules);
+      ////console.log("schedule:",schedules);
 
       this.schemaLabels.values().forEach((textLabel) => {
         textLabel.visible = false;
       });
 
       activeSchemas.sort().forEach((schema) => {
-        //console.log("drawSchema:", schema);
+        ////console.log("drawSchema:", schema);
         this.drawSchema(schema, schemaColors[schema], schedules[schema], this.graphDimensions);
           //this.drawPolygon(polygon, polygonColors[polygon], polygonDimensions)
       });
@@ -452,7 +598,7 @@ export default class PlannerScene extends Phaser.Scene {
     updateSchemaLabels(midpoint) {
       var schemaLabelKey = midpoint['activityKey'];
       if (midpoint['isDuplicate']) schemaLabelKey += "Duplicate";
-      //console.log(schemaLabelKey);
+      ////console.log(schemaLabelKey);
       this.schemaLabels.get(schemaLabelKey).visible = true;
       this.schemaLabels.get(schemaLabelKey).x = midpoint['x'];
       this.schemaLabels.get(schemaLabelKey).y = midpoint['y'];      
@@ -542,8 +688,8 @@ export default class PlannerScene extends Phaser.Scene {
       return graphButtonTexts;
     }
     
-    addText(x, y, value, size = 32) {
-      return this.add.text(x, y, value, { fontFamily: 'arial', fontSize: `${size}px`, fill: '#FFF' });
+    addText(x, y, value, size = 32, fontFamily = 'arial') {
+      return this.add.text(x, y, value, { fontFamily: fontFamily, fontSize: `${size}px`, fill: '#FFF' });
     }
   
 
