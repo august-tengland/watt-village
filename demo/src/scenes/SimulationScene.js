@@ -3,6 +3,8 @@ import { Person } from '../objects/Person.js';
 import { Location } from '../objects/Location.js';
 import { Activity } from '../objects/Activity.js';
 import { Device } from '../objects/Device.js';
+import { Powerline } from '../objects/Powerline.js';
+
 import { TotalEnergyHandler } from '../objects/TotalEnergyHandler.js';
 import { IndividualEnergyHandler } from '../objects/IndividualEnergyHandler.js';
 import { HouseSolarPanelHandler } from '../objects/HouseSolarPanelHandler.js';
@@ -32,7 +34,7 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
-        this.dayStartingHour = 18; // at which hour does the scene start/stop at?
+        this.dayStartingHour = 3; // at which hour does the scene start/stop at?
 
         // Starting time for scene
         this.registry.values.time = this.dayStartingHour*this.tucf;
@@ -58,6 +60,11 @@ export default class SimulationScene extends Phaser.Scene {
 
         // What is the optimal effect of the solar panels installed on the roof? (per house)
         this.solarPanelEffects = [12, 15]; //kWh (per hour)
+
+
+        this.powerlineUpdateFreq = 3;
+
+        this.numUpdates = 0;
 
         var offsetsArray = this.setOffsets();
         this.baseOffset = offsetsArray[0];
@@ -131,9 +138,7 @@ export default class SimulationScene extends Phaser.Scene {
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        this.powerLine = this.add.sprite(500,680,'powerLine').setScale(2);
-        this.powerLine.anims.play("powerLineActive");
-        this.powerLine.setDepth(5);
+
 
         // ---- GAME & LOGIC OBJECTS -----------------------------------------
 
@@ -160,6 +165,16 @@ export default class SimulationScene extends Phaser.Scene {
         // Create people
         this.people = this.createPeople();
 
+        // Create powerlines
+        const powerlineResponseArray = this.createPowerlines();
+        this.powerlines = powerlineResponseArray[0];
+        this.powerlinesBackground = powerlineResponseArray[1];
+
+        this.consumptionLabels = this.createConsumptionLabels();
+
+        this.inverterLabels = this.createInverterLabels();
+
+
         // Create energy & solar handlers
         this.individualEnergyHandlers = this.createIndividualEnergyHandlers();
         //console.log(this.individualEnergyHandlers);
@@ -170,15 +185,33 @@ export default class SimulationScene extends Phaser.Scene {
         this.totalEnergyHandler = this.createTotalEnergyHandler();
         //console.log(this.totalEnergyHandler);
 
+
         this.updatePlaybackSpeed();
 
         this.bindLocationsToPeople();
 
         this.assignSchedules();
-        
+
+       
     }
 
     update () {
+        // this.powerline1.tilePositionX -= 1;
+        // if (Math.abs(this.powerline1.tilePositionX) == this.powerline1.width) {
+        //     this.powerline1.tilePositionX = 0;
+        // }
+        // this.powerline2.tilePositionX -= 1;
+        // this.powerlineAlt1.tilePositionX -= 1;
+        // this.powerlineAlt2.tilePositionX -= 1;
+        // this.test1.tilePositionY -= 1;
+
+        this.numUpdates += 1;
+
+        if(this.numUpdates % this.powerlineUpdateFreq == 0) {
+            this.powerlines.forEach(powerline => powerline.handleAnimations());
+
+        }
+
         if (this.gameOver)
         {
             return;
@@ -265,6 +298,8 @@ export default class SimulationScene extends Phaser.Scene {
         for (var [key, houseSolarPanelHandler] of this.houseSolarPanelHandlers) {
             houseSolarPanelHandler.runUpdate(this.registry.values.time);
         }
+        this.updateConsumptionLabels();
+        this.updateInverterLabels();
         this.totalEnergyHandler.runUpdate(this.registry.values.time);
 
     }
@@ -501,7 +536,7 @@ createDevices() {
     const deviceInfo = {
         "stove": {
             texture: 'stove',
-            powerConsumption: 2.0/this.tucf,
+            powerConsumption: 1.0/this.tucf,
             isIdleConsuming: false,
             animationKeys: {
                 idle: 'stoveIdle',
@@ -511,7 +546,7 @@ createDevices() {
         },
         "fridge": {
             texture: 'fridge',
-            powerConsumption: 0.042/this.tucf, // kHw (per hour), = 1kWh / day
+            powerConsumption: 0.05/this.tucf, // kHw (per hour), = 1kWh / day
             isIdleConsuming: true,
             animationKeys: {
                 idle: 'fridgeIdle',
@@ -521,7 +556,7 @@ createDevices() {
         },
         "washingMachine": {
             texture: 'stove',
-            powerConsumption: 2.0/this.tucf, // kHw (per hour), = 1kWh / day
+            powerConsumption: 1.0/this.tucf, // kHw (per hour), = 1kWh / day
             isIdleConsuming: false,
             animationKeys: {
                 idle: 'stove',
@@ -800,35 +835,93 @@ createDevices() {
             }
             person.setSchedule(schedule);
         };
-        // APARTMENT 1 
-/*
-        const schedule1 = new Map();
-        schedule1.set(3, this.activities.get('a1Fridge'));
-        schedule1.set(8, this.activities.get('a1Stove'));
-        schedule1.set(12, this.activities.get('a1DinnerTable'));
-        schedule1.set(4, this.activities.get('a1WashingMachine'));
-        this.people.get("p1").setSchedule(schedule1);
-
-        // APARTMENT 2 
-
-        const schedule2 = new Map();
-        schedule2.set(1, this.activities.get('a2Fridge'));
-        schedule2.set(5, this.activities.get('a2Stove'));
-        schedule2.set(8, this.activities.get('a2DinnerTable'));
-        this.people.get("p2").setSchedule(schedule2);
-
-        // APARTMENT 3 
-
-        const schedule3 = new Map();
-        //schedule3.set(2, this.activities.get('a3Fridge'));
-        //schedule3.set(7, this.activities.get('a3Stove'));
-        //schedule3.set(11, this.activities.get('a3DinnerTable'));
-        schedule3.set(4, this.activities.get('a3DinnerTable'));
-        this.people.get("p3").setSchedule(schedule3);
-*/
-        ////console.log(this.people.get("p1"));
-        ////console.log(this.people.get("p3"));
     }
+
+// ---- CREATE CONSUMPTION LABELS -----------------------------------
+
+    createConsumptionLabels() {
+        const consumptionLabels = new Map();
+        const labelPostitions = {
+            1: {x: 590, y: 673},
+            2: {x: 590, y: 951},
+            3: {x: 1352, y: 673},
+            4: {x: 1352, y: 951}
+        }
+        for (var apartment = 1; apartment <= 4; apartment++) {
+            
+            this.add.rectangle(
+                labelPostitions[apartment]['x']-2,
+                labelPostitions[apartment]['y'],
+                62, 16, "0x523900").setOrigin(0).setDepth(30);
+
+            consumptionLabels.set(apartment, this.addText(
+                                        labelPostitions[apartment]['x'],
+                                        labelPostitions[apartment]['y'],
+                                        this.setConsumptionLabelText(0),
+                                        12).setDepth(35));
+        }
+
+        return consumptionLabels;
+    }
+
+    createInverterLabels() {
+        const inverterLabels = new Map();
+        const inverterBaseValues = {x: 942, y: 960, width: 65, height: 110};
+        const labelData = {
+            1: {x: 4, y: 5, isValue: false, text: "Produce", color: "#aa9966"},
+            2: {x: 4, y: 20, isValue: true, text: "0", color: "#ffffff"},
+            3: {x: 4, y: 40, isValue: false, text: "Buy", color: "#aa9966"},
+            4: {x: 4, y: 55, isValue: true, text: "0", color: "#ffffff"},
+            5: {x: 4, y: 75, isValue: false, text: "Sell", color: "#aa9966"},
+            6: {x: 4, y: 90, isValue: true, text: "0", color: "#ffffff"}
+        }
+
+        this.add.rectangle(
+            inverterBaseValues['x'],
+            inverterBaseValues['y'],
+            inverterBaseValues['width'],
+            inverterBaseValues['height'],
+            "0x443933").setOrigin(0).setDepth(3);
+
+        for (var label = 1; label <= 6; label++) {
+            const textString = labelData[label]['isValue'] ? 
+                                    this.setConsumptionLabelText(labelData[label]['text']) : 
+                                    labelData[label]['text'];
+
+            inverterLabels.set(label, this.addText(
+                                        inverterBaseValues['x']+labelData[label]['x'],
+                                        inverterBaseValues['y']+labelData[label]['y'],
+                                        textString,
+                                        12,
+                                        labelData[label]['color']).setDepth(5));
+        }
+
+        return inverterLabels;
+    }
+
+    updateConsumptionLabels() {
+        this.individualEnergyHandlers.forEach((handler) => {
+            this.consumptionLabels.get(handler.apartment).setText(this.setConsumptionLabelText(handler.currentConsumption)); 
+        });
+    }
+
+    updateInverterLabels() {
+        this.inverterLabels.get(2).setText(this.setConsumptionLabelText(this.totalEnergyHandler.currentTotalSolarProduction)); 
+        this.inverterLabels.get(4).setText(this.setConsumptionLabelText(this.totalEnergyHandler.currentTotalBuying)); 
+        this.inverterLabels.get(6).setText(this.setConsumptionLabelText(this.totalEnergyHandler.currentTotalSelling)); 
+    }
+
+    setConsumptionLabelText(effect) {
+        effect = Math.min(99.99,effect*this.tucf);
+        var effectLabel = effect.toFixed(2).toString().padStart(5, '0');
+        effectLabel += " kWh";
+        return effectLabel;
+    }
+
+
+    addText(x, y, value, size = 32, color = "#ffffff") {
+        return this.add.text(x, y, value, { fontFamily: 'Arial', fontStyle: 'bold', fontSize: `${size}px`, fill: color });
+      }
 
 // ----- CREATE ENERGY HANDLERS --------------------------------------
 
@@ -881,12 +974,325 @@ createDevices() {
             dayLength: this.dayLength,
             individualEnergyHandlers: this.individualEnergyHandlers,
             houseSolarPanelHandlers: this.houseSolarPanelHandlers,
+            powerlines: this.powerlines,
             currentDayKey: this.currentDay});
 
         return totalEnergyHandler;
     }
 
+    // ---- CREATE POWERLINES ---------------------------------------
 
+    createPowerlines() {
+
+        const powerlines = new Map();
+        const powerlinesBackground = new Map();
+
+        const powerlineBaseData = {
+            width: 5,
+            isActive: true,
+            backgroundColor: "0x523900",
+            backgroundPadding: 1,
+            baseSpeed: 0.5
+        }
+        const powerlineData = {
+            plh0sp1: {
+                x: 527, y: 385,
+                length: 20,
+                apartment: 0, house: 1, 
+                orientation: 1,
+                type: "solar",
+                speed: 1
+            },
+            plh0sp2: {
+                x: 828, y: 385,
+                length: 20,
+                apartment: 0, house: 1, 
+                orientation: 1,
+                type: "solar",
+                speed: 1
+            },
+            plh0r1: {
+                x: 527, y: 405,
+                length: 305,
+                apartment: 0, house: 1, 
+                orientation: 0,
+                type: "solar",
+                speed: 1
+            },
+            plh0r2: {
+                x: 832, y: 405,
+                length: 85,
+                apartment: 0, house: 1, 
+                orientation: 0,
+                type: "solar",
+                speed: 2
+            },
+            plh0re1: {
+                x: 917, y: 405,
+                length: 580,
+                apartment: 0, house: 1, 
+                orientation: 1,
+                type: "solar",
+                speed: 2
+            },
+            plh0re2: {
+                x: 917, y: 985,
+                length: 25,
+                apartment: 0, house: 1, 
+                orientation: 0,
+                type: "solar",
+                speed: 2
+            },
+            plh0me1: {
+                x: 900, y: 1000,
+                length: 45,
+                apartment: 0, house: 1, 
+                orientation: 2,
+                type: "mixed",
+                speed: 4
+            },
+            plh0me2: {
+                x: 895, y: 960,
+                length: 45,
+                apartment: 0, house: 1, 
+                orientation: 3,
+                type: "mixed",
+                speed: 4
+            },
+            plh0a1s1: {
+                x: 895, y: 685,
+                length: 275,
+                apartment: 1, house: 1, 
+                orientation: 3,
+                type: "mixed",
+                speed: 2
+            },
+            plh0a1s2: {
+                x: 650, y: 680,
+                length: 250,
+                apartment: 1, house: 1, 
+                orientation: 2,
+                type: "mixed",
+                speed: 2
+            },
+            plh0a3s1: {
+                x: 650, y: 960,
+                length: 250,
+                apartment: 3, house: 1, 
+                orientation: 2,
+                type: "mixed",
+                speed: 2
+            },
+            plh1sp1: {
+                x: 1120, y: 385,
+                length: 20,
+                apartment: 2,
+                orientation: 1,
+                type: "solar",
+                speed: 0.8
+            },
+            plh1sp2: {
+                x: 1378, y: 385,
+                length: 20,
+                apartment: 0, house: 2, 
+                orientation: 1,
+                type: "solar",
+                speed: 0.8
+            },
+            plh1sp3: {
+                x: 1636, y: 385,
+                length: 20,
+                apartment: 0, house: 2, 
+                orientation: 1,
+                type: "solar",
+                speed: 0.8
+            },
+            plh1r1: {
+                x: 1040, y: 405,
+                length: 85,
+                apartment: 0, house: 2, 
+                orientation: 2,
+                type: "solar",
+                speed: 2.4
+            },
+            plh1r2: {
+                x: 1120, y: 405,
+                length: 263,
+                apartment: 0, house: 2, 
+                orientation: 2,
+                type: "solar",
+                speed: 1.6
+            },
+            plh1r3: {
+                x: 1378, y: 405,
+                length: 263,
+                apartment: 0, house: 2, 
+                orientation: 2,
+                type: "solar",
+                speed: 0.8
+            },
+            plh1re1: {
+                x: 1035, y: 405,
+                length: 580,
+                apartment: 0, house: 2, 
+                orientation: 1,
+                type: "solar",
+                speed: 2.4
+            },
+            plh1re2: {
+                x: 1005, y: 985,
+                length: 35,
+                apartment: 0, house: 2, 
+                orientation: 2,
+                type: "solar",
+                speed: 2.4
+            },
+            plh1me1: {
+                x: 1005, y: 1000,
+                length: 50,
+                apartment: 0, house: 2, 
+                orientation: 0,
+                type: "mixed",
+                speed: 4
+            },
+            plh1me2: {
+                x: 1050, y: 960,
+                length: 45,
+                apartment: 0, house: 2, 
+                orientation: 3,
+                type: "mixed",
+                speed: 4
+            },
+            plh1a2s1: {
+                x: 1050, y: 685,
+                length: 275,
+                apartment: 2, house: 2, 
+                orientation: 3,
+                type: "mixed",
+                speed: 2
+            },
+            plh1a2s2: {
+                x: 1050, y: 680,
+                length: 300,
+                apartment: 2, house: 2, 
+                orientation: 0,
+                type: "mixed",
+                speed: 2
+            },
+            plh1a4s1: {
+                x: 1050, y: 960,
+                length: 300,
+                apartment: 4, house: 2, 
+                orientation: 0,
+                type: "mixed",
+                speed: 2
+            },
+            plcc1: {
+                x: 255, y: 1015,
+                length: 690,
+                apartment: 0, house: 0,
+                orientation: 2,
+                type: "mixed",
+                speed: 2
+            },
+            plcc2: {
+                x: 250, y: 930,
+                length: 90,
+                apartment: 0, house: 0,
+                orientation: 3,
+                type: "mixed",
+                speed: 2
+            },
+            plbe: {
+                x: 0, y: 1035,
+                length: 945,
+                apartment: 0, house: 0,
+                orientation: 0,
+                type: "bought",
+                speed: 4
+            },
+            plsre: {
+                x: 0, y: 1045,
+                length: 945,
+                apartment: 0, house: 0,
+                orientation: 2,
+                type: "solarSell",
+                speed: 4
+            },
+
+        }
+
+        for (const [plName, plValues] of Object.entries(powerlineData)) {
+            const texture = plValues['orientation'] % 2 == 0 ? 'powerlineIntense' : 'powerlineIntenseRotate';
+            const width = plValues['orientation'] % 2 == 0 ? plValues['length'] : powerlineBaseData['width']; 
+            const height = plValues['orientation'] % 2 == 0 ? powerlineBaseData['width'] : plValues['length']; 
+
+            if (plValues['type'] === "mixed") {
+                const plNameArray = [plName+"s", plName+"b"];
+                const plTypeArray = ["mixedSolar", "mixedBought"];
+                const plFrame = [1,2];
+                for (var i = 0; i < plNameArray.length; i++) {
+                    powerlines.set(plNameArray[i], new Powerline({
+                        scene: this,
+                        x: plValues['x'],
+                        y: plValues['y'],
+                        width: width,
+                        height: height,
+                        texture: texture,
+                        frame: plFrame[i],
+                        apartment: plValues['apartment'],
+                        orientation: plValues['orientation'],
+                        speed: plValues['speed'] * powerlineBaseData['baseSpeed'],
+                        house: plValues['house'],
+                        isActive: powerlineBaseData['isActive'],
+                        type: plTypeArray[i]
+                    })); 
+                    powerlines.get(plNameArray[i]).setOrigin(0,0);
+                }
+            } else {
+                const frame = plValues['type'] === "bought" ? 0 : 3; 
+                powerlines.set(plName, new Powerline({
+                    scene: this,
+                    x: plValues['x'],
+                    y: plValues['y'],
+                    width: width,
+                    height: height,
+                    texture: texture,
+                    frame: frame,
+                    apartment: plValues['apartment'],
+                    orientation: plValues['orientation'],
+                    speed: plValues['speed'] * powerlineBaseData['baseSpeed'],
+                    house: plValues['house'],
+                    isActive: powerlineBaseData['isActive'],
+                    type: plValues['type']
+                })); 
+                powerlines.get(plName).setOrigin(0,0);
+            }
+            
+
+            powerlinesBackground.set(plName, this.add.rectangle(plValues['x'],plValues['y'],width,height,powerlineBaseData['backgroundColor']));
+            powerlinesBackground.get(plName).setDepth(30).setOrigin(0,0);
+        }
+
+        return [powerlines, powerlinesBackground];
+
+
+
+        // this.powerlines.set("pl1", new Powerline({
+        //     scene: this,
+        //     x: 900,
+        //     y: 685,
+        //     width: 5,
+        //     height: 90,
+        //     texture: 'powerlineIntenseRotate',
+        //     frame: 0,
+        //     apartment: 1,
+        //     orientation: 1,
+        //     speed: 2,
+        //     house: 0,
+        //     isActive: true
+        // })); 
+    }
 }
 
 

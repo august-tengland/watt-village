@@ -111,6 +111,7 @@
           "key": "solarPanel",
           "url": "./assets/sprites/solarPanel.png"
         },
+
         {
           "type": "spritesheet",
           "key": "startButton",
@@ -159,11 +160,47 @@
         },
         {
           "type": "spritesheet",
-          "key": "powerLine",
-          "url": "./assets/sprites/powerLine.png",
+          "key": "powerline",
+          "url": "./assets/sprites/powerline.png",
           "frameConfig": {
-            "frameWidth": 20,
-            "frameHeight": 2
+            "frameWidth": 96,
+            "frameHeight": 5
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "powerlineAlt",
+          "url": "./assets/sprites/powerlineAlt.png",
+          "frameConfig": {
+            "frameWidth": 96,
+            "frameHeight": 5
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "powerlineAltRotate",
+          "url": "./assets/sprites/powerlineAltRotate.png",
+          "frameConfig": {
+            "frameWidth": 5,
+            "frameHeight": 96
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "powerlineIntense",
+          "url": "./assets/sprites/powerlineIntense.png",
+          "frameConfig": {
+            "frameWidth": 96,
+            "frameHeight": 5
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "powerlineIntenseRotate",
+          "url": "./assets/sprites/powerlineIntenseRotate.png",
+          "frameConfig": {
+            "frameWidth": 5,
+            "frameHeight": 96
           }
         }
       ]

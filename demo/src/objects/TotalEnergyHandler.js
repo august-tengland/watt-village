@@ -12,6 +12,8 @@ export class TotalEnergyHandler {
   // pointers
   individualEnergyHandlers;
   houseSolarPanelHandlers;
+  powerlines;
+  tucf;
 
   // init from json-data
   energyPricesPerTimeUnit;
@@ -20,6 +22,8 @@ export class TotalEnergyHandler {
   // current values
   currentTotalConsumption;
   currentTotalSolarProduction;
+  currentTotalBuying;
+  currentTotalSelling;
   currentConsumptionPerHouse;
   currentSolarProductionPerHouse;
   currentConsumptionFractions;
@@ -29,6 +33,7 @@ export class TotalEnergyHandler {
   totalCost;
   totalSelling;
   totalSavings;
+  
 
   constructor(params) { 
     // variables
@@ -36,15 +41,19 @@ export class TotalEnergyHandler {
     this.devices = params.devices;
     this.time = params.time;
     this.dayLength = params.dayLength;
+    this.tucf = params.dayLength / 24;
     this.currentDayKey = params.currentDayKey;
 
     this.individualEnergyHandlers = params.individualEnergyHandlers;
     this.houseSolarPanelHandlers = params.houseSolarPanelHandlers;
+    this.powerlines = params.powerlines;
 
     this.totalSolarPanelEffect = this.getTotalSolarPanelEffect();
 
     this.currentTotalConsumption = 0;
     this.currentTotalSolarProduction = 0;
+    this.currentTotalBuying = 0;
+    this.currentTotalSelling = 0;
     this.currentConsumptionPerHouse = [0,0];
     this.currentSolarProductionPerHouse = [0,0];
     this.currentConsumptionFractions = [0,0,0,0];
@@ -59,6 +68,7 @@ export class TotalEnergyHandler {
     this.time = newTime % this.dayLength;
     this.updateCurrentConsumption();
     this.updateCurrentSolarProduction();
+    this.updatePowerlinesAlpha();
     this.updateTotalCost();
   }
 
@@ -71,6 +81,104 @@ export class TotalEnergyHandler {
     }
     return totalSolarPanelEffect;
   }
+
+  updatePowerlinesAlpha() {
+
+    const effectToAlpha = (effect) => { // Sigmoid function
+      var steep = -1;
+      return 2 / (1 + Math.exp(steep*(this.tucf*effect))) - 1;
+    };
+    // estimatedMaxConsumptionPerApartment = 2kWh
+    const energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
+   
+    const solarEffect = this.currentTotalSolarProduction;
+    const boughtEffect = Math.max(0,energyDiff);
+    const soldSolarEffect = Math.max(0,-1*energyDiff);
+    const usedSolarEffect = solarEffect - soldSolarEffect;
+
+    this.currentTotalBuying = boughtEffect;
+    this.currentTotalSelling =soldSolarEffect;
+
+    const solarAlpha = effectToAlpha(solarEffect);
+    const boughtAlpha = effectToAlpha(boughtEffect);
+    const soldAlpha = effectToAlpha(soldSolarEffect);
+    
+    // console.log(this.currentTotalSolarProduction);
+    // console.log(this.currentTotalConsumption);
+    // console.log(energyDiff);
+    // console.log("solarEffect:", solarEffect,"boughtEffect:",boughtEffect,"soldEffect:", soldEffect);
+    // console.log("solarAlpha:", solarAlpha,"boughtAlpha:",boughtAlpha,"soldAlpha:", soldAlpha);
+
+    this.powerlines.forEach(powerline => {
+      //console.log(powerline.type);
+
+      if (powerline.type === "solar") powerline.setAlpha(solarAlpha);
+      else if (powerline.type === "bought") powerline.setAlpha(boughtAlpha);
+      else if (powerline.type === "solarSell") powerline.setAlpha(soldAlpha);
+      else { // Mixed
+        //console.log("hellooo?");
+        var totalUsageFactor = 0;
+        //console.log(powerline); 
+        //console.log(this.currentConsumptionFractions); 
+        if (powerline.apartment > 0) {
+          totalUsageFactor = this.currentConsumptionFractions[powerline.apartment-1];
+        } else if (powerline.house > 0) {
+          totalUsageFactor = this.currentConsumptionFractions[powerline.house-1] + this.currentConsumptionFractions[powerline.house+1]; 
+        } else { // Car charger
+          totalUsageFactor = 0;
+        }
+        //console.log("total usage factor:", totalUsageFactor);
+        if (powerline.type === "mixedSolar") powerline.setAlpha(effectToAlpha(usedSolarEffect * totalUsageFactor));
+        else if (powerline.type === "mixedBought") powerline.setAlpha(effectToAlpha(boughtAlpha * totalUsageFactor));
+      }
+    });
+  }
+
+  // updatePowerlinesAlpha() {
+  //   console.log(this.currentTotalConsumption);
+   
+  //   const estimatedMaxConsumption = 2;
+
+  //   const energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
+  //   const fractionSolar = Math.min(1,this.currentTotalSolarProduction / this.currentTotalConsumption);
+  //   const fractionBought = Math.max(0,energyDiff / this.currentTotalConsumption);
+  //   const fractionSold = Math.max(0,-1*energyDiff / this.currentTotalSolarProduction);
+
+  //   var solarAlpha = this.currentTotalSolarProduction /this.totalSolarPanelEffect;
+  //   //var boughtAlpha = this.currentTotalConsumption*fractionBought / estimatedMaxConsumption;
+  //   var boughtAlpha = 1;
+  //   var soldAlpha = solarAlpha * fractionSold;
+
+
+  //   console.log("energyDiff");
+  //   console.log("fractions:",fractionSolar, fractionBought, fractionSold);
+  //   console.log("alphas:",solarAlpha, boughtAlpha, soldAlpha, mixedSolarAlpha, mixedBoughtAlpha);
+
+
+  //   this.powerlines.forEach(powerline => {
+  //     //console.log(powerline.type);
+
+  //     if (powerline.type === "solar") powerline.setAlpha(solarAlpha);
+  //     else if (powerline.type === "bought") powerline.setAlpha(boughtAlpha);
+  //     else if (powerline.type === "solarSell") powerline.setAlpha(soldAlpha);
+  //     else { // Mixed
+  //       //console.log("hellooo?");
+  //       var totalUsageFactor = 0;
+  //       console.log(powerline); 
+  //       console.log(this.currentConsumptionFractions); 
+  //       if (powerline.apartment > 0) {
+  //         totalUsageFactor = this.currentConsumptionFractions[powerline.apartment-1];
+  //       } else if (powerline.house > 0) {
+  //         totalUsageFactor = this.currentConsumptionFractions[powerline.house-1] + this.currentConsumptionFractions[powerline.house+1]; 
+  //       } else { // Car charger
+  //         totalUsageFactor = 0;
+  //       }
+  //       console.log("total usage factor:", totalUsageFactor);
+  //       if (powerline.type === "mixedSolar") powerline.setAlpha(solarAlpha * totalUsageFactor);
+  //       else if (powerline.type === "mixedBought") powerline.setAlpha(boughtAlpha * totalUsageFactor);
+  //     }
+  //   });
+  // }
 
   updateCurrentConsumption() {
 
