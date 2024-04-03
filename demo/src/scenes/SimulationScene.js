@@ -555,12 +555,11 @@ createDevices() {
             repeatAnimation: false
         },
         "washingMachine": {
-            texture: 'stove',
+            texture: 'washingMachine',
             powerConsumption: 1.0/this.tucf, // kHw (per hour), = 1kWh / day
             isIdleConsuming: false,
             animationKeys: {
-                idle: 'stove',
-                active: 'stove'
+                active: 'washingMachineActive'
             },
             repeatAnimation: true
         }
@@ -569,13 +568,13 @@ createDevices() {
     const basePositionsSmall = {
         "stove": { "x": 502, "y": 480 },
         "fridge": { "x": 596, "y": 464 },
-        "washingMachine": { "x": 520, "y": 350 }
+        "washingMachine": { "x": 523, "y": 371 }
     }
 
     const basePositionsBig = {
         "stove": { "x": 885, "y": 480 },
         "fridge": { "x": 736, "y": 465 },
-        "washingMachine": { "x": 865, "y": 350 }
+        "washingMachine": { "x": 853, "y": 371 }
     }
 
     for (var apartment = 1; apartment <= 4; apartment++) {

@@ -160,6 +160,15 @@
         },
         {
           "type": "spritesheet",
+          "key": "washingMachine",
+          "url": "./assets/sprites/washingMachine.png",
+          "frameConfig": {
+            "frameWidth": 29,
+            "frameHeight": 29
+          }
+        },
+        {
+          "type": "spritesheet",
           "key": "powerline",
           "url": "./assets/sprites/powerline.png",
           "frameConfig": {

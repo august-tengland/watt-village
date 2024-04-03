@@ -87,7 +87,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   doIdleActivity(activity) {
-    //console.log(activity);
+    console.log(activity);
     activity.startActivity();
     setTimeout(() => {
       //console.log(activity.minDuration);
