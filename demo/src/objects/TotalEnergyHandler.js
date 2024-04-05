@@ -56,7 +56,7 @@ export class TotalEnergyHandler {
     this.currentTotalSelling = 0;
     this.currentConsumptionPerHouse = [0,0];
     this.currentSolarProductionPerHouse = [0,0];
-    this.currentConsumptionFractions = [0,0,0,0];
+    this.currentConsumptionFractions = [0,0,0,0,0];
 
     this.totalCost = 0;
     this.totalSelling = 0;
@@ -121,11 +121,11 @@ export class TotalEnergyHandler {
         //console.log(powerline); 
         //console.log(this.currentConsumptionFractions); 
         if (powerline.apartment > 0) {
-          totalUsageFactor = this.currentConsumptionFractions[powerline.apartment-1];
+          totalUsageFactor = this.currentConsumptionFractions[powerline.apartment];
         } else if (powerline.house > 0) {
-          totalUsageFactor = this.currentConsumptionFractions[powerline.house-1] + this.currentConsumptionFractions[powerline.house+1]; 
+          totalUsageFactor = this.currentConsumptionFractions[powerline.house] + this.currentConsumptionFractions[powerline.house+2]; 
         } else { // Car charger
-          totalUsageFactor = 0;
+          totalUsageFactor = this.currentConsumptionFractions[0];
         }
         //console.log("total usage factor:", totalUsageFactor);
         if (powerline.type === "mixedSolar") powerline.setAlpha(effectToAlpha(usedSolarEffect * totalUsageFactor));
@@ -134,56 +134,12 @@ export class TotalEnergyHandler {
     });
   }
 
-  // updatePowerlinesAlpha() {
-  //   console.log(this.currentTotalConsumption);
-   
-  //   const estimatedMaxConsumption = 2;
-
-  //   const energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
-  //   const fractionSolar = Math.min(1,this.currentTotalSolarProduction / this.currentTotalConsumption);
-  //   const fractionBought = Math.max(0,energyDiff / this.currentTotalConsumption);
-  //   const fractionSold = Math.max(0,-1*energyDiff / this.currentTotalSolarProduction);
-
-  //   var solarAlpha = this.currentTotalSolarProduction /this.totalSolarPanelEffect;
-  //   //var boughtAlpha = this.currentTotalConsumption*fractionBought / estimatedMaxConsumption;
-  //   var boughtAlpha = 1;
-  //   var soldAlpha = solarAlpha * fractionSold;
-
-
-  //   console.log("energyDiff");
-  //   console.log("fractions:",fractionSolar, fractionBought, fractionSold);
-  //   console.log("alphas:",solarAlpha, boughtAlpha, soldAlpha, mixedSolarAlpha, mixedBoughtAlpha);
-
-
-  //   this.powerlines.forEach(powerline => {
-  //     //console.log(powerline.type);
-
-  //     if (powerline.type === "solar") powerline.setAlpha(solarAlpha);
-  //     else if (powerline.type === "bought") powerline.setAlpha(boughtAlpha);
-  //     else if (powerline.type === "solarSell") powerline.setAlpha(soldAlpha);
-  //     else { // Mixed
-  //       //console.log("hellooo?");
-  //       var totalUsageFactor = 0;
-  //       console.log(powerline); 
-  //       console.log(this.currentConsumptionFractions); 
-  //       if (powerline.apartment > 0) {
-  //         totalUsageFactor = this.currentConsumptionFractions[powerline.apartment-1];
-  //       } else if (powerline.house > 0) {
-  //         totalUsageFactor = this.currentConsumptionFractions[powerline.house-1] + this.currentConsumptionFractions[powerline.house+1]; 
-  //       } else { // Car charger
-  //         totalUsageFactor = 0;
-  //       }
-  //       console.log("total usage factor:", totalUsageFactor);
-  //       if (powerline.type === "mixedSolar") powerline.setAlpha(solarAlpha * totalUsageFactor);
-  //       else if (powerline.type === "mixedBought") powerline.setAlpha(boughtAlpha * totalUsageFactor);
-  //     }
-  //   });
-  // }
 
   updateCurrentConsumption() {
 
     this.currentConsumptionPerHouse = [0,0];
     this.currentTotalConsumption = 0;
+    this.currentConsumptionFractions = [0,0,0,0,0];
 
     // Calculate total consumption in each and all buildings
     for(var [key, ieh] of this.individualEnergyHandlers) {
@@ -194,10 +150,12 @@ export class TotalEnergyHandler {
 
     // Calculate the fraction in which each house is responsible 
     for(var [key, ieh] of this.individualEnergyHandlers) {
-      this.currentConsumptionFractions[ieh.apartment - 1] = ieh.currentConsumption / this.currentTotalConsumption;
+      this.currentConsumptionFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
+      this.currentConsumptionFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
+
       //console.log("fraction of consumption by apartment", ieh.apartment, ": ", this.currentConsumptionFractions[ieh.apartment - 1]);
     }
-    
+    console.log(this.currentConsumptionFractions);
     //console.log("total current consumption: ", this.currentTotalConsumption);
     this.scene.events.emit('currentConsumptionChanged', this.currentTotalConsumption);
    }

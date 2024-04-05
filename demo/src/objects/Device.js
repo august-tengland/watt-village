@@ -3,6 +3,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
     body;
 
     key; 
+    type;
     currentScene;
     isActive;
     isIdleConsuming; // if true, uses power regardless of if its "interacted with" or not
@@ -20,12 +21,24 @@ export class Device extends Phaser.GameObjects.Sprite  {
       this.key = params.key;
       this.currentScene = params.scene;
       this.isActive = false;
+      this.type = params.texture;
       this.apartment = params.apartment;
       this.isIdleConsuming = params.isIdleConsuming;
       this.animationKeys = params.animationKeys;
       this.powerConsumption = params.powerConsumption;
       this.repeatAnimation = params.repeatAnimation;
       this.currentScene.add.existing(this);
+      this.deviceSpecificHandling();
+    }
+
+    deviceSpecificHandling() {
+      switch (this.type) {
+        case 'bed':
+          if(this.apartment % 2 == 0) {
+            this.flipX = true;
+          }
+          break;
+      }
     }
 
     handleAnimations() {
@@ -56,6 +69,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
     }
 
     getCurrentConsumption() {
+      console.log("getting consumption from",this.key,":",(this.isActive||this.isIdleConsuming) ? this.powerConsumption : 0);
       return (this.isActive||this.isIdleConsuming) ? this.powerConsumption : 0;
       // Check how long the device has been active, maybe something with system time
     }

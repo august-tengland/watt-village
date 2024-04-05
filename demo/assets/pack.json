@@ -160,6 +160,15 @@
         },
         {
           "type": "spritesheet",
+          "key": "bed",
+          "url": "./assets/sprites/bed.png",
+          "frameConfig": {
+            "frameWidth": 68,
+            "frameHeight": 48
+          }
+        },
+        {
+          "type": "spritesheet",
           "key": "washingMachine",
           "url": "./assets/sprites/washingMachine.png",
           "frameConfig": {

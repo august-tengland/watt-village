@@ -107,6 +107,8 @@ export class ScheduleHandler {
         const bedStartTime = 24 * this.tucf + 1;
         schedule.set(bedStartTime.toString(),bedActivity);
 
+        console.log("test:",schedule);
+
         return schedule;
     }
 
@@ -138,8 +140,6 @@ export class ScheduleHandler {
             const activity = activityMap.get(fullActivityKey);
             activities.push([startTime, activity]);
         }
-    
-        console.log(activities);
         return activities;
     }
-   }
+}

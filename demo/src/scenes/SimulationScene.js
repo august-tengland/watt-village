@@ -34,7 +34,7 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
-        this.dayStartingHour = 3; // at which hour does the scene start/stop at?
+        this.dayStartingHour = 1; // at which hour does the scene start/stop at?
 
         // Starting time for scene
         this.registry.values.time = this.dayStartingHour*this.tucf;
@@ -228,10 +228,10 @@ export default class SimulationScene extends Phaser.Scene {
         var baseOffset = {"x": 243, "y": 168 };
 
         var offsets = {
-            "1": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 0 },
-            "2": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] + -1 },
+            "1": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] },
+            "2": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] },
             "3": { "x": baseOffset['x'] + 0, "y": baseOffset['y'] + 277 },
-            "4": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] + 277-1 }
+            "4": { "x": baseOffset['x'] + 147, "y": baseOffset['y'] + 277 }
         }
         
         return [baseOffset, offsets];
@@ -248,6 +248,7 @@ export default class SimulationScene extends Phaser.Scene {
         
         for (var [key, person] of this.people) {
             if(person.schedule.has(this.registry.values.time.toString())) {
+                console.log(person.schedule);
                 //console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
                 person.doActivity(person.schedule.get(this.registry.values.time.toString()));
             }
@@ -533,7 +534,23 @@ createDevices() {
     // Create Devices
     const devices = new Map();
 
-    const deviceInfo = {
+    const basePositionsSmall = {
+        "stove": { "x": 502, "y": 480 },
+        "fridge": { "x": 596, "y": 465 },
+        "washingMachine": { "x": 523, "y": 371 },
+        "bed": { "x": 250, "y": 478 },
+        "carCharger": { "x": -7, "y": 770 }
+    }
+
+    const basePositionsBig = {
+        "stove": { "x": 885, "y": 480 },
+        "fridge": { "x": 736, "y": 465 },
+        "washingMachine": { "x": 853, "y": 371 },
+        "bed": { "x": 1280, "y": 478 },
+        "carCharger": { "x": -120, "y": 770 }
+    }
+
+    const apartmentDeviceInfo = {
         "stove": {
             texture: 'stove',
             powerConsumption: 1.0/this.tucf,
@@ -562,25 +579,39 @@ createDevices() {
                 active: 'washingMachineActive'
             },
             repeatAnimation: true
-        }
-    }
-
-    const basePositionsSmall = {
-        "stove": { "x": 502, "y": 480 },
-        "fridge": { "x": 596, "y": 464 },
-        "washingMachine": { "x": 523, "y": 371 }
-    }
-
-    const basePositionsBig = {
-        "stove": { "x": 885, "y": 480 },
-        "fridge": { "x": 736, "y": 465 },
-        "washingMachine": { "x": 853, "y": 371 }
+        },
+        "bed": {
+            texture: 'bed',
+            powerConsumption: 0, 
+            isIdleConsuming: false,
+            animationKeys: {
+                active: 'bedActive'
+            },
+            repeatAnimation: false
+        },
+        "carCharger": {
+            texture: 'washingMachine',
+            powerConsumption: 11.0/this.tucf, 
+            isIdleConsuming: false,
+            animationKeys: {
+                active: 'washingMachineActive'
+            },
+            repeatAnimation: true,
+            disable: [3,4] // The following apartments will not have access to the device
+        },
     }
 
     for (var apartment = 1; apartment <= 4; apartment++) {
         const deviceSuffix = "d" + apartment;
         const basePositions = apartment % 2 == 0 ? basePositionsBig : basePositionsSmall;  
-        for (const [deviceName, DeviceValues] of Object.entries(deviceInfo)) {
+        for (const [deviceName, DeviceValues] of Object.entries(apartmentDeviceInfo)) {
+            if(DeviceValues['disable'] != null && DeviceValues['disable'].includes(apartment)) { //&& DeviceValues['disable'].contains(apartment)
+                //const disableValues = DeviceValues['disable'];
+                //console.log(disableValues);
+                console.log("Disable activity", deviceName, "for apartment", apartment);
+                // console.log(DeviceValues['disable'].has(apartment));
+                break; // skip this apartment
+            }
             const deviceKey = deviceSuffix + deviceName;
             const postitions = {
                 x: basePositions[deviceName]['x'] + this.offsets[apartment]['x'],
@@ -689,7 +720,8 @@ createDevices() {
                 minDuration: 3000,
                 startDuration: 0,
                 exitDuration: 0,
-                deviceType: null 
+                deviceType: "carCharger",
+                disable: [3,4] // The following apartments will not have access to the activity 
             }
         }
 
@@ -728,15 +760,18 @@ createDevices() {
             const baseLocationSuffix = apartment % 2 == 0 ? baseLocationSuffixBig : baseLocationSuffixSmall;  
             for (const [activityName, activityValues] of Object.entries(activityInfo)) {
                 if(activityName in baseLocationSuffix) {
-                    const activityKey = activitySuffix + activityName;
-                    const device = activityValues.deviceType ? this.devices.get("d" + apartment + activityValues.deviceType) : null; 
-                    const locationKey = "l" + apartment + baseLocationSuffix[activityName];
-                    activities.set(activityKey, new Activity({key: activityKey, 
-                                                              scene: this, 
-                                                              apartment: apartment, 
-                                                              device: device, 
-                                                              locationKey: locationKey, 
-                                                              ...activityValues}));    
+                    if(activityInfo['disable'] != null && activityInfo['disable'].includes(apartment)) break;
+                    else { //&& DeviceValues['disable'].contains(apartment)
+                        const activityKey = activitySuffix + activityName;
+                        const device = activityValues.deviceType ? this.devices.get("d" + apartment + activityValues.deviceType) : null; 
+                        const locationKey = "l" + apartment + baseLocationSuffix[activityName];
+                        activities.set(activityKey, new Activity({key: activityKey, 
+                                                                scene: this, 
+                                                                apartment: apartment, 
+                                                                device: device, 
+                                                                locationKey: locationKey, 
+                                                                ...activityValues}));    
+                    }
                 }
             }
         }

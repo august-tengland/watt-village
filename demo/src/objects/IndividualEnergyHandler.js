@@ -17,8 +17,8 @@ export class IndividualEnergyHandler {
     
     // current values
     currentConsumption;
-    currentSolarPanelGeneration;
-  
+    currentApartmentConsumption;
+    currentOutsideConsumption;  
     // aggregated values
     individualCost;
     individualSelling;
@@ -48,8 +48,15 @@ export class IndividualEnergyHandler {
   
      updateCurrentConsumption() {
       this.currentConsumption = 0;
+      this.currentApartmentConsumption = 0;
+      this.currentOutsideConsumption = 0;  
       for(var [key, device] of this.devices) {
         this.currentConsumption += device.getCurrentConsumption();
+        if (["car"].includes(device.type)) {
+          this.currentOutsideConsumption += device.getCurrentConsumption();  
+        } else {
+          this.currentApartmentConsumption += device.getCurrentConsumption();
+        }
       }
       //console.log("current consumption for apartment ",this.apartment, ": ", this.currentConsumption);
      }
