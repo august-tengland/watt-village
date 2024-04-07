@@ -3,6 +3,7 @@
 export class Activity {
 
     key; 
+    activityType;
     isActive;
     isIdleActivity; // Does this activity require character precense or not?
     locationKey; // Each activity can only take place at one location
@@ -16,17 +17,17 @@ export class Activity {
      // variables
      this.isActive = false;
      this.key = params.key;
+     this.activityType = params.activityType;
      this.isIdleActivity = params.isIdleActivity;
      this.locationKey = params.locationKey;
      this.minDuration = typeof params.minDuration !== "undefined" ? params.minDuration : 0;
      this.exitDuration = typeof params.exitDuration !== "undefined" ? params.exitDuration : 0;
      this.startDuration = typeof params.startDuration !== "undefined" ? params.startDuration : 0;
      this.device = typeof params.device !== "undefined" ? params.device : null;
-     this.playbackSpeed = 1;
+     this.playbackSpeed = 2;
    }
 
    updatePlaybackSpeed(speed) {
-    this.minDuration = this.minDuration / (speed/this.playbackSpeed);
     this.exitDuration = this.exitDuration / (speed/this.playbackSpeed);
     this.startDuration = this.startDuration / (speed/this.playbackSpeed);
     this.playbackSpeed = speed;

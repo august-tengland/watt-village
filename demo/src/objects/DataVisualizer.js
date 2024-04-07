@@ -36,6 +36,12 @@ export class DataVisualizer {
       return energyPricesData;
     }
 
+    fetchDailyGoal(currentDayKey) {
+      const json = this.scene.cache.json.get('dailyGoalsJSON');
+      const dailyGoalData = json[currentDayKey];
+      return dailyGoalData;
+    }
+
     getPolygonTypes() {
       return this.polygonTypes;
     }

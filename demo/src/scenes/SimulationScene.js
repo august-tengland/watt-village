@@ -34,7 +34,7 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
-        this.dayStartingHour = 1; // at which hour does the scene start/stop at?
+        this.dayStartingHour = 3; // at which hour does the scene start/stop at?
 
         // Starting time for scene
         this.registry.values.time = this.dayStartingHour*this.tucf;
@@ -50,7 +50,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.setSpeedyAnimations(this.speedyAnimations);
 
         // Determines which schedules to follow 
-        this.currentDay = "day1";
+        this.currentDay = this.registry.get("currentDay");
 
         // Used to keep track of whether timer should be on or off (i.e. "speedup")
         this.numMovingCharacters = 0;
@@ -70,7 +70,10 @@ export default class SimulationScene extends Phaser.Scene {
         this.baseOffset = offsetsArray[0];
         this.offsets = offsetsArray[1]; 
 
-        this.scheduleHandler = new ScheduleHandler({scene: this, currentDayKey: this.currentDay, tucf: this.tucf});
+        this.scheduleHandler = new ScheduleHandler({scene: this, 
+                                                    currentDayKey: this.currentDay, 
+                                                    startTime: this.dayStartingHour * this.tucf, 
+                                                    tucf: this.tucf});
     }
     
     create () {
@@ -84,6 +87,9 @@ export default class SimulationScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
+        this.gameTimer.paused = true; // We'll start it after finishing everything else
+        
+        this.microGameTimer = 0;
         
         this.events.on('personStartedMoving', this.handlePersonStartedMoving, this);
 
@@ -98,7 +104,9 @@ export default class SimulationScene extends Phaser.Scene {
         this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
     
         //  A simple background for our game
-        this.sky = this.add.image(0, 0, 'sky').setScale(2.6,2);
+        this.sky = this.add.image(0, 0, 'sky');
+        this.sky.setTint(0x169ac5,0x169ac5,0x9addf3,0x9addf3);
+
         Phaser.Display.Align.In.Center(this.sky,this.gamezone);
     
         //  The platforms group contains the ground and the 2 ledges we can jump on
@@ -118,6 +126,8 @@ export default class SimulationScene extends Phaser.Scene {
         // Foreground for the houses
         this.houseSmallForeground = this.add.image(0, 0, 'houseSmallForeground');
         this.houseBigForeground = this.add.image(0, 0, 'houseBigForeground');
+
+        this.cars = this.createCars();
 
         this.houseSmallBackdrop.setDepth(2);
         this.houseBigBackdrop.setDepth(2);
@@ -192,24 +202,29 @@ export default class SimulationScene extends Phaser.Scene {
 
         this.assignSchedules();
 
+        // START
+        this.gameTimer.paused = false;
+        this.events.emit('timeChanged',this.registry.values.time);
+        this.events.emit('gamePausedChanged',this.gameTimer.paused);
+        this.startCommunitySleeping();
+        this.checkSchedules();
+        this.updateHandlers();
+        this.updateConsumptionLabels();
+        this.updateInverterLabels();
+        this.updateSkyTint(0);
+
        
     }
 
     update () {
-        // this.powerline1.tilePositionX -= 1;
-        // if (Math.abs(this.powerline1.tilePositionX) == this.powerline1.width) {
-        //     this.powerline1.tilePositionX = 0;
-        // }
-        // this.powerline2.tilePositionX -= 1;
-        // this.powerlineAlt1.tilePositionX -= 1;
-        // this.powerlineAlt2.tilePositionX -= 1;
-        // this.test1.tilePositionY -= 1;
 
         this.numUpdates += 1;
+        if(this.gameTimer.paused) this.microGameTimer = 0;
+        else this.microGameTimer += 1;
 
         if(this.numUpdates % this.powerlineUpdateFreq == 0) {
             this.powerlines.forEach(powerline => powerline.handleAnimations());
-
+            this.updateSkyTint(this.microGameTimer/(this.updateSpeed*0.06));
         }
 
         if (this.gameOver)
@@ -239,40 +254,51 @@ export default class SimulationScene extends Phaser.Scene {
 
     updateTime() {
         this.registry.values.time += 1;
+        this.microGameTimer = 0
         this.events.emit('timeChanged',this.registry.values.time);
-        this.updateHandlers();
         this.checkSchedules();
+        this.updateHandlers();
+        this.updateConsumptionLabels();
+        this.updateInverterLabels();
+        this.updateSkyTint(0);
     }
 
     checkSchedules() {
-        
+        const timeInt = this.registry.values.time;
+        const timeString = timeInt.toString();
         for (var [key, person] of this.people) {
-            if(person.schedule.has(this.registry.values.time.toString())) {
-                console.log(person.schedule);
-                //console.log("person ", person.key, "doing activity:", person.schedule.get(this.registry.values.time.toString()));
-                person.doActivity(person.schedule.get(this.registry.values.time.toString()));
+
+            if(person.schedule.has(timeString)) {
+                const activityArray = person.schedule.get(timeString);
+                activityArray.forEach(activityObject => {
+                    person.doActivity(timeInt, activityObject['activity'], activityObject['duration']);
+                })
+            }
+            if(person.stopSchedule.has(timeString)) {
+                const activityArray = person.stopSchedule.get(timeString);
+                activityArray.forEach(activity => {
+                    person.stopIdleActivity(activity);
+                })
             }
         }
     }
 
-
     handlePersonStartedMoving(personKey) {
+
         this.numMovingCharacters += 1;
-        //console.log(personKey,"started moving");
-        //console.log("increase: " + this.numMovingCharacters);
         this.setSpeedyAnimations(false);
         this.gameTimer.paused = true;
+        this.events.emit('gamePausedChanged',this.gameTimer.paused);
+
     }
+
     handlePersonStoppedMoving(personKey) {
-        //console.log(personKey,"stopped moving");
-        //console.log("decrease: " + this.numMovingCharacters);
         this.numMovingCharacters -= 1;
         if (this.numMovingCharacters == 0) {
             this.setSpeedyAnimations(true);
             this.gameTimer.paused = false;
-        }
+            this.events.emit('gamePausedChanged',this.gameTimer.paused);        }
     }
-
 
     updatePlaybackSpeed() {
         this.anims.globalTimeScale = this.playbackSpeed;
@@ -299,16 +325,83 @@ export default class SimulationScene extends Phaser.Scene {
         for (var [key, houseSolarPanelHandler] of this.houseSolarPanelHandlers) {
             houseSolarPanelHandler.runUpdate(this.registry.values.time);
         }
-        this.updateConsumptionLabels();
-        this.updateInverterLabels();
+
         this.totalEnergyHandler.runUpdate(this.registry.values.time);
 
     }
+    updateSkyTint(microAddOn) {
+
+        function generateInbetweenColor(c1, c2, progression) {
+            c1 = c1.toString(16);
+            c2 = c2.toString(16);
+            var c = "";
+            for(var i = 0; i<3; i++) {
+                var sub1 = c1.substring(2*i, 2+2*i);
+                var sub2 = c2.substring(2*i, 2+2*i);
+                var v1 = parseInt(sub1, 16);
+                var v2 = parseInt(sub2, 16);
+                var v = Math.floor(v1*(1-progression) + v2*progression);
+                var sub = v.toString(16).toUpperCase();
+                var padsub = ('0'+sub).slice(-2);
+                c += padsub;
+            }
+            return parseInt(c,16);
+        }
+
+        const currentTime = this.registry.values.time + microAddOn;
+        const topColors = [0x100020,0x5280a7,0x267aa5,0x169ac5];
+        const bottomColors = [0x102040,0x4865b1,0xfaddc3,0x9addf3];
+        const swaps = [5,6,7,9,17,19,20,21];
+        for (var i = 0; i < swaps.length; i++) {
+           if(swaps[i]*this.tucf > currentTime) {
+                if(i == 0) {
+                    this.sky.setTint(topColors[i],topColors[i],bottomColors[i],bottomColors[i]);
+                } else {
+                    const minTime = swaps[i-1];
+                    const maxTime = swaps[i];
+                    const progression = (currentTime-minTime*this.tucf) / (maxTime*this.tucf-minTime*this.tucf); 
+                    const ci1 = Math.min(i-1, (swaps.length-1)-(i-1));
+                    const ci2 = Math.min(i, (swaps.length-1)- i);
+                    const topColor = generateInbetweenColor(topColors[ci1],topColors[ci2],progression);
+                    const bottomColor = generateInbetweenColor(bottomColors[ci1],bottomColors[ci2],progression);
+                    this.sky.setTint(topColor,topColor,bottomColor,bottomColor);
+                }
+            return;
+           }
+        }
+        this.sky.setTint(topColors[0],topColors[0],bottomColors[0],bottomColors[0]); 
+    }
+
+    startCommunitySleeping() {
+        const timeInt = this.registry.values.time;
+        for (var [key, person] of this.people) {
+            const sleepActivityKey = "a" + key.substring(1) + "bed";
+            const sleepActivity = this.activities.get(sleepActivityKey);
+            person.startPresenceActivityDefined(sleepActivity);    
+        }
+    }
+    
 
 // *********************************************************************
 // ------- CREATION METHODS  -------------------------------------------
 // *********************************************************************
  
+createCars() {
+    const carBasePositions = {x: 202,y: 935};
+    const carOffsets = {
+        0: {x: 0, y: 0},
+        1: {x: 100, y: 0},
+    }
+    const cars = new Map();
+    cars.set("car1", this.add.image(carBasePositions['x']+carOffsets[0]['x'],
+                                    carBasePositions['y']+carOffsets[0]['y'],
+                                    "car").setFrame(0));
+    cars.set("car2", this.add.image(carBasePositions['x']+carOffsets[1]['x'],
+                                    carBasePositions['y']+carOffsets[1]['y'],
+                                    "car").setFrame(1));
+    cars.get("car2").flipX = true;
+    return cars;
+}
 
 createSolarPanels() {
     var solarPanels = new Map([
@@ -345,7 +438,7 @@ createLocations() {
             "2": { "x": 580, "y": 360 }
         },
         "1": {
-            "0": { "x": 280, "y": 480 },
+            "0": { "x": 255, "y": 480 },
             "1": { "x": 390, "y": 480 },
             "2": { "x": 445, "y": 480 },
             "3": { "x": 520, "y": 480 },
@@ -373,7 +466,7 @@ createLocations() {
             "2": { "x": 890, "y": 480 },
             "3": { "x": 1000, "y": 480 },
             "4": { "x": 1077, "y": 480 },
-            "5": { "x": 1260, "y": 480 }
+            "5": { "x": 1280, "y": 480 }
         },
         "2": {
             "0": { "x": -410, "y": 770 },
@@ -538,16 +631,18 @@ createDevices() {
         "stove": { "x": 502, "y": 480 },
         "fridge": { "x": 596, "y": 465 },
         "washingMachine": { "x": 523, "y": 371 },
+        "dishwasher": { "x": 536, "y": 489 },
         "bed": { "x": 250, "y": 478 },
-        "carCharger": { "x": -7, "y": 770 }
+        "carCharger": { "x": -1, "y": 772 }
     }
 
     const basePositionsBig = {
         "stove": { "x": 885, "y": 480 },
         "fridge": { "x": 736, "y": 465 },
         "washingMachine": { "x": 853, "y": 371 },
+        "dishwasher": { "x": 825, "y": 489 },
         "bed": { "x": 1280, "y": 478 },
-        "carCharger": { "x": -120, "y": 770 }
+        "carCharger": { "x": -127, "y": 772 }
     }
 
     const apartmentDeviceInfo = {
@@ -580,6 +675,15 @@ createDevices() {
             },
             repeatAnimation: true
         },
+        "dishwasher": {
+            texture: 'dishWasher',
+            powerConsumption: 1.0/this.tucf, // kHw (per hour), = 1kWh / day
+            isIdleConsuming: false,
+            animationKeys: {
+                active: 'dishWasherActive'
+            },
+            repeatAnimation: true
+        },
         "bed": {
             texture: 'bed',
             powerConsumption: 0, 
@@ -590,11 +694,11 @@ createDevices() {
             repeatAnimation: false
         },
         "carCharger": {
-            texture: 'washingMachine',
+            texture: 'carCharger',
             powerConsumption: 11.0/this.tucf, 
             isIdleConsuming: false,
             animationKeys: {
-                active: 'washingMachineActive'
+                active: 'carChargerActive'
             },
             repeatAnimation: true,
             disable: [3,4] // The following apartments will not have access to the device
@@ -613,20 +717,27 @@ createDevices() {
                 break; // skip this apartment
             }
             const deviceKey = deviceSuffix + deviceName;
-            const postitions = {
+            const positions = {
                 x: basePositions[deviceName]['x'] + this.offsets[apartment]['x'],
                 y: basePositions[deviceName]['y'] + this.offsets[apartment]['y']
             }
+            var lightning = this.add.sprite(positions['x'],positions['y'], "lightning");
+            lightning.setDepth(8);
+
             devices.set(deviceKey, new Device({key: deviceKey, 
                                                scene: this, 
                                                apartment: apartment, 
-                                               ...postitions, 
-                                               ...DeviceValues}));
+                                               ...positions, 
+                                               ...DeviceValues,
+                                               lightning}));
         }
     }
 
     for(var [key, device] of devices) {
         device.setDepth(5);
+        if(device.type === 'bed') {
+            device.setDepth(40);
+        }
     }
 
     
@@ -640,84 +751,84 @@ createDevices() {
         const activityInfo = {
             "fridge": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 300,
                 exitDuration: 300,
                 deviceType: "fridge" 
             },
             "stove": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 300,
                 exitDuration: 300,
                 deviceType: "stove" 
             },
             "dinnerTable": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 300,
                 exitDuration: 300,
                 deviceType: null 
             },
             "dishwasher": {
                 isIdleActivity: true,
-                minDuration: 3000,
+                minDuration: 1*this.tucf,
                 startDuration: 300,
                 exitDuration: 300,
-                deviceType: null 
+                deviceType: "dishwasher" 
             },
             "washingMachine": {
                 isIdleActivity: true,
-                minDuration: 3000,
+                minDuration: 1*this.tucf,
                 startDuration: 300,
                 exitDuration: 300,
                 deviceType: "washingMachine"
             },
             "goToWork": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
                 deviceType: null 
             },
             "bathroom": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
                 deviceType: null 
             },
             "couch": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
                 deviceType: null 
             },
             "tv": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
                 deviceType: null 
             },
             "book": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
                 deviceType: null 
             },
             "bed": {
                 isIdleActivity: false,
-                minDuration: 3000,
+                minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
-                deviceType: null 
+                deviceType: "bed" 
             },
             "carCharge": {
                 isIdleActivity: true,
-                minDuration: 3000,
+                minDuration: 6*this.tucf,
                 startDuration: 0,
                 exitDuration: 0,
                 deviceType: "carCharger",
@@ -766,6 +877,7 @@ createDevices() {
                         const device = activityValues.deviceType ? this.devices.get("d" + apartment + activityValues.deviceType) : null; 
                         const locationKey = "l" + apartment + baseLocationSuffix[activityName];
                         activities.set(activityKey, new Activity({key: activityKey, 
+                                                                activityType: activityName,
                                                                 scene: this, 
                                                                 apartment: apartment, 
                                                                 device: device, 
@@ -789,9 +901,10 @@ createDevices() {
 
         people.set("p1", new Person({
             key: "p1",
+            name: "rut",
             isControlledPerson: true,
             scene: this,
-            x: this.locations.get('l110').x,
+            x: this.locations.get('l110').x-10,
             y: this.locations.get('l110').y,
             apartment: 1,
             speed: this.characterSpeed,
@@ -801,35 +914,38 @@ createDevices() {
 
         people.set("p2", new Person({
             key: "p2",
+            name: "maria",
             scene: this,
             x: this.locations.get('l215').x,
             y: this.locations.get('l215').y,
             apartment: 2,
             speed: this.characterSpeed,
-            texture: 'rut'}));
+            texture: 'maria'}));
 
 
         // APARTMENT 3 
 
         people.set("p3", new Person({
             key: "p3",
+            name: "peter",
             scene: this,
-            x: this.locations.get('l310').x,
+            x: this.locations.get('l310').x-10,
             y: this.locations.get('l310').y,
             apartment: 3,
             speed: this.characterSpeed,
-            texture: 'rut'}));
+            texture: 'peter'}));
 
         // APARTMENT 4
 
         people.set("p4", new Person({
             key: "p4",
+            name: "ravi",
             scene: this,
             x: this.locations.get('l415').x,
             y: this.locations.get('l415').y,
             apartment: 4,
             speed: this.characterSpeed,
-            texture: 'rut'}));
+            texture: 'ravi'}));
 
         for(var [key, person] of people) {
             person.setDepth(10);
@@ -863,11 +979,12 @@ createDevices() {
             if(person.isControlledPerson) {
                 var timestep = (8*this.tucf).toString();
                 schedule = this.scheduleHandler.createControlledSchedule(person.key, activityTracker, this.activities);
-                person.setSchedule(schedule);
+                console.log(schedule);
             } else {
                 schedule = this.scheduleHandler.getSchedule(person.key, this.activities);
             }
             person.setSchedule(schedule);
+        
         };
     }
 
@@ -1310,22 +1427,6 @@ createDevices() {
 
         return [powerlines, powerlinesBackground];
 
-
-
-        // this.powerlines.set("pl1", new Powerline({
-        //     scene: this,
-        //     x: 900,
-        //     y: 685,
-        //     width: 5,
-        //     height: 90,
-        //     texture: 'powerlineIntenseRotate',
-        //     frame: 0,
-        //     apartment: 1,
-        //     orientation: 1,
-        //     speed: 2,
-        //     house: 0,
-        //     isActive: true
-        // })); 
     }
 }
 

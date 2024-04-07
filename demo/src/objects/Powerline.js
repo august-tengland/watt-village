@@ -23,6 +23,7 @@ export class Powerline extends Phaser.GameObjects.TileSprite  {
       this.type = params.type;
       this.currentScene.add.existing(this);
       this.setDepth(35);
+      this.setAlpha(0);
     }
 
     update() {

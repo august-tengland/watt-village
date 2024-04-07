@@ -26,7 +26,7 @@ export class TotalEnergyHandler {
   currentTotalSelling;
   currentConsumptionPerHouse;
   currentSolarProductionPerHouse;
-  currentConsumptionFractions;
+  powerlineFractions;
   //currentSolarFraction; // NOTE: Maybe add?
 
   // aggregated values
@@ -56,7 +56,8 @@ export class TotalEnergyHandler {
     this.currentTotalSelling = 0;
     this.currentConsumptionPerHouse = [0,0];
     this.currentSolarProductionPerHouse = [0,0];
-    this.currentConsumptionFractions = [0,0,0,0,0];
+    this.personConsumptionFractions = [0,0,0,0];
+    this.powerlineFractions = [0,0,0,0,0];
 
     this.totalCost = 0;
     this.totalSelling = 0;
@@ -119,13 +120,13 @@ export class TotalEnergyHandler {
         //console.log("hellooo?");
         var totalUsageFactor = 0;
         //console.log(powerline); 
-        //console.log(this.currentConsumptionFractions); 
+        //console.log(this.powerlineFractions); 
         if (powerline.apartment > 0) {
-          totalUsageFactor = this.currentConsumptionFractions[powerline.apartment];
+          totalUsageFactor = this.powerlineFractions[powerline.apartment];
         } else if (powerline.house > 0) {
-          totalUsageFactor = this.currentConsumptionFractions[powerline.house] + this.currentConsumptionFractions[powerline.house+2]; 
+          totalUsageFactor = this.powerlineFractions[powerline.house] + this.powerlineFractions[powerline.house+2]; 
         } else { // Car charger
-          totalUsageFactor = this.currentConsumptionFractions[0];
+          totalUsageFactor = this.powerlineFractions[0];
         }
         //console.log("total usage factor:", totalUsageFactor);
         if (powerline.type === "mixedSolar") powerline.setAlpha(effectToAlpha(usedSolarEffect * totalUsageFactor));
@@ -139,7 +140,8 @@ export class TotalEnergyHandler {
 
     this.currentConsumptionPerHouse = [0,0];
     this.currentTotalConsumption = 0;
-    this.currentConsumptionFractions = [0,0,0,0,0];
+    this.personConsumptionFractions = [0,0,0,0];
+    this.powerlineFractions = [0,0,0,0,0];
 
     // Calculate total consumption in each and all buildings
     for(var [key, ieh] of this.individualEnergyHandlers) {
@@ -150,12 +152,13 @@ export class TotalEnergyHandler {
 
     // Calculate the fraction in which each house is responsible 
     for(var [key, ieh] of this.individualEnergyHandlers) {
-      this.currentConsumptionFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
-      this.currentConsumptionFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
+      this.personConsumptionFractions[ieh.apartment-1] = (ieh.currentApartmentConsumption+ieh.currentOutsideConsumption) / this.currentTotalConsumption;
+      this.powerlineFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
+      this.powerlineFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
 
-      //console.log("fraction of consumption by apartment", ieh.apartment, ": ", this.currentConsumptionFractions[ieh.apartment - 1]);
+      //console.log("fraction of consumption by apartment", ieh.apartment, ": ", this.powerlineFractions[ieh.apartment - 1]);
     }
-    console.log(this.currentConsumptionFractions);
+    //console.log(this.powerlineFractions);
     //console.log("total current consumption: ", this.currentTotalConsumption);
     this.scene.events.emit('currentConsumptionChanged', this.currentTotalConsumption);
    }
@@ -199,8 +202,8 @@ export class TotalEnergyHandler {
       this.totalSavings += (potentialCostThisTimeUnit - actualCostThisTimeUnit);
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
-        var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.currentConsumptionFractions[ieh.apartment-1];
-        var actualIndividualCostThisTimeUnit = actualCostThisTimeUnit*this.currentConsumptionFractions[ieh.apartment-1];
+        var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
+        var actualIndividualCostThisTimeUnit = actualCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
         ieh.updateTotalCost({
                         'costThisTimeUnit': actualIndividualCostThisTimeUnit,
                         'sellingThisTimeUnit': 0,
@@ -218,7 +221,7 @@ export class TotalEnergyHandler {
       this.totalSavings += (potentialCostThisTimeUnit + SellingThisTimeUnit);
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
-        var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.currentConsumptionFractions[ieh.apartment-1];
+        var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
         var individualSellingThisTimeUnit = SellingThisTimeUnit*0.25; // NOTE: Change to account for apartment size
         ieh.updateTotalCost({
                         'costThisTimeUnit': 0,

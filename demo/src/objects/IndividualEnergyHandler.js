@@ -52,7 +52,7 @@ export class IndividualEnergyHandler {
       this.currentOutsideConsumption = 0;  
       for(var [key, device] of this.devices) {
         this.currentConsumption += device.getCurrentConsumption();
-        if (["car"].includes(device.type)) {
+        if (["carCharger"].includes(device.type)) {
           this.currentOutsideConsumption += device.getCurrentConsumption();  
         } else {
           this.currentApartmentConsumption += device.getCurrentConsumption();

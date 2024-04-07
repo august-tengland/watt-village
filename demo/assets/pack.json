@@ -22,6 +22,11 @@
           "url": "./assets/data/solarSchedule.json"
         },
         {
+          "type": "json",
+          "key": "dailyGoalsJSON",
+          "url": "./assets/data/dailyGoals.json"
+        },
+        {
           "type": "html",
           "key": "form",
           "url": "./assets/html/form.html"
@@ -49,12 +54,12 @@
         {
           "type": "image",
           "key": "HUDIndividualStats",
-          "url": "./assets/HUD/HUDIndividualStats.png"
+          "url": "./assets/HUD/HUDIndividualSavings.png"
         },
         {
           "type": "image",
           "key": "HUDCommunityStats",
-          "url": "./assets/HUD/HUDCommunityStats.png"
+          "url": "./assets/HUD/HUDCommunitySavings.png"
         },
         {
           "type": "image",
@@ -65,6 +70,11 @@
           "type": "image",
           "key": "HUDSolarProduction",
           "url": "./assets/HUD/HUDSolarProduction.png"
+        },
+        {
+          "type": "image",
+          "key": "HUDGoal",
+          "url": "./assets/HUD/HUDGoal.png"
         },
         {
           "type": "image",
@@ -111,7 +121,15 @@
           "key": "solarPanel",
           "url": "./assets/sprites/solarPanel.png"
         },
-
+        {
+          "type": "spritesheet",
+          "key": "HUDTime",
+          "url": "./assets/HUD/HUDTime.png",
+          "frameConfig": {
+            "frameWidth": 110,
+            "frameHeight": 133
+          }
+        },
         {
           "type": "spritesheet",
           "key": "startButton",
@@ -121,7 +139,6 @@
             "frameHeight": 40
           }
         },
-
         {
           "type": "spritesheet",
           "key": "graphButtons",
@@ -134,10 +151,37 @@
         {
           "type": "spritesheet",
           "key": "rut",
-          "url": "./assets/sprites/rut_idle.png",
+          "url": "./assets/sprites/rut.png",
           "frameConfig": {
             "frameWidth": 32,
             "frameHeight": 48
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "peter",
+          "url": "./assets/sprites/peter.png",
+          "frameConfig": {
+            "frameWidth": 32,
+            "frameHeight": 48
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "ravi",
+          "url": "./assets/sprites/ravi.png",
+          "frameConfig": {
+            "frameWidth": 32,
+            "frameHeight": 48
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "maria",
+          "url": "./assets/sprites/maria.png",
+          "frameConfig": {
+            "frameWidth": 32,
+            "frameHeight": 52
           }
         },
         {
@@ -174,6 +218,42 @@
           "frameConfig": {
             "frameWidth": 29,
             "frameHeight": 29
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "dishWasher",
+          "url": "./assets/sprites/dishWasher.png",
+          "frameConfig": {
+            "frameWidth": 30,
+            "frameHeight": 30
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "dishWasher",
+          "url": "./assets/sprites/dishWasher.png",
+          "frameConfig": {
+            "frameWidth": 30,
+            "frameHeight": 30
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "carCharger",
+          "url": "./assets/sprites/carCharger.png",
+          "frameConfig": {
+            "frameWidth": 20,
+            "frameHeight": 25
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "car",
+          "url": "./assets/sprites/car.png",
+          "frameConfig": {
+            "frameWidth": 77,
+            "frameHeight": 39
           }
         },
         {
@@ -219,6 +299,15 @@
           "frameConfig": {
             "frameWidth": 5,
             "frameHeight": 96
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "lightning",
+          "url": "./assets/sprites/lightning.png",
+          "frameConfig": {
+            "frameWidth": 14,
+            "frameHeight": 17
           }
         }
       ]

@@ -90,8 +90,10 @@ export default class PlannerScene extends Phaser.Scene {
       this.activityTimeValueLabels = this.getActivityTimeValueLabels(this.activityTimeSliders,this.activityDurations);
 
 
-      this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: "day1"});
+      this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: this.registry.get("currentDay")});
       ////console.log(this.dataVisualizer.energyPrices);
+
+      this.dailyGoal = this.dataVisualizer.fetchDailyGoal(this.registry.get("currentDay"));
 
       this.activePolygons = ['energyBuy','energySell','solar']; //['energyBuy','energySell','solar'];
       this.activeSchemas = ['presenceActivity', 'idleActivity']; //['presenceActivity', 'idleActivity'];
@@ -103,7 +105,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.drawPolygons(this.activePolygons);
       this.drawSchemas(this.activeSchemas);
       this.events.emit('componentsCreated');
-
+      this.events.emit('dailyGoalChanged', this.dailyGoal);
     }
   
     update() {
@@ -177,9 +179,7 @@ export default class PlannerScene extends Phaser.Scene {
       } else {
         //console.log("no overlap");
         this.registry.set("activityTracker",activityTracker);
-        this.scene.start('HUDScene');
         this.scene.start('SimulationScene');
-        this.scene.bringToTop('HUDScene');
       }
     }
 
@@ -289,6 +289,7 @@ export default class PlannerScene extends Phaser.Scene {
       return errorMessageLabel;
 
     }
+
 
     getSchedulerHeaders() {
       const shBaseOffset = {x: 110, y:190};

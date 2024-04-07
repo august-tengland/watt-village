@@ -4,6 +4,7 @@ export class Person extends Phaser.GameObjects.Sprite {
 
   // variables
    key;
+   name;
    currentScene;
    speed;
    apartment;
@@ -14,12 +15,14 @@ export class Person extends Phaser.GameObjects.Sprite {
    comingActivity; 
    currentActivity; 
    schedule; // Map of time-activity pairs
+   stopSchedule; // (Timestep, activity) map to keep track of when to stop idle activities
    
   constructor(params) {
     super(params.scene, params.x, params.y, params.texture, params.frame);
 
     // variables
     this.key = params.key;
+    this.name = params.name;
     this.isControlledPerson = typeof params.isControlledPerson !== "undefined" ? params.isControlledPerson : false;
     this.currentScene = params.scene;
     this.speed = params.speed;
@@ -29,6 +32,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.comingActivity = null;
     this.currentActivity = null; // Note: Set to sleeping maybe?
     this.schedule = null;
+    this.stopSchedule = null;
 
     this.initSprite();
     this.currentScene.add.existing(this);
@@ -59,6 +63,7 @@ export class Person extends Phaser.GameObjects.Sprite {
   setSchedule(schedule) {
     ////console.log("calling setSchedule for person ", this.key);
     this.schedule = schedule;
+    this.stopSchedule = new Map();
   }
 
   handleAnimations() {
@@ -68,8 +73,31 @@ export class Person extends Phaser.GameObjects.Sprite {
     } else if (this.body.velocity.x < 0) {
       this.flipX = true;
     } 
-    this.anims.play('rutIdle',true);
+    if(this.currentActivity) {
+      console.log(this.currentActivity.activityType);
+      if (this.currentActivity.activityType === "book") {
+        this.anims.play(this.name+'Reading',true);
+        this.setOrigin(0.5,0.7);
+        return;
+      } else if (this.currentActivity.activityType === "tv") {
+        this.setOrigin(0.5,0.7);
+        return;
+      } else if (this.currentActivity.activityType === "bed") {
+        this.anims.stop();
+        this.setFrame(12);
+        if(this.apartment % 2 == 0) {
+          this.angle = 90;
+        } else {
+          this.angle = 270;
+        }
+        return;
+      }
+    }
+    this.anims.play(this.name+'Idle',true);
+    this.angle = 0;
+    this.setOrigin(0.5);
   }
+
 
   setPossibleLocations(locationList) {
     this.possibleLocations = locationList;
@@ -81,20 +109,22 @@ export class Person extends Phaser.GameObjects.Sprite {
   // --------- DO ACTIVITY ---------------------------------------------------------------
   // **************************************************************************************
 
-  doActivity(activity) {
-    if(activity.isIdleActivity) this.doIdleActivity(activity);
+  doActivity(timestep, activity, duration) {
+    if(activity.isIdleActivity) this.doIdleActivity(timestep, activity, duration);
     else this.doPresenceActivity(activity);
   }
 
-  doIdleActivity(activity) {
+
+  doIdleActivity(timestep, activity, duration) {
     console.log(activity);
     activity.startActivity();
-    setTimeout(() => {
-      //console.log(activity.minDuration);
-      this.stopIdleActivity(activity);
-    },activity.minDuration);
+    console.log(timestep + activity.minDuration);
+    this.setMapValue(this.stopSchedule,(timestep + duration).toString(),activity);
+    //this.stopSchedule.set((timestep + activity.minDuration).toString(),activity);
+    console.log(this.stopSchedule);
   }
   stopIdleActivity(activity) {
+    console.log("is this called?");
     activity.stopActivity();
   }
 
@@ -117,6 +147,15 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.currentActivity = this.comingActivity;
     this.comingActivity = null;
     this.currentActivity.startActivity();
+    this.handleAnimations();
+    console.log("doing current activity: " , this.currentActivity); 
+  }
+
+  startPresenceActivityDefined(activity) {
+    this.currentActivity = activity;
+    this.comingActivity = null;
+    this.currentActivity.startActivity();
+    this.handleAnimations();
     console.log("doing current activity: " , this.currentActivity); 
   }
 
@@ -288,4 +327,11 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.body.setVelocityX(0);
     this.body.setVelocityY(0);
   }
+  setMapValue(map, key, value) {
+    if (!map.has(key)) {
+        map.set(key, [value]);
+        return;
+    }
+    map.set(key, [value, ...map.get(key)]);
+}
 }
