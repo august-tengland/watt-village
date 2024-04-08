@@ -74,7 +74,6 @@ export class Person extends Phaser.GameObjects.Sprite {
       this.flipX = true;
     } 
     if(this.currentActivity) {
-      console.log(this.currentActivity.activityType);
       if (this.currentActivity.activityType === "book") {
         this.anims.play(this.name+'Reading',true);
         this.setOrigin(0.5,0.7);
@@ -116,15 +115,15 @@ export class Person extends Phaser.GameObjects.Sprite {
 
 
   doIdleActivity(timestep, activity, duration) {
-    console.log(activity);
+    //console.log(activity);
     activity.startActivity();
-    console.log(timestep + activity.minDuration);
+    //console.log(timestep + activity.minDuration);
     this.setMapValue(this.stopSchedule,(timestep + duration).toString(),activity);
     //this.stopSchedule.set((timestep + activity.minDuration).toString(),activity);
-    console.log(this.stopSchedule);
+    //console.log(this.stopSchedule);
   }
   stopIdleActivity(activity) {
-    console.log("is this called?");
+    //console.log("is this called?");
     activity.stopActivity();
   }
 
@@ -148,7 +147,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.comingActivity = null;
     this.currentActivity.startActivity();
     this.handleAnimations();
-    console.log("doing current activity: " , this.currentActivity); 
+    //console.log("doing current activity: " , this.currentActivity); 
   }
 
   startPresenceActivityDefined(activity) {
@@ -156,7 +155,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.comingActivity = null;
     this.currentActivity.startActivity();
     this.handleAnimations();
-    console.log("doing current activity: " , this.currentActivity); 
+    //console.log("doing current activity: " , this.currentActivity); 
   }
 
   stopPresenceActivity() {

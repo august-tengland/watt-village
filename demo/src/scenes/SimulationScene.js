@@ -34,7 +34,7 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
-        this.dayStartingHour = 18; // at which hour does the scene start/stop at?
+        this.dayStartingHour = 17; // at which hour does the scene start/stop at?
 
         // Starting time for scene
         this.registry.values.time = this.dayStartingHour*this.tucf;
@@ -43,7 +43,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.playbackSpeed = 1;
         
         // Controls the time interval for each in-game time unit
-        this.updateSpeed = 500;
+        this.updateSpeed = 2000;
 
         // Controls speed of animations
         this.speedyAnimations = true;
@@ -256,8 +256,9 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time += 1;
         this.microGameTimer = 0
         this.events.emit('timeChanged',this.registry.values.time);
-        this.checkSchedules();
         this.updateHandlers();
+        this.checkSchedules();
+        this.probeHandlers();
         this.updateConsumptionLabels();
         this.updateInverterLabels();
         this.updateSkyTint(0);
@@ -318,7 +319,6 @@ export default class SimulationScene extends Phaser.Scene {
 
     updateHandlers() {
 
-
         for (var [key, individualEnergyHandler] of this.individualEnergyHandlers) {
             individualEnergyHandler.runUpdate(this.registry.values.time);
         }
@@ -327,8 +327,20 @@ export default class SimulationScene extends Phaser.Scene {
         }
 
         this.totalEnergyHandler.runUpdate(this.registry.values.time);
-
     }
+    
+    probeHandlers() {
+
+        for (var [key, individualEnergyHandler] of this.individualEnergyHandlers) {
+            individualEnergyHandler.runUpdate(this.registry.values.time);
+        }
+        for (var [key, houseSolarPanelHandler] of this.houseSolarPanelHandlers) {
+            houseSolarPanelHandler.runUpdate(this.registry.values.time);
+        }
+
+        this.totalEnergyHandler.runProbe(this.registry.values.time);
+    }
+
     updateSkyTint(microAddOn) {
 
         function generateInbetweenColor(c1, c2, progression) {
@@ -1064,6 +1076,7 @@ createDevices() {
 
     updateConsumptionLabels() {
         this.individualEnergyHandlers.forEach((handler) => {
+            handler.updateCurrentConsumption();
             this.consumptionLabels.get(handler.apartment).setText(this.setConsumptionLabelText(handler.currentConsumption)); 
         });
     }

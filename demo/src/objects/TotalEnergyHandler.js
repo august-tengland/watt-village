@@ -73,6 +73,13 @@ export class TotalEnergyHandler {
     this.updateTotalCost();
   }
 
+  runProbe(newTime) {
+    this.time = newTime % this.dayLength;
+    this.updateCurrentConsumption();
+    this.updateCurrentSolarProduction();
+    this.updatePowerlinesAlpha();
+  }
+
   getTotalSolarPanelEffect() {
 
     var totalSolarPanelEffect = 0;
@@ -152,7 +159,7 @@ export class TotalEnergyHandler {
 
     // Calculate the fraction in which each house is responsible 
     for(var [key, ieh] of this.individualEnergyHandlers) {
-      this.personConsumptionFractions[ieh.apartment-1] = (ieh.currentApartmentConsumption+ieh.currentOutsideConsumption) / this.currentTotalConsumption;
+      this.personConsumptionFractions[ieh.apartment-1] = ieh.currentConsumption / this.currentTotalConsumption;
       this.powerlineFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
       this.powerlineFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
 

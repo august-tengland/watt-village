@@ -59,7 +59,6 @@ export class Device extends Phaser.GameObjects.Sprite  {
 
     handleAnimations() {
       if(this.isActive) {
-        console.log("playing active animation for:",this.key);
         this.anims.play(this.animationKeys['active'],true);
       } else {
         if(this.repeatAnimation) {

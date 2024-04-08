@@ -77,21 +77,18 @@ export default class PlannerScene extends Phaser.Scene {
       Phaser.Display.Align.In.Center(this.bigCharacter,this.gamezone, 400,160);
 
       // --- Content ---
-      
       this.lineGraphics = this.add.graphics({ x: 0, y: 0 });
       this.buttonGraphics = this.add.graphics({ x: 0, y: 0 });
 
       this.initActivityTracker();
+
+      this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: this.registry.get("currentDay")});
 
       this.schedulerHeaders = this.getSchedulerHeaders();
 
       this.activityTimeSliders = this.getTimeSliders();
       this.activityTimeLabels = this.getActivityTimeLabels(this.activityTimeSliders,this.activityLabels);
       this.activityTimeValueLabels = this.getActivityTimeValueLabels(this.activityTimeSliders,this.activityDurations);
-
-
-      this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: this.registry.get("currentDay")});
-      ////console.log(this.dataVisualizer.energyPrices);
 
       this.dailyGoal = this.dataVisualizer.fetchDailyGoal(this.registry.get("currentDay"));
 
@@ -104,21 +101,15 @@ export default class PlannerScene extends Phaser.Scene {
       this.startErrorMessage = this.addStartErrorMessage(this.startButton);
       this.drawPolygons(this.activePolygons);
       this.drawSchemas(this.activeSchemas);
+      this.baseline = this.dataVisualizer.createBaseline(this.data.get("activityTracker"));
       this.events.emit('componentsCreated');
       this.events.emit('dailyGoalChanged', this.dailyGoal);
-      this.dataVisualizer.createBaseline(this.data.get("activityTracker"));
+      console.log(this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));  
+
     }
   
     update() {
 
-      //this.graphics.clear();
-      //this.drawPolygons(['energyBuy','energySell','solar']);
-
-      if (this.startKey.isDown) {
-        this.scene.start('HUDScene');
-        this.scene.start('SimulationScene');
-        this.scene.bringToTop('HUDScene');
-      }
     }
 
     // ***********************************************************************
@@ -136,7 +127,6 @@ export default class PlannerScene extends Phaser.Scene {
       const activityTracker = this.data.get('activityTracker');
       activityTracker[activityKey].startTime = Math.round(value);
       this.data.set('activityTracker',activityTracker);
-      //this.activityTracker[activityKey].startTime = value;
     }
 
     handleActivityTrackerChanged(activityTracker) {
@@ -147,6 +137,8 @@ export default class PlannerScene extends Phaser.Scene {
         this.lineGraphics.clear();
         this.drawPolygons(this.activePolygons);
         this.drawSchemas(this.activeSchemas);
+        console.log(this.dataVisualizer);
+        console.log(this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));  
       }
     }
 

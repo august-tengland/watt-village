@@ -164,16 +164,55 @@ export class DataVisualizer {
     }
 
     createBaseline(activitySchedule) {
-      const devicePredictedConsumptions = {
-        'dinner': 1.0, // Note: Only for the first hour
-        'tv:': 0.05,
-        'washingMachine:': 1.0,
-        'dishwasher:': 1.0,
-        'carCharge:': 11.0,
-        
-
-      }
-      console.log("test:", activitySchedule);
+      return this.getCostPrediction(activitySchedule);
     }
+
+    getPredictedSavings(activitySchedule, baseline) {
+      const estimate = this.getCostPrediction(activitySchedule);
+      console.log(estimate,baseline);
+      return  baseline['estimatedTotalCost']- estimate['estimatedTotalCost'];
+    }
+
+    // TODO: ADD SOLAR POWER INTO EQUATION 
+    // Assume: Everyone acts the same as you, meaning:
+    // - When you consume, you have access to 25% of the solar power (since the three others are doing the same thing)
+    // - When you don't consume, no one is using solar power (i.e. everything sold)
+    // - For excess (sold): you get 25% of the savings 
+    getCostPrediction(activitySchedule) {
+      const estimate = {};
+      const devicePredictedConsumptions = {
+        dinner: 1.0*(5/6), // Note: Only for 50 minutes of the two hour timing
+        tv: 0.05,
+        washingMachine: 1.0,
+        dishwasher: 1.0,
+        carCharge: 11.0,
+      };
+      var consumptionArray = new Array(24).fill(0.05);
+      for (const [activityKey, activity] of Object.entries(activitySchedule)) {
+        console.log(activityKey,activity);
+        for(var i = activity.startTime; i < activity.startTime + activity.duration; i++) {
+          if(activityKey in devicePredictedConsumptions){
+            if(!(activityKey == 'dinner' && i > activity.startTime)) {
+              consumptionArray[i] += devicePredictedConsumptions[activityKey]; 
+            }
+          }
+        }
+      };
+      consumptionArray = consumptionArray.map((value) => Number(value.toFixed(3)));
+      console.log(consumptionArray);
+
+      this.energyPrices['buy']
+      var estimatedTotalCost = 0;
+      for (var hour = 0; hour < 24; hour++) {
+        estimatedTotalCost += consumptionArray[hour] * this.energyPrices['buy'][hour]/100; 
+        //console.log(this.energyPrices['buy'][hour]);
+      }
+
+      estimate['consumptionPerHour'] = consumptionArray;
+      estimate['estimatedTotalCost'] = estimatedTotalCost;
+      return estimate
+    }
+
+ 
   
    }
