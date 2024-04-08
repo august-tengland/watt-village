@@ -144,6 +144,17 @@
         "frameRate": 18
       },
       {
+        "key": "tvActive",
+        "frames": {
+          "typeOfGeneration": "generateFrameNumbers",
+          "key": "tv",
+          "start": 1,
+          "end": 2
+        },
+        "repeat": -1,
+        "frameRate": 18
+      },
+      {
         "key": "bedActive",
         "frames": {
           "typeOfGeneration": "generateFrameNumbers",

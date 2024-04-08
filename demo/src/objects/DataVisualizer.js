@@ -11,6 +11,9 @@ export class DataVisualizer {
     solarSchedule;
     energyPrices;
 
+    // Used to give preliminary assesment on savings
+    baseLineSavings;
+
     
     constructor(params) { 
       // variables
@@ -158,6 +161,19 @@ export class DataVisualizer {
         }
       }
       return [schemaSquares, midpoints];
+    }
+
+    createBaseline(activitySchedule) {
+      const devicePredictedConsumptions = {
+        'dinner': 1.0, // Note: Only for the first hour
+        'tv:': 0.05,
+        'washingMachine:': 1.0,
+        'dishwasher:': 1.0,
+        'carCharge:': 11.0,
+        
+
+      }
+      console.log("test:", activitySchedule);
     }
   
    }

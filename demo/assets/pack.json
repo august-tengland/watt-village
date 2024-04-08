@@ -231,15 +231,6 @@
         },
         {
           "type": "spritesheet",
-          "key": "dishWasher",
-          "url": "./assets/sprites/dishWasher.png",
-          "frameConfig": {
-            "frameWidth": 30,
-            "frameHeight": 30
-          }
-        },
-        {
-          "type": "spritesheet",
           "key": "carCharger",
           "url": "./assets/sprites/carCharger.png",
           "frameConfig": {
@@ -254,6 +245,15 @@
           "frameConfig": {
             "frameWidth": 77,
             "frameHeight": 39
+          }
+        },
+        {
+          "type": "spritesheet",
+          "key": "tv",
+          "url": "./assets/sprites/tv.png",
+          "frameConfig": {
+            "frameWidth": 17,
+            "frameHeight": 34
           }
         },
         {

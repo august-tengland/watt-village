@@ -34,7 +34,7 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
-        this.dayStartingHour = 3; // at which hour does the scene start/stop at?
+        this.dayStartingHour = 18; // at which hour does the scene start/stop at?
 
         // Starting time for scene
         this.registry.values.time = this.dayStartingHour*this.tucf;
@@ -633,7 +633,8 @@ createDevices() {
         "washingMachine": { "x": 523, "y": 371 },
         "dishwasher": { "x": 536, "y": 489 },
         "bed": { "x": 250, "y": 478 },
-        "carCharger": { "x": -1, "y": 772 }
+        "carCharger": { "x": -1, "y": 772 },
+        "tv": { "x": 212, "y": 351 }
     }
 
     const basePositionsBig = {
@@ -642,7 +643,8 @@ createDevices() {
         "washingMachine": { "x": 853, "y": 371 },
         "dishwasher": { "x": 825, "y": 489 },
         "bed": { "x": 1280, "y": 478 },
-        "carCharger": { "x": -127, "y": 772 }
+        "carCharger": { "x": -127, "y": 772 },
+        "tv": { "x": 1322, "y": 351 }
     }
 
     const apartmentDeviceInfo = {
@@ -703,6 +705,15 @@ createDevices() {
             repeatAnimation: true,
             disable: [3,4] // The following apartments will not have access to the device
         },
+        "tv": {
+            texture: 'tv',
+            powerConsumption: 0.05/this.tucf, 
+            isIdleConsuming: false,
+            animationKeys: {
+                active: 'tvActive'
+            },
+            repeatAnimation: true
+        }
     }
 
     for (var apartment = 1; apartment <= 4; apartment++) {
@@ -714,22 +725,23 @@ createDevices() {
                 //console.log(disableValues);
                 console.log("Disable activity", deviceName, "for apartment", apartment);
                 // console.log(DeviceValues['disable'].has(apartment));
-                break; // skip this apartment
+            } else {
+                const deviceKey = deviceSuffix + deviceName;
+                const positions = {
+                    x: basePositions[deviceName]['x'] + this.offsets[apartment]['x'],
+                    y: basePositions[deviceName]['y'] + this.offsets[apartment]['y']
+                }
+                var lightning = this.add.sprite(positions['x'],positions['y'], "lightning");
+                lightning.setDepth(8);
+    
+                devices.set(deviceKey, new Device({key: deviceKey, 
+                                                   scene: this, 
+                                                   apartment: apartment, 
+                                                   ...positions, 
+                                                   ...DeviceValues,
+                                                   lightning}));
             }
-            const deviceKey = deviceSuffix + deviceName;
-            const positions = {
-                x: basePositions[deviceName]['x'] + this.offsets[apartment]['x'],
-                y: basePositions[deviceName]['y'] + this.offsets[apartment]['y']
-            }
-            var lightning = this.add.sprite(positions['x'],positions['y'], "lightning");
-            lightning.setDepth(8);
-
-            devices.set(deviceKey, new Device({key: deviceKey, 
-                                               scene: this, 
-                                               apartment: apartment, 
-                                               ...positions, 
-                                               ...DeviceValues,
-                                               lightning}));
+            
         }
     }
 
@@ -810,7 +822,7 @@ createDevices() {
                 minDuration: null,
                 startDuration: 0,
                 exitDuration: 0,
-                deviceType: null 
+                deviceType: "tv" 
             },
             "book": {
                 isIdleActivity: false,

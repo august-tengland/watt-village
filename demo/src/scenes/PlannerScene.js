@@ -106,6 +106,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.drawSchemas(this.activeSchemas);
       this.events.emit('componentsCreated');
       this.events.emit('dailyGoalChanged', this.dailyGoal);
+      this.dataVisualizer.createBaseline(this.data.get("activityTracker"));
     }
   
     update() {
@@ -338,21 +339,21 @@ export default class PlannerScene extends Phaser.Scene {
       var sliderValues = {
         carCharge: {
           activityKey: "carCharge",
-          startingValue: 2,
+          startingValue: 17,
           min: 0,
           max: 23,
           gap: 1
         },
         dishwasher: {
           activityKey: "dishwasher",
-          startingValue: 10,
+          startingValue: 21,
           min: 0,
           max: 23,
           gap: 1
         },
         washingMachine: {
           activityKey: "washingMachine",
-          startingValue: 18,
+          startingValue: 17,
           min: 0,
           max: 23,
           gap: 1

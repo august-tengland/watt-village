@@ -49,6 +49,11 @@ export class Device extends Phaser.GameObjects.Sprite  {
             this.flipX = true;
           }
           break;
+        case 'tv':
+          if(this.apartment % 2 == 0) {
+            this.flipX = true;
+          }
+          break;
       }
     }
 

@@ -156,10 +156,7 @@ export class TotalEnergyHandler {
       this.powerlineFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
       this.powerlineFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
 
-      //console.log("fraction of consumption by apartment", ieh.apartment, ": ", this.powerlineFractions[ieh.apartment - 1]);
     }
-    //console.log(this.powerlineFractions);
-    //console.log("total current consumption: ", this.currentTotalConsumption);
     this.scene.events.emit('currentConsumptionChanged', this.currentTotalConsumption);
    }
 
@@ -171,9 +168,6 @@ export class TotalEnergyHandler {
       this.currentSolarProductionPerHouse[hsph.house] = hsph.currentSolarProduction;
       this.currentTotalSolarProduction += hsph.currentSolarProduction;
     }
-    //console.log("current production for house 0: ", this.currentSolarProductionPerHouse[0]);
-    //console.log("current production for house 1: ", this.currentSolarProductionPerHouse[1]);
-    //console.log("total production: ", this.currentTotalSolarProduction);
     this.scene.events.emit('currentProductionChanged', this.currentTotalSolarProduction, this.totalSolarPanelEffect);
    }
 
@@ -185,7 +179,8 @@ export class TotalEnergyHandler {
     var energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
     //console.log("current energy difference: ", energyDiff);
     // The cost that would have been incurred if no solar production was present
-    var potentialCostThisTimeUnit = this.currentTotalConsumption * this.energyPricesPerTimeUnit['buy'][this.time]
+    // What would be the cost if we were running these activities during the most expensive hour (without solar)
+    var potentialCostThisTimeUnit = this.currentTotalConsumption * Math.max(...this.energyPricesPerTimeUnit['buy']);
 
     if (energyDiff >= 0) { // If consuming more than producing
       //console.log("current energy price (buy):", this.energyPricesPerTimeUnit['buy'][this.time]);
