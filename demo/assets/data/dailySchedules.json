@@ -2,44 +2,76 @@
 {
     "day1": {
         "p2": {
-            "07:00": "fridge",
-            "07:10": "dinnerTable",
-            "07:30": "bathroom",
-            "07:50": "goToWork",
-            "10:00": "carCharge",
-            "17:20": "couch",
-            "17:40": "fridge",
-            "17:50": "stove",
-            "18:50": "dinnerTable",
-            "19:20": "tv",
-            "21:40": "bathroom",
-            "22:00": "bed"
         },
         "p3": {
-            "07:00": "fridge",
-            "07:10": "dinnerTable",
-            "07:30": "bathroom",
-            "07:50": "goToWork",
-            "18:00": "couch",
-            "18:10": "fridge",
-            "18:20": "stove",
-            "19:20": "dinnerTable",
-            "20:00": "book",
-            "21:40": "bathroom",
-            "22:00": "bed"
         },
         "p4": {
-            "07:00": "fridge",
-            "07:10": "dinnerTable",
-            "07:30": "bathroom",
-            "07:50": "goToWork",
-            "17:20": "couch",
-            "17:40": "fridge",
-            "17:50": "stove",
-            "18:50": "dinnerTable",
-            "19:20": "tv",
-            "21:40": "bathroom",
-            "22:00": "bed"
+        }
+    },
+    "day2": {
+        "p2": {
+        },
+        "p3": {
+            "07:00": ["fridge"],
+            "07:10": ["dinnerTable"],
+            "07:30": ["bathroom"],
+            "07:50": ["goToWork"],
+            "18:00": ["couch"],
+            "18:10": ["fridge","washingMachine"],
+            "18:20": ["stove"],
+            "19:20": ["dinnerTable"],
+            "20:00": ["book"],
+            "20:30": ["dishwasher"],
+            "21:00": ["tv"],
+            "23:00": ["bathroom"],
+            "23:20": ["bed"]
+        },
+        "p4": {
+        }
+    },
+    "day3": {
+        "p2": {
+            "07:00": ["fridge"],
+            "07:10": ["dinnerTable"],
+            "07:30": ["bathroom"],
+            "07:50": ["goToWork"],
+            "10:00": ["carCharge"],
+            "17:20": ["couch"],
+            "17:40": ["fridge"],
+            "17:50": ["stove"],
+            "18:50": ["dinnerTable"],
+            "19:20": ["tv","dishwasher"],
+            "21:20": ["book"],
+            "21:40": ["bathroom", "washingMachine"],
+            "22:00": ["bed"]
+        },
+        "p3": {
+            "07:00": ["fridge"],
+            "07:10": ["dinnerTable"],
+            "07:30": ["bathroom"],
+            "07:50": ["goToWork"],
+            "18:00": ["couch"],
+            "18:10": ["fridge","washingMachine"],
+            "18:20": ["stove"],
+            "19:20": ["dinnerTable"],
+            "20:00": ["book"],
+            "20:30": ["dishwasher"],
+            "21:00": ["tv"],
+            "23:00": ["bathroom"],
+            "23:20": ["bed"]
+        },
+        "p4": {
+            "07:00": ["fridge"],
+            "07:10": ["dinnerTable"],
+            "07:30": ["bathroom"],
+            "07:50": ["goToWork"],
+            "17:20": ["couch","washingMachine"],
+            "17:40": ["fridge"],
+            "17:50": ["stove"],
+            "18:50": ["dinnerTable"],
+            "19:20": ["tv","dishwasher"],
+            "22:40": ["bathroom"],
+            "22:50": ["bed"]
         }
     }
 }

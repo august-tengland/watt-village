@@ -30,12 +30,17 @@ export class ScheduleHandler {
         var scheduleDataPerTimeUnit = {};
         for (const [personKey, scheduleValue] of Object.entries(scheduleData)) {
             scheduleDataPerTimeUnit[personKey] = {};
-            for (const [timestepKey, timestepActivity] of Object.entries(scheduleValue)) {
+            for (const [timestepKey, timestepActivityArray] of Object.entries(scheduleValue)) {
                 var timestep = this.convertTimestep(timestepKey); 
-                var activityKey = "a" + personKey.substring(1) + timestepActivity;
-                scheduleDataPerTimeUnit[personKey][timestep] = activityKey; 
+                scheduleDataPerTimeUnit[personKey][timestep] = [];
+                timestepActivityArray.forEach(activityKey => {
+                    var fullActivityKey = "a" + personKey.substring(1) + activityKey;
+                    scheduleDataPerTimeUnit[personKey][timestep].push(fullActivityKey);     
+                });
             }
         }
+        console.log(scheduleDataPerTimeUnit);
+
         return scheduleDataPerTimeUnit;
     }
 
@@ -51,9 +56,13 @@ export class ScheduleHandler {
         //console.log("Creating schedule for person:", personKey);
         //console.log(this.scheduleDataPerTimeUnit[personKey]);
         const scheduleFromJson = this.scheduleDataPerTimeUnit[personKey];
-        for (const [time, activityKey] of Object.entries(scheduleFromJson)) {
-            // Get full activity from reference to activity map
-            this.setMapValue(schedule,time, activityMap.get(activityKey));
+        for (const [time, activityKeyArray] of Object.entries(scheduleFromJson)) {
+            //console.log(activityKeyArray);
+            activityKeyArray.forEach(activityKey => {
+                //console.log(activityKey);
+                // Get full activity from reference to activity map
+                this.setMapValue(schedule, time, activityMap.get(activityKey),activityMap.get(activityKey).minDuration);
+            });      
         }
         //console.log(schedule);
         return schedule;

@@ -71,6 +71,7 @@ export class Device extends Phaser.GameObjects.Sprite  {
       }
 
       if((this.isActive || this.isIdleConsuming) && this.powerConsumption > 0) {
+        console.log("device",this.key,"playing lightning");
         this.lightning.setVisible(true)
         this.lightning.anims.play("lightningActive");
       } 

@@ -26,9 +26,7 @@ export default class BootScene extends Phaser.Scene {
             );
             progress.destroy();
             this.initGlobalDataManager();
-            this.scene.start('HUDScene');
-            this.scene.start('PlannerScene');
-            //this.scene.start('SimulationScene');
+            this.scene.start('MenuScene');
             this.scene.bringToTop('HUDScene');
         });
 
@@ -38,7 +36,7 @@ export default class BootScene extends Phaser.Scene {
 
     initGlobalDataManager() {
         this.registry.set("time", 0);
-        this.registry.set("currentDay", "day1");
+        this.registry.set("currentDay", null);
         this.registry.set("dayLength", 0);
         this.registry.set("activityTracker",null);
     }

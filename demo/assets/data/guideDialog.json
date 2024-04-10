@@ -1,0 +1,34 @@
+{
+    "day1": {
+        "1": {
+            "text": "Welcome to 'WattVillage', your playground for experiencing an energy community!",
+            "duration": 2000,
+            "position": "general",
+            "image": null
+        },
+        "2": {
+            "text": "In this game, you're playing as 'rut'",
+            "duration": 2000,
+            "position": "general",
+            "image": "rutPortrait"
+        },
+        "3": {
+            "text": "Here's some more dialog",
+            "duration": 2000,
+            "position": "general",
+            "image": "rutPortrait"
+        },
+        "4": {
+            "text": "Here's even more dialog",
+            "duration": 2000,
+            "position": "general",
+            "image": null
+        }
+    },
+    "day2": {
+        
+    },
+    "day3": {
+        
+    }
+}

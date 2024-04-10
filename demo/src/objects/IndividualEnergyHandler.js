@@ -12,6 +12,7 @@ export class IndividualEnergyHandler {
     apartment;
     house;
     baseline;
+    isActive;
   
     // init from json-data
     energyPricesPerTimeUnit;
@@ -37,6 +38,7 @@ export class IndividualEnergyHandler {
       this.dayLength = params.dayLength;
       this.currentDayKey = params.currentDayKey;
       this.baseline = params.baseline;
+      this.isActive = params.isActive;
       this.currentConsumption = 0;
       this.totalConsumption = 0;
       this.individualCost = 0;
@@ -54,28 +56,32 @@ export class IndividualEnergyHandler {
       this.currentConsumption = 0;
       this.currentApartmentConsumption = 0;
       this.currentOutsideConsumption = 0;  
-      for(var [key, device] of this.devices) {
-        this.currentConsumption += device.getCurrentConsumption();
-        if (["carCharger"].includes(device.type)) {
-          this.currentOutsideConsumption += device.getCurrentConsumption();  
-        } else {
-          this.currentApartmentConsumption += device.getCurrentConsumption();
+      if(this.isActive) {
+        for(var [key, device] of this.devices) {
+          this.currentConsumption += device.getCurrentConsumption();
+          if (["carCharger"].includes(device.type)) {
+            this.currentOutsideConsumption += device.getCurrentConsumption();  
+          } else {
+            this.currentApartmentConsumption += device.getCurrentConsumption();
+          }
         }
       }
-      //console.log("current consumption for apartment ",this.apartment, ": ", this.currentConsumption);
-     }
+      }
   
      updateTotalCost(params) { 
-      
-      this.totalConsumption += this.currentConsumption;
-      this.individualCost += params['costThisTimeUnit'];
-      this.individualSelling += params['sellingThisTimeUnit'];
-      const progression = this.totalConsumption/this.baseline['estimatedIndividualConsumption'];
-      const consumptionBaseline = (this.individualCost-this.individualSelling);
-      this.individualSavings = (this.baseline['estimatedIndividualCost'] -consumptionBaseline/progression) * progression;
 
-      if(this.apartment == 1) {
-        this.scene.events.emit('individualStatsChanged', this.individualCost, this.individualSelling, this.individualSavings);
+      if(this.isActive) {
+        this.totalConsumption += this.currentConsumption;
+        this.individualCost += params['costThisTimeUnit'];
+        this.individualSelling += params['sellingThisTimeUnit'];
+        const progression = this.totalConsumption/this.baseline['estimatedIndividualConsumption'];
+        const consumptionBaseline = (this.individualCost-this.individualSelling);
+        this.individualSavings = (this.baseline['estimatedIndividualCost'] -consumptionBaseline/progression) * progression;
+  
+        if(this.apartment == 1) {
+          //console.log(progression);
+          this.scene.events.emit('individualStatsChanged', this.individualCost, this.individualSelling, this.individualSavings);
+        }
       }
      }
 

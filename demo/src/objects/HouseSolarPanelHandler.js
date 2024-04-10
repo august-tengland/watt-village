@@ -10,6 +10,7 @@ export class HouseSolarPanelHandler {
     solarPanelEffect;
     house;
     currentDayKey;
+    isActive;
   
     // init from json-data
     solarSchedulePerTimeUnit;
@@ -27,6 +28,7 @@ export class HouseSolarPanelHandler {
       this.dayLength = params.dayLength;
       this.currentDayKey = params.currentDayKey;
       this.solarPanelEffect = params.solarPanelEffect;
+      this.isActive = params.isActive;
       this.currentSolarProduction = 0;
       this.solarSchedulePerTimeUnit = this.generateSolarSchedule(params.currentDayKey);
   
@@ -38,7 +40,9 @@ export class HouseSolarPanelHandler {
     }
   
      updateSolarPanelProduction() {
-      this.currentSolarProduction = this.solarSchedulePerTimeUnit[this.time] * this.solarPanelEffect;
+      if (this.isActive) {
+        this.currentSolarProduction = this.solarSchedulePerTimeUnit[this.time] * this.solarPanelEffect;
+      }
      }
 
      generateSolarSchedule(currentDayKey) {

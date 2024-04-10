@@ -157,17 +157,20 @@ export class TotalEnergyHandler {
 
     // Calculate total consumption in each and all buildings
     for(var [key, ieh] of this.individualEnergyHandlers) {
-      if(ieh.house == 0) this.currentConsumptionPerHouse[0] += ieh.currentConsumption
-      else this.currentConsumptionPerHouse[1] += ieh.currentConsumption;
-      this.currentTotalConsumption += ieh.currentConsumption;
+      if (ieh.isActive) {
+        if(ieh.house == 0) this.currentConsumptionPerHouse[0] += ieh.currentConsumption
+        else this.currentConsumptionPerHouse[1] += ieh.currentConsumption;
+        this.currentTotalConsumption += ieh.currentConsumption;
+      }
     }
 
     // Calculate the fraction in which each house is responsible 
     for(var [key, ieh] of this.individualEnergyHandlers) {
-      this.personConsumptionFractions[ieh.apartment-1] = ieh.currentConsumption / this.currentTotalConsumption;
-      this.powerlineFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
-      this.powerlineFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
-
+      if (ieh.isActive) {
+        this.personConsumptionFractions[ieh.apartment-1] = ieh.currentConsumption / this.currentTotalConsumption;
+        this.powerlineFractions[ieh.apartment] = ieh.currentApartmentConsumption / this.currentTotalConsumption;
+        this.powerlineFractions[0] += ieh.currentOutsideConsumption / this.currentTotalConsumption;
+      }
     }
     this.scene.events.emit('currentConsumptionChanged', this.currentTotalConsumption);
    }
@@ -177,8 +180,10 @@ export class TotalEnergyHandler {
     this.currentTotalSolarProduction = 0;
 
     for(var [key, hsph] of this.houseSolarPanelHandlers) {
-      this.currentSolarProductionPerHouse[hsph.house] = hsph.currentSolarProduction;
-      this.currentTotalSolarProduction += hsph.currentSolarProduction;
+      if(hsph.isActive) {
+        this.currentSolarProductionPerHouse[hsph.house] = hsph.currentSolarProduction;
+        this.currentTotalSolarProduction += hsph.currentSolarProduction;
+      }
     }
     this.scene.events.emit('currentProductionChanged', this.currentTotalSolarProduction, this.totalSolarPanelEffect);
    }
@@ -186,56 +191,59 @@ export class TotalEnergyHandler {
 
    updateTotalCost() {
 
+    //var solarCapacity = 0; // Note: Change this later
+    //var numberPeopleWithCar = 0;
+    //var numberPeopleNoCar = 0;
+    var solarFraction = 0; // How much of the available solar power are you expected to claim? 
+    
+    if (this.currentDayKey === "day1") {
+      solarFraction = 1;
+    
+    } else if (this.currentDayKey === "day2") {
+      solarFraction = 0.5;
+
+    } else if (this.currentDayKey === "day3") {
+      solarFraction = 0.25;
+    }
+
     this.totalConsumption += this.currentTotalConsumption;
 
     this.scene.events.emit('currentEnergyPricesChanged', this.energyPricesPerTimeUnit['buy'][this.time], this.energyPricesPerTimeUnit['sell'][this.time]);
-    console.log(this.currentConsumptionPerHouse);
     var energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
-    //console.log("current energy difference: ", energyDiff);
     // The cost that would have been incurred if no solar production was present
     // What would be the cost if we were running these activities during the most expensive hour (without solar)
-    var potentialCostThisTimeUnit = this.currentTotalConsumption * Math.max(...this.energyPricesPerTimeUnit['buy']);
 
     if (energyDiff >= 0) { // If consuming more than producing
       //console.log("current energy price (buy):", this.energyPricesPerTimeUnit['buy'][this.time]);
       
       // The cost that was actually incurred, including savings from solar production
       var actualCostThisTimeUnit = energyDiff * this.energyPricesPerTimeUnit['buy'][this.time];      
-      //console.log("Total cost for this time unit:", actualCostThisTimeUnit);
 
       this.totalCost += actualCostThisTimeUnit;
 
-      this.totalSavings += (potentialCostThisTimeUnit - actualCostThisTimeUnit);
-
       for(var [key, ieh] of this.individualEnergyHandlers) {
-        var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
         var actualIndividualCostThisTimeUnit = actualCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
         ieh.updateTotalCost({
                         'costThisTimeUnit': actualIndividualCostThisTimeUnit,
-                        'sellingThisTimeUnit': 0,
-                        'savingsThisTimeUnit': potentialIndividualCostThisTimeUnit - actualIndividualCostThisTimeUnit});
+                        'sellingThisTimeUnit': 0});
       }
 
     } else { // If producing more than consuming
-      //console.log("current energy price (sell):", this.energyPricesPerTimeUnit['sell'][this.time]);
 
       // The money that was made selling excess electricity
       var SellingThisTimeUnit = -1 * energyDiff * this.energyPricesPerTimeUnit['sell'][this.time];      
-      //console.log("Total selling for this time unit:", SellingThisTimeUnit);
 
       this.totalSelling += SellingThisTimeUnit;
-      this.totalSavings += (potentialCostThisTimeUnit + SellingThisTimeUnit);
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
-        var potentialIndividualCostThisTimeUnit = potentialCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
-        var individualSellingThisTimeUnit = SellingThisTimeUnit*0.25; // NOTE: Change to account for apartment size
+        var individualSellingThisTimeUnit = SellingThisTimeUnit*solarFraction; // Account for apartment size
         ieh.updateTotalCost({
                         'costThisTimeUnit': 0,
-                        'sellingThisTimeUnit': individualSellingThisTimeUnit,
-                        'savingsThisTimeUnit': potentialIndividualCostThisTimeUnit + individualSellingThisTimeUnit});
+                        'sellingThisTimeUnit': individualSellingThisTimeUnit});
             }
     }
     const progression = this.totalConsumption/(this.baseline['estimatedCommunityConsumption']);
+    //console.log(this.totalConsumption);
     console.log(progression);
     const consumptionBaseline = (this.totalCost-this.totalSelling);
     this.totalSavings = (this.baseline['estimatedCommunityCost'] -consumptionBaseline/progression) * progression;

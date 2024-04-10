@@ -27,14 +27,44 @@
           "url": "./assets/data/dailyGoals.json"
         },
         {
-          "type": "html",
-          "key": "form",
-          "url": "./assets/html/form.html"
+          "type": "json",
+          "key": "guideDialogJSON",
+          "url": "./assets/data/guideDialog.json"
+        },
+        {
+          "type": "image",
+          "key": "wattVillageLogo",
+          "url": "./assets/images/wattVillageLogo.png"
+        },
+        {
+          "type": "image",
+          "key": "menuPlayButton",
+          "url": "./assets/images/menuPlayButton.png"
+        },
+        {
+          "type": "image",
+          "key": "menuPlayLevelButton",
+          "url": "./assets/images/menuPlayLevelButton.png"
+        },
+        {
+          "type": "image",
+          "key": "guideContainer",
+          "url": "./assets/images/guideContainer.png"
+        },
+        {
+          "type": "image",
+          "key": "guideNextButton",
+          "url": "./assets/images/guideNextButton.png"
         },
         {
           "type": "image",
           "key": "bigRut",
           "url": "./assets/images/bigRut.png"
+        },
+        {
+          "type": "image",
+          "key": "rutPortrait",
+          "url": "./assets/images/rutPortrait.png"
         },
         {
           "type": "image",
@@ -105,6 +135,21 @@
           "type": "image",
           "key": "houseBigForeground",
           "url": "./assets/images/houseBigForeground.png"
+        },
+        {
+          "type": "image",
+          "key": "houseBigHider",
+          "url": "./assets/images/houseBigHider.png"
+        },
+        {
+          "type": "image",
+          "key": "houseSmallHider",
+          "url": "./assets/images/houseSmallHider.png"
+        },
+        {
+          "type": "image",
+          "key": "apartmentSmallHider",
+          "url": "./assets/images/apartmentSmallHider.png"
         },
         {
           "type": "image",
