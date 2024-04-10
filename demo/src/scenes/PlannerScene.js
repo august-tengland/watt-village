@@ -85,6 +85,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: this.registry.get("currentDay")});
 
       this.schedulerHeaders = this.getSchedulerHeaders();
+      this.estimateValueLabel = this.getEstimateLabel(); 
 
       this.activityTimeSliders = this.getTimeSliders();
       this.activityTimeLabels = this.getActivityTimeLabels(this.activityTimeSliders,this.activityLabels);
@@ -104,8 +105,8 @@ export default class PlannerScene extends Phaser.Scene {
       this.baseline = this.dataVisualizer.createBaseline(this.data.get("activityTracker"));
       this.events.emit('componentsCreated');
       this.events.emit('dailyGoalChanged', this.dailyGoal);
-      console.log(this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));  
-
+      this.data.set("estimate", this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));    
+      this.updateEstimateLabel(this.data.get("estimate"));  
     }
   
     update() {
@@ -137,8 +138,8 @@ export default class PlannerScene extends Phaser.Scene {
         this.lineGraphics.clear();
         this.drawPolygons(this.activePolygons);
         this.drawSchemas(this.activeSchemas);
-        console.log(this.dataVisualizer);
-        console.log(this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));  
+        this.data.set("estimate", this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));    
+        this.updateEstimateLabel(this.data.get("estimate"));  
       }
     }
 
@@ -172,6 +173,7 @@ export default class PlannerScene extends Phaser.Scene {
       } else {
         //console.log("no overlap");
         this.registry.set("activityTracker",activityTracker);
+        this.registry.set("baseline",this.baseline);
         this.scene.start('SimulationScene');
       }
     }
@@ -253,7 +255,7 @@ export default class PlannerScene extends Phaser.Scene {
     }
 
     addStartButton() {
-      const startButton = this.add.image(290,920,"startButton")
+      const startButton = this.add.image(290,950,"startButton")
         .setInteractive()
         .on('pointerdown', () => this.attemptSimulationStart() )
         .on('pointerover', () => this.enterStartButtonHoverState())
@@ -281,6 +283,31 @@ export default class PlannerScene extends Phaser.Scene {
 
       return errorMessageLabel;
 
+    }
+
+    getEstimateLabel() {
+      const shEstimate = {
+        x: 150, y: 885, fontSize: 24,
+        text: "Estimated Savings: ",
+        textStyle: "Comic Sans MS"
+      }
+      const shEstimateLabel = this.addText(shEstimate['x'],
+                                            shEstimate['y'],
+                                            shEstimate['text'],
+                                            shEstimate['fontSize'],
+                                            shEstimate['textStyle']);
+
+      const shEstimateValueLabel = this.addText(0,0,"0 sek",
+                                                shEstimate['fontSize'],
+                                                shEstimate['textStyle'],
+                                                "#88FF33");
+
+      Phaser.Display.Align.To.RightCenter(shEstimateValueLabel, shEstimateLabel);                                            
+      return shEstimateValueLabel;
+    }
+
+    updateEstimateLabel(estimate) {
+      this.estimateValueLabel.setText(estimate.toFixed(2)+" sek");
     }
 
 
@@ -366,7 +393,7 @@ export default class PlannerScene extends Phaser.Scene {
         }
       };
 
-      var yOffsets = [0,80,160,320,400];
+      var yOffsets = [0,80,160,310,390];
       var yOffsetPointer = 0;
       for (const [sliderKey, sliderValue] of Object.entries(sliderValues)) {
         timeSliders.set(sliderKey, this.getSlider({
@@ -682,8 +709,8 @@ export default class PlannerScene extends Phaser.Scene {
       return graphButtonTexts;
     }
     
-    addText(x, y, value, size = 32, fontFamily = 'arial') {
-      return this.add.text(x, y, value, { fontFamily: fontFamily, fontSize: `${size}px`, fill: '#FFF' });
+    addText(x, y, value, size = 32, fontFamily = 'arial', fill='#FFF') {
+      return this.add.text(x, y, value, { fontFamily: fontFamily, fontSize: `${size}px`, fill: fill });
     }
   
 

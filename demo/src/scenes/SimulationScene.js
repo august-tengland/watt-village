@@ -34,16 +34,16 @@ export default class SimulationScene extends Phaser.Scene {
         // TIME UNIT CONVERSION FACTOR
         // How many in-game time units correspond to 1 hour "real time"?
         this.tucf = this.dayLength / 24;
-        this.dayStartingHour = 17; // at which hour does the scene start/stop at?
+        this.dayStartingHour = 3; // at which hour does the scene start/stop at?
 
         // Starting time for scene
         this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 1;
+        this.playbackSpeed = 3;
         
         // Controls the time interval for each in-game time unit
-        this.updateSpeed = 2000;
+        this.updateSpeed = 500;
 
         // Controls speed of animations
         this.speedyAnimations = true;
@@ -262,6 +262,10 @@ export default class SimulationScene extends Phaser.Scene {
         this.updateConsumptionLabels();
         this.updateInverterLabels();
         this.updateSkyTint(0);
+        if(this.registry.values.time >= this.dayStartingHour*this.tucf+this.dayLength) {
+            this.gameTimer.paused = true;
+            this.events.emit('gamePausedChanged',this.gameTimer.paused);
+        };
     }
 
     checkSchedules() {
@@ -719,7 +723,7 @@ createDevices() {
         },
         "tv": {
             texture: 'tv',
-            powerConsumption: 0.05/this.tucf, 
+            powerConsumption: 0.15/this.tucf, 
             isIdleConsuming: false,
             animationKeys: {
                 active: 'tvActive'
@@ -1116,7 +1120,8 @@ createDevices() {
                 devices: new Map([...this.devices].filter(([k, v]) => v.apartment == apartment )), 
                 time: this.registry.values.time,
                 dayLength: this.dayLength,
-                currentDayKey: this.currentDay}));
+                currentDayKey: this.currentDay,
+                baseline: this.registry.get("baseline")}));
         }
         
         return individualEnergyHandlers;
@@ -1151,7 +1156,8 @@ createDevices() {
             individualEnergyHandlers: this.individualEnergyHandlers,
             houseSolarPanelHandlers: this.houseSolarPanelHandlers,
             powerlines: this.powerlines,
-            currentDayKey: this.currentDay});
+            currentDayKey: this.currentDay,
+            baseline: this.registry.get("baseline")});
 
         return totalEnergyHandler;
     }

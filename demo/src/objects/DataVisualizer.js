@@ -164,52 +164,74 @@ export class DataVisualizer {
     }
 
     createBaseline(activitySchedule) {
-      return this.getCostPrediction(activitySchedule);
+      return this.getCostPrediction(activitySchedule, false);
     }
 
     getPredictedSavings(activitySchedule, baseline) {
-      const estimate = this.getCostPrediction(activitySchedule);
+      const estimate = this.getCostPrediction(activitySchedule, true);
       console.log(estimate,baseline);
-      return  baseline['estimatedTotalCost']- estimate['estimatedTotalCost'];
+      return  baseline['estimatedIndividualCost']- estimate['estimatedIndividualCost'];
     }
 
-    // TODO: ADD SOLAR POWER INTO EQUATION 
+    // TODO: ADD WRAPAROUND 
     // Assume: Everyone acts the same as you, meaning:
     // - When you consume, you have access to 25% of the solar power (since the three others are doing the same thing)
     // - When you don't consume, no one is using solar power (i.e. everything sold)
     // - For excess (sold): you get 25% of the savings 
-    getCostPrediction(activitySchedule) {
+    getCostPrediction(activitySchedule, usingSolar, solarCapacity = 24) {
+      
+      const variableConsumptionMargin = 2;
       const estimate = {};
       const devicePredictedConsumptions = {
         dinner: 1.0*(5/6), // Note: Only for 50 minutes of the two hour timing
-        tv: 0.05,
+        tv: 0.15,
         washingMachine: 1.0,
         dishwasher: 1.0,
         carCharge: 11.0,
       };
+
       var consumptionArray = new Array(24).fill(0.05);
+      var totalIndividualConsumption = 0;
+      var totalIndividualConsumptionNoCar = 0;
+
       for (const [activityKey, activity] of Object.entries(activitySchedule)) {
         console.log(activityKey,activity);
         for(var i = activity.startTime; i < activity.startTime + activity.duration; i++) {
           if(activityKey in devicePredictedConsumptions){
             if(!(activityKey == 'dinner' && i > activity.startTime)) {
-              consumptionArray[i] += devicePredictedConsumptions[activityKey]; 
+              consumptionArray[i%24] += devicePredictedConsumptions[activityKey];
+              totalIndividualConsumption += devicePredictedConsumptions[activityKey];
+              if (activityKey != 'carCharge') 
+                totalIndividualConsumptionNoCar += devicePredictedConsumptions[activityKey];  
             }
           }
         }
       };
       consumptionArray = consumptionArray.map((value) => Number(value.toFixed(3)));
-      console.log(consumptionArray);
-
-      this.energyPrices['buy']
+      var totalSolarProduction = 0;
       var estimatedTotalCost = 0;
       for (var hour = 0; hour < 24; hour++) {
-        estimatedTotalCost += consumptionArray[hour] * this.energyPrices['buy'][hour]/100; 
-        //console.log(this.energyPrices['buy'][hour]);
+        if (!usingSolar) {
+          estimatedTotalCost += consumptionArray[hour] * this.energyPrices['buy'][hour]/100; 
+        } else {
+          totalSolarProduction += solarCapacity*this.solarSchedule[hour];
+          const energyDifference = consumptionArray[hour] - solarCapacity*this.solarSchedule[hour]*0.25; //Assume you have access to 25%
+          console.log(energyDifference);
+          if(energyDifference>0) {
+            estimatedTotalCost += energyDifference * this.energyPrices['buy'][hour]/100;
+          } else {
+            estimatedTotalCost += energyDifference * this.energyPrices['sell'][hour]/100;
+          }
+        }
       }
-
       estimate['consumptionPerHour'] = consumptionArray;
-      estimate['estimatedTotalCost'] = estimatedTotalCost;
+      estimate['estimatedIndividualConsumption'] = totalIndividualConsumption + variableConsumptionMargin;
+      estimate['estimatedIndividualConsumptionNoCar'] = totalIndividualConsumptionNoCar + variableConsumptionMargin/10;
+      estimate['estimatedCommunityConsumption'] = 2*estimate['estimatedIndividualConsumption'] + 2*estimate['estimatedIndividualConsumptionNoCar'];
+      const noCarUsageFraction = estimate['estimatedIndividualConsumptionNoCar'] / estimate['estimatedIndividualConsumption'];  
+      estimate['estimatedIndividualCost'] = estimatedTotalCost;
+      estimate['estimatedIndividualCostNoCar'] = estimatedTotalCost * noCarUsageFraction;
+      estimate['estimatedCommunityCost'] = 2*estimate['estimatedIndividualCost'] + 2*estimate['estimatedIndividualCostNoCar'];
       return estimate
     }
 

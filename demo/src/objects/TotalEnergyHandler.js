@@ -6,9 +6,13 @@ export class TotalEnergyHandler {
   scene;
   devices;
   time;
+  timeAbsolute;
+  startTime;
   dayLength;
   totalSolarPanelEffect;
   currentDayKey;
+  baseline;
+
   // pointers
   individualEnergyHandlers;
   houseSolarPanelHandlers;
@@ -20,6 +24,7 @@ export class TotalEnergyHandler {
   solarSchedulePerTimeUnit;
   
   // current values
+  totalConsumption;
   currentTotalConsumption;
   currentTotalSolarProduction;
   currentTotalBuying;
@@ -40,9 +45,12 @@ export class TotalEnergyHandler {
     this.scene = params.scene;
     this.devices = params.devices;
     this.time = params.time;
+    this.timeAbsolute = params.time;
+    this.startTime = params.time;
     this.dayLength = params.dayLength;
     this.tucf = params.dayLength / 24;
     this.currentDayKey = params.currentDayKey;
+    this.baseline = params.baseline;
 
     this.individualEnergyHandlers = params.individualEnergyHandlers;
     this.houseSolarPanelHandlers = params.houseSolarPanelHandlers;
@@ -50,6 +58,7 @@ export class TotalEnergyHandler {
 
     this.totalSolarPanelEffect = this.getTotalSolarPanelEffect();
 
+    this.totalConsumption = 0;
     this.currentTotalConsumption = 0;
     this.currentTotalSolarProduction = 0;
     this.currentTotalBuying = 0;
@@ -67,6 +76,7 @@ export class TotalEnergyHandler {
 
   runUpdate(newTime) {
     this.time = newTime % this.dayLength;
+    this.timeAbsolute = newTime;
     this.updateCurrentConsumption();
     this.updateCurrentSolarProduction();
     this.updatePowerlinesAlpha();
@@ -75,6 +85,7 @@ export class TotalEnergyHandler {
 
   runProbe(newTime) {
     this.time = newTime % this.dayLength;
+    this.timeAbsolute = newTime;
     this.updateCurrentConsumption();
     this.updateCurrentSolarProduction();
     this.updatePowerlinesAlpha();
@@ -111,12 +122,6 @@ export class TotalEnergyHandler {
     const boughtAlpha = effectToAlpha(boughtEffect);
     const soldAlpha = effectToAlpha(soldSolarEffect);
     
-    // console.log(this.currentTotalSolarProduction);
-    // console.log(this.currentTotalConsumption);
-    // console.log(energyDiff);
-    // console.log("solarEffect:", solarEffect,"boughtEffect:",boughtEffect,"soldEffect:", soldEffect);
-    // console.log("solarAlpha:", solarAlpha,"boughtAlpha:",boughtAlpha,"soldAlpha:", soldAlpha);
-
     this.powerlines.forEach(powerline => {
       //console.log(powerline.type);
 
@@ -181,8 +186,10 @@ export class TotalEnergyHandler {
 
    updateTotalCost() {
 
-    this.scene.events.emit('currentEnergyPricesChanged', this.energyPricesPerTimeUnit['buy'][this.time], this.energyPricesPerTimeUnit['sell'][this.time]);
+    this.totalConsumption += this.currentTotalConsumption;
 
+    this.scene.events.emit('currentEnergyPricesChanged', this.energyPricesPerTimeUnit['buy'][this.time], this.energyPricesPerTimeUnit['sell'][this.time]);
+    console.log(this.currentConsumptionPerHouse);
     var energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
     //console.log("current energy difference: ", energyDiff);
     // The cost that would have been incurred if no solar production was present
@@ -197,10 +204,7 @@ export class TotalEnergyHandler {
       //console.log("Total cost for this time unit:", actualCostThisTimeUnit);
 
       this.totalCost += actualCostThisTimeUnit;
-      //console.log("actual:", actualCostThisTimeUnit);
-      //console.log("potential:", potentialCostThisTimeUnit);
-      //console.log("diff:", potentialCostThisTimeUnit - actualCostThisTimeUnit);
-      //console.log("savings:", this.totalSavings)
+
       this.totalSavings += (potentialCostThisTimeUnit - actualCostThisTimeUnit);
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
@@ -231,6 +235,10 @@ export class TotalEnergyHandler {
                         'savingsThisTimeUnit': potentialIndividualCostThisTimeUnit + individualSellingThisTimeUnit});
             }
     }
+    const progression = this.totalConsumption/(this.baseline['estimatedCommunityConsumption']);
+    console.log(progression);
+    const consumptionBaseline = (this.totalCost-this.totalSelling);
+    this.totalSavings = (this.baseline['estimatedCommunityCost'] -consumptionBaseline/progression) * progression;
     this.scene.events.emit('totalStatsChanged', this.totalCost, this.totalSelling, this.totalSavings);
    }
 

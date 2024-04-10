@@ -11,6 +11,7 @@ export class IndividualEnergyHandler {
     currentDayKey;
     apartment;
     house;
+    baseline;
   
     // init from json-data
     energyPricesPerTimeUnit;
@@ -19,6 +20,7 @@ export class IndividualEnergyHandler {
     currentConsumption;
     currentApartmentConsumption;
     currentOutsideConsumption;  
+    totalConsumption;
     // aggregated values
     individualCost;
     individualSelling;
@@ -34,7 +36,9 @@ export class IndividualEnergyHandler {
       this.time = params.time;
       this.dayLength = params.dayLength;
       this.currentDayKey = params.currentDayKey;
+      this.baseline = params.baseline;
       this.currentConsumption = 0;
+      this.totalConsumption = 0;
       this.individualCost = 0;
       this.individualSelling = 0;
       this.individualSavings = 0;
@@ -61,14 +65,15 @@ export class IndividualEnergyHandler {
       //console.log("current consumption for apartment ",this.apartment, ": ", this.currentConsumption);
      }
   
-     updateTotalCost(params) { // params: {costThisTimeUnit, sellingThisTimeUnit, savingsThisTimeUnit}
-      //console.log("Cost for apartment", this.apartment, "this time unit:",params['costThisTimeUnit']);
-      //console.log("Selling for apartment", this.apartment, "this time unit:",params['sellingThisTimeUnit']);
-      //console.log("Savings for apartment", this.apartment, "this time unit:",params['savingsThisTimeUnit']);
-
+     updateTotalCost(params) { 
+      
+      this.totalConsumption += this.currentConsumption;
       this.individualCost += params['costThisTimeUnit'];
       this.individualSelling += params['sellingThisTimeUnit'];
-      this.individualSavings += params['savingsThisTimeUnit'];
+      const progression = this.totalConsumption/this.baseline['estimatedIndividualConsumption'];
+      const consumptionBaseline = (this.individualCost-this.individualSelling);
+      this.individualSavings = (this.baseline['estimatedIndividualCost'] -consumptionBaseline/progression) * progression;
+
       if(this.apartment == 1) {
         this.scene.events.emit('individualStatsChanged', this.individualCost, this.individualSelling, this.individualSavings);
       }
