@@ -1,34 +1,112 @@
 {
-    "day1": {
+    "day1beforePlanner": {
         "1": {
             "text": "Welcome to 'WattVillage', your playground for experiencing an energy community!",
             "duration": 2000,
             "position": "general",
-            "image": null
+            "image": null,
+            "finish": false
         },
         "2": {
-            "text": "In this game, you're playing as 'rut'",
+            "text": "In this game, you're playing as 'Rut'.\n\nRut lives in a small neighbourhood that is looking to invest in solar panels as a means to gain energy independence and save money.\n\nThe solar panel installed on Rut's apartment building will generate electricity during the daytime, that can either be used during daily activities or sold to the national energy grid.",
             "duration": 2000,
             "position": "general",
-            "image": "rutPortrait"
+            "image": "rutPortrait",
+            "finish": false
         },
         "3": {
-            "text": "Here's some more dialog",
+            "text": "There are no batteries installed in the building, so using the solar energy can be tricky as Rut goes to work. Fortunately, she has invested in a couple of 'smart applicances' that can be scheduled to run anytime during the day.\n\nConsuming energy during peak-hours (when demand is the highest) can be costly, so scheduling activitites to other times can save money. This is called 'load shifting'.",
             "duration": 2000,
             "position": "general",
-            "image": "rutPortrait"
+            "image": "rutPortrait",
+            "finish": false
         },
         "4": {
-            "text": "Here's even more dialog",
+            "text": "At the top of the screen, you'll see a number of statistics for your daily energy costs. In order to clear a level, you must schedule your activities in a way that saves enough money to meet the daily target.",
             "duration": 2000,
             "position": "general",
-            "image": null
+            "image": "todaysGoalFilled",
+            "finish": false
+        },
+        "5": {
+            "text": "Right now, Rut lives alone in her apartment building and has one solar panel installed. As the game progresses, more people will join the community and the solar panels will increase (but more on that later!)\n\nClick the 'Schedule' button you're ready to start scheduling.\n\nGood Luck!",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
         }
     },
-    "day2": {
+    "day1duringPlanner": {
+        "1": {
+            "text": "Welcome to the activity scheduler!\n\nUse the sliders to schedule different energy-consuming activities.\n\nFeel like the schedule is too crowded? Use the buttons above the schedule to toggle different graphs.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": false
+        },
+        "2": {
+            "text": "Something about idle activities",
+            "duration": 2000,
+            "position": "general",
+            "image": "idleActivities",
+            "finish": false
+        },
+        "3": {
+            "text": "Something about presence activities",
+            "duration": 2000,
+            "position": "general",
+            "image": "presenceActivities",
+            "finish": false
+        },
+        "4": {
+            "text": "Right now, Rut lives alone in her apartment building and has one solar panel installed. As the game progresses, more people will join the community and the solar panels will increase (but more on that later!)\n\nClick the 'Start' button when you're ready to start scheduling. The activity planner will give you an estimate of your savings directly so no need to worry.\n\nGood Luck!",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day1afterPlanner": {
+        "1": {
+            "text": "It's now time to run a simulation of this day's activities!",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": false
+        },
+        "2": {
+            "text": "In this game, you're playing as 'Rut'.\n\nRut lives in a small neighbourhood that is looking to invest in solar panels as a means to gain energy independence and save money.\n\nThe solar panel installed on Rut's apartment building will generate electricity during the daytime, that can either be used during daily activities or sold to the national energy grid.",
+            "duration": 2000,
+            "position": "general",
+            "image": "rutPortrait",
+            "finish": false
+        },
+        "3": {
+            "text": "There are no batteries installed in the building, so using the solar energy can be tricky as Rut goes to work. Fortunately, she has invested in a couple of 'smart applicances' that can be scheduled to run anytime during the day.\n\nConsuming energy during peak-hours (when demand is the highest) can be costly, so scheduling activitites to other times can save money. This is called 'load shifting'.",
+            "duration": 2000,
+            "position": "general",
+            "image": "rutPortrait",
+            "finish": false
+        },
+        "4": {
+            "text": "At the top of the screen, you'll see a number of statistics for your daily energy costs. In order to clear a level, schedule your activities in a way that saves enough money to meet the daily target. \n\n(Note: 'Savings' are calculated against a baseline, assuming that no solar panels exist and that activities run during peak-hours)",
+            "duration": 2000,
+            "position": "general",
+            "image": "todaysGoalFilled",
+            "finish": false
+        },
+        "5": {
+            "text": "Right now, Rut lives alone in her apartment building and has one solar panel installed. As the game progresses, more people will join the community and the solar panels will increase (but more on that later!)\n\nClick the 'Start' button when you're ready to start scheduling. The activity planner will give you an estimate of your savings directly so no need to worry.\n\nGood Luck!",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day2beforePlanner": {
         
     },
-    "day3": {
+    "day3beforePlanner": {
         
     }
 }

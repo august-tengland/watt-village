@@ -108,6 +108,26 @@
         },
         {
           "type": "image",
+          "key": "todaysGoalFilled",
+          "url": "./assets/images/todaysGoalFilled.png"
+        },
+        {
+          "type": "image",
+          "key": "idleActivities",
+          "url": "./assets/images/idleActivities.png"
+        },
+        {
+          "type": "image",
+          "key": "presenceActivities",
+          "url": "./assets/images/presenceActivities.png"
+        },
+        {
+          "type": "image",
+          "key": "plannerInteractiveElements",
+          "url": "./assets/images/plannerInteractiveElements.png"
+        },
+        {
+          "type": "image",
           "key": "houseSmall",
           "url": "./assets/images/houseSmall.png"
         },

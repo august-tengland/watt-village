@@ -44,15 +44,6 @@ export default class MenuScene extends Phaser.Scene {
       this.cursors = this.input.keyboard.createCursorKeys();
     }
   
-    update() {
-      if (this.startKey.isDown) {
-        this.registry.set("currentDay", "day3");
-
-        this.scene.start('HUDScene');
-        this.scene.start('PlannerScene');
-        this.scene.bringToTop('HUDScene');
-      }
-    }
 
     createPlayButton() {
 
@@ -136,7 +127,7 @@ export default class MenuScene extends Phaser.Scene {
 
       this.registry.set("currentDay", currentDay);
       this.registry.set("usingGuide", guide);
-      this.registry.set("runGuide", guide);
+      this.registry.set('guideState', "beforePlanner");
 
 
       this.scene.start('HUDScene');

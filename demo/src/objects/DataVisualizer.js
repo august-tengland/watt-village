@@ -39,11 +39,7 @@ export class DataVisualizer {
       return energyPricesData;
     }
 
-    fetchDailyGoal(currentDayKey) {
-      const json = this.scene.cache.json.get('dailyGoalsJSON');
-      const dailyGoalData = json[currentDayKey];
-      return dailyGoalData;
-    }
+
 
     getPolygonTypes() {
       return this.polygonTypes;
@@ -186,7 +182,7 @@ export class DataVisualizer {
       var solarFraction = 0; // How much of the available solar power are you expected to claim? 
       
       if (this.currentDayKey === "day1") {
-        solarCapacity = 10;
+        solarCapacity = 5;
         numberPeopleWithCar = 1;
         numberPeopleNoCar = 0;
         solarFraction = 1;

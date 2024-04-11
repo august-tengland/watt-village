@@ -54,6 +54,7 @@ export default class PlannerScene extends Phaser.Scene {
     }
   
     create() {  
+      this.scene.bringToTop('GuideScene');
       // --- EVENT LISTENERS ----------------
       this.events.on('graphButtonPressed', this.handleGraphButtonPressed, this);
       this.events.on('sliderChanged', this.handleSliderChanged, this);
@@ -91,7 +92,6 @@ export default class PlannerScene extends Phaser.Scene {
       this.activityTimeLabels = this.getActivityTimeLabels(this.activityTimeSliders,this.activityLabels);
       this.activityTimeValueLabels = this.getActivityTimeValueLabels(this.activityTimeSliders,this.activityDurations);
 
-      this.dailyGoal = this.dataVisualizer.fetchDailyGoal(this.registry.get("currentDay"));
 
       this.activePolygons = ['energyBuy','energySell','solar']; //['energyBuy','energySell','solar'];
       this.activeSchemas = ['presenceActivity', 'idleActivity']; //['presenceActivity', 'idleActivity'];
@@ -104,9 +104,14 @@ export default class PlannerScene extends Phaser.Scene {
       this.drawSchemas(this.activeSchemas);
       this.baseline = this.dataVisualizer.createBaseline(this.data.get("activityTracker"));
       this.events.emit('componentsCreated');
-      this.events.emit('dailyGoalChanged', this.dailyGoal);
       this.data.set("estimate", this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));    
       this.updateEstimateLabel(this.data.get("estimate"));  
+
+      if(!(this.guideState==="inactive")) {
+        console.log("testing");
+        this.scene.launch('GuideScene');
+        this.scene.bringToTop('GuideScene');
+      }
     }
   
     update() {
@@ -687,8 +692,8 @@ export default class PlannerScene extends Phaser.Scene {
         solar:            "Solar Production",
         energyBuy:        "Energy Price (Buy)",
         energySell:       "Energy Price (Sell)",
-        presenceActivity: "Presence Activity",
-        idleActivity:     "Idle Activity",
+        presenceActivity: "Presence Activities",
+        idleActivity:     "Remote Activities",
       }
 
       const buttonTextPositions = {

@@ -96,8 +96,16 @@ export default class HUDScene extends Phaser.Scene {
       //simulation.events.on('currentProductionChanged', this.updateCurrentSolarProduction, this);
       simulation.events.on('currentEnergyPricesChanged', this.updateEnergyPrices, this);
       simulation.events.on('gamePausedChanged', this.updateTimeHud, this);
-      planner.events.on('dailyGoalChanged', this.updateGoalHud, this);
 
+      this.dailyGoal = this.fetchDailyGoal(this.registry.get("currentDay"));
+      this.updateGoalHud(this.dailyGoal);
+
+    }
+
+    fetchDailyGoal(currentDayKey) {
+      const json = this.cache.json.get('dailyGoalsJSON');
+      const dailyGoalData = json[currentDayKey];
+      return dailyGoalData;
     }
 
     createEnergyPriceValues() {
