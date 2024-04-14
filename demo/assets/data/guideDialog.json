@@ -45,21 +45,21 @@
             "finish": false
         },
         "2": {
-            "text": "Something about idle activities",
+            "text": "Because of Rut's fancy gadgets, certain activities can be done remotely and at the same time, such as washing and charging the car. Rut also doesn't take the car to work, so feel free to schedule these activities anytime you wish.",
             "duration": 2000,
             "position": "general",
             "image": "idleActivities",
             "finish": false
         },
         "3": {
-            "text": "Something about presence activities",
+            "text": "Other activities, such as making dinner and watching TV, requires Rut to be present. As such, they cannot be done at the same time.",
             "duration": 2000,
             "position": "general",
             "image": "presenceActivities",
             "finish": false
         },
         "4": {
-            "text": "Right now, Rut lives alone in her apartment building and has one solar panel installed. As the game progresses, more people will join the community and the solar panels will increase (but more on that later!)\n\nClick the 'Start' button when you're ready to start scheduling. The activity planner will give you an estimate of your savings directly so no need to worry.\n\nGood Luck!",
+            "text": "At the bottom of the schedule you'll see a projection of today's savings, letting you know if you're on the right track.\n\nWhen you're happy with the schedule, click the 'Start day' button to begin the day.",
             "duration": 2000,
             "position": "general",
             "image": null,
@@ -68,35 +68,21 @@
     },
     "day1afterPlanner": {
         "1": {
-            "text": "It's now time to run a simulation of this day's activities!",
+            "text": "It's now time to see Rut go about her daily activities!\n\nThe daily simulation will run for 24 in-game hours and aims to show you how different actions can impact the current energy balance in the apartment building.",
             "duration": 2000,
             "position": "general",
             "image": null,
             "finish": false
         },
         "2": {
-            "text": "In this game, you're playing as 'Rut'.\n\nRut lives in a small neighbourhood that is looking to invest in solar panels as a means to gain energy independence and save money.\n\nThe solar panel installed on Rut's apartment building will generate electricity during the daytime, that can either be used during daily activities or sold to the national energy grid.",
+            "text": "The power lines and appliances will help visualize current electricity consumption.\n\nThe clock in the top-right corner helps keep track of the time.",
             "duration": 2000,
             "position": "general",
-            "image": "rutPortrait",
+            "image": null,
             "finish": false
         },
         "3": {
-            "text": "There are no batteries installed in the building, so using the solar energy can be tricky as Rut goes to work. Fortunately, she has invested in a couple of 'smart applicances' that can be scheduled to run anytime during the day.\n\nConsuming energy during peak-hours (when demand is the highest) can be costly, so scheduling activitites to other times can save money. This is called 'load shifting'.",
-            "duration": 2000,
-            "position": "general",
-            "image": "rutPortrait",
-            "finish": false
-        },
-        "4": {
-            "text": "At the top of the screen, you'll see a number of statistics for your daily energy costs. In order to clear a level, schedule your activities in a way that saves enough money to meet the daily target. \n\n(Note: 'Savings' are calculated against a baseline, assuming that no solar panels exist and that activities run during peak-hours)",
-            "duration": 2000,
-            "position": "general",
-            "image": "todaysGoalFilled",
-            "finish": false
-        },
-        "5": {
-            "text": "Right now, Rut lives alone in her apartment building and has one solar panel installed. As the game progresses, more people will join the community and the solar panels will increase (but more on that later!)\n\nClick the 'Start' button when you're ready to start scheduling. The activity planner will give you an estimate of your savings directly so no need to worry.\n\nGood Luck!",
+            "text": "Other than that, sit back and watch the effort of your scheduling unfold!",
             "duration": 2000,
             "position": "general",
             "image": null,
@@ -104,9 +90,51 @@
         }
     },
     "day2beforePlanner": {
-        
+        "1": {
+            "text": "Something about Peter",
+            "duration": 2000,
+            "position": "general",
+            "image": "peterPortrait",
+            "finish": false
+        },
+        "2": {
+            "text": "Something about sharing solar",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day2duringPlanner": {
+        "1": {
+            "text": "Something about not knowing what others are going to do",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": false
+        },
+        "2": {
+            "text": "Something about the scheduler",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
     },
     "day3beforePlanner": {
-        
+        "1": {
+            "text": "Something about Ravi",
+            "duration": 2000,
+            "position": "general",
+            "image": "raviPortrait",
+            "finish": false
+        },
+        "2": {
+            "text": "Something more about Maria",
+            "duration": 2000,
+            "position": "general",
+            "image": "mariaPortrait",
+            "finish": true
+        }
     }
 }

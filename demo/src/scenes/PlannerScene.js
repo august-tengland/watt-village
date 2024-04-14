@@ -2,6 +2,7 @@
 
 import {DataVisualizer} from '../objects/DataVisualizer.js';
 import {GraphButton} from '../objects/GraphButton.js';
+import GuideScene from './GuideScene.js';
 
 
 export default class PlannerScene extends Phaser.Scene {
@@ -18,6 +19,15 @@ export default class PlannerScene extends Phaser.Scene {
     }
   
     init() {
+      console.log("when is this called?");
+      this.usingGuide = this.registry.get('usingGuide');
+      this.guideState = this.registry.get('guideState');
+      
+      this.data.set("loadingCompleted", false);
+      this.data.set("activityTracker", null);
+      this.data.set("estimate", null);
+
+
       this.startKey = this.input.keyboard.addKey(
         Phaser.Input.Keyboard.KeyCodes.S
       );
@@ -54,6 +64,7 @@ export default class PlannerScene extends Phaser.Scene {
     }
   
     create() {  
+      console.log(this.data.get('activityTracker'));
       this.scene.bringToTop('GuideScene');
       // --- EVENT LISTENERS ----------------
       this.events.on('graphButtonPressed', this.handleGraphButtonPressed, this);
@@ -92,7 +103,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.activityTimeLabels = this.getActivityTimeLabels(this.activityTimeSliders,this.activityLabels);
       this.activityTimeValueLabels = this.getActivityTimeValueLabels(this.activityTimeSliders,this.activityDurations);
 
-
+      
       this.activePolygons = ['energyBuy','energySell','solar']; //['energyBuy','energySell','solar'];
       this.activeSchemas = ['presenceActivity', 'idleActivity']; //['presenceActivity', 'idleActivity'];
       this.schemaLabels = this.createSchemaLabels(this.activityLabels); // Used to track and add/remove 
@@ -107,7 +118,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.data.set("estimate", this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));    
       this.updateEstimateLabel(this.data.get("estimate"));  
 
-      if(!(this.guideState==="inactive")) {
+      if(this.usingGuide && !(this.guideState==="inactive")) {
         console.log("testing");
         this.scene.launch('GuideScene');
         this.scene.bringToTop('GuideScene');
@@ -169,7 +180,6 @@ export default class PlannerScene extends Phaser.Scene {
     }
 
     attemptSimulationStart() {
-
     const activityTracker = this.data.get("activityTracker");
 
       if(this.existsScheduleOverlap(activityTracker)) {
@@ -179,6 +189,12 @@ export default class PlannerScene extends Phaser.Scene {
         //console.log("no overlap");
         this.registry.set("activityTracker",activityTracker);
         this.registry.set("baseline",this.baseline);
+        const currentDay = this.registry.get("currentDay")
+        if(this.usingGuide && this.guideState === "duringPlanner" && currentDay === "day1") // Scuffed
+          this.registry.set("guideState","afterPlanner");
+        else 
+          this.registry.set("guideState","inactive");
+        this.scene.stop("GuideScene");
         this.scene.start('SimulationScene');
       }
     }
@@ -494,7 +510,11 @@ export default class PlannerScene extends Phaser.Scene {
         const startTime = activityTracker[timeSlider.name]["startTime"];
         const duration = activityTracker[timeSlider.name]["duration"];
         const timeString = this.convertActivityTimeToDigital(startTime,duration);
-
+        console.log("activityValueLabelKey:" + activityValueLabelKey);
+        console.log("startTime:" + startTime);
+        console.log("duration:" + duration);
+        console.log("activityTracker:", activityTracker);
+        console.log("timeString:" + timeString);
         timeValueLabels.get(activityValueLabelKey).setText(timeString);
       }
       return timeValueLabels;

@@ -11,7 +11,7 @@ export default class HUDScene extends Phaser.Scene {
   
     create() {
 
-
+    console.log("is this called?");
     this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
 
     this.HUDIndividualStats = this.add.image(20, 20, 'HUDIndividualStats');
@@ -99,6 +99,7 @@ export default class HUDScene extends Phaser.Scene {
 
       this.dailyGoal = this.fetchDailyGoal(this.registry.get("currentDay"));
       this.updateGoalHud(this.dailyGoal);
+      this.registry.set('dailyGoal',this.dailyGoal);
 
     }
 

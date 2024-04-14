@@ -85,4 +85,14 @@ export class IndividualEnergyHandler {
       }
      }
 
+     getStats() {
+      const stats = {
+        buy: this.individualCost,
+        sell: this.individualSelling,
+        save: this.individualSavings,
+      }
+
+      return stats;
+     }
+
    }

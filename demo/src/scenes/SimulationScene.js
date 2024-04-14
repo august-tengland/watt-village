@@ -40,7 +40,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 1;
+        this.playbackSpeed = 32;
         
         // Controls the time interval for each in-game time unit
         this.updateSpeed = 500;
@@ -52,7 +52,11 @@ export default class SimulationScene extends Phaser.Scene {
         // Determines which schedules to follow 
         this.currentDay = this.registry.get("currentDay");
 
+        this.usingGuide = this.registry.get('usingGuide');
         this.guideState = this.registry.get('guideState');
+
+        console.log(this.currentDay);
+        console.log(this.guideState);
 
         // Used to keep track of whether timer should be on or off (i.e. "speedup")
         this.numMovingCharacters = 0;
@@ -190,8 +194,7 @@ export default class SimulationScene extends Phaser.Scene {
 
         // Create hiders
         this.hiders = this.createHiders();
-        console.log(this.guideState);
-        if(!(this.guideState==="beforePlanner")) {
+        if(!this.usingGuide || !(this.guideState==="beforePlanner")) {
             // Create energy & solar handlers
             this.individualEnergyHandlers = this.createIndividualEnergyHandlers();
             //console.log(this.individualEnergyHandlers);
@@ -210,7 +213,7 @@ export default class SimulationScene extends Phaser.Scene {
         }
 
         // START
-        if(this.guideState==="inactive") {
+        if(!this.usingGuide || this.guideState==="inactive") {
             this.gameTimer.paused = false;
             this.events.emit('timeChanged',this.registry.values.time);
             this.events.emit('gamePausedChanged',this.gameTimer.paused);
@@ -244,6 +247,16 @@ export default class SimulationScene extends Phaser.Scene {
         this.updateConsumptionLabels();
         this.updateInverterLabels();
     }
+
+    endDay() {
+        this.gameTimer.paused = true;
+        this.events.emit('gamePausedChanged',this.gameTimer.paused);
+        this.scene.pause('SimulationScene');
+        const totalStats = this.getTotalStats();
+        this.registry.set("totalStats", totalStats);
+        this.scene.launch('SummaryScene');
+    }
+
 
     update () {
 
@@ -293,8 +306,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.updateInverterLabels();
         this.updateSkyTint(0);
         if(this.registry.values.time >= this.dayStartingHour*this.tucf+this.dayLength) {
-            this.gameTimer.paused = true;
-            this.events.emit('gamePausedChanged',this.gameTimer.paused);
+            this.endDay();
         };
     }
 
@@ -376,6 +388,16 @@ export default class SimulationScene extends Phaser.Scene {
         this.totalEnergyHandler.runProbe(this.registry.values.time);
     }
 
+    getTotalStats() {
+        const totalStats = new Map();
+        for (var [key, individualEnergyHandler] of this.individualEnergyHandlers) {
+            totalStats[key] = individualEnergyHandler.getStats();
+        }
+
+        totalStats['total'] = this.totalEnergyHandler.getStats();
+        return totalStats;
+    }
+
     updateSkyTint(microAddOn) {
 
         function generateInbetweenColor(c1, c2, progression) {
@@ -451,13 +473,7 @@ createCars() {
 }
 
 createSolarPanels() {
-    var solarPanels = new Map([
-        ['small1', this.add.image(0, 0, 'solarPanel')],
-        ['small2', this.add.image(0, 0, 'solarPanel')],
-        ['big1', this.add.image(0, 0, 'solarPanel')],
-        ['big2', this.add.image(0, 0, 'solarPanel')],
-        ['big3', this.add.image(0, 0, 'solarPanel')],
-    ]);
+
     var solarPanels = new Map();
 
     solarPanels.set('small1', this.add.image(0, 0, 'solarPanel'));
@@ -782,7 +798,7 @@ createDevices() {
         for (const [deviceName, DeviceValues] of Object.entries(apartmentDeviceInfo)) {
             if(DeviceValues['disable'] != null && DeviceValues['disable'].includes(apartment)) { //&& DeviceValues['disable'].contains(apartment)
             } else {
-                if(this.guideState === "beforePlanner") DeviceValues['isIdleConsuming'] = false;
+                if(this.usingGuide && this.guideState === "beforePlanner") DeviceValues['isIdleConsuming'] = false;
                 const deviceKey = deviceSuffix + deviceName;
                 const positions = {
                     x: basePositions[deviceName]['x'] + this.offsets[apartment]['x'],

@@ -4,6 +4,7 @@ import Planner from "./scenes/PlannerScene.js";
 import HUD from "./scenes/HUDScene.js";
 import Simulation from "./scenes/SimulationScene.js";
 import Guide from "./scenes/GuideScene.js";
+import Summary from "./scenes/SummaryScene.js";
 
 var config = {
     type: Phaser.AUTO,
@@ -21,7 +22,7 @@ var config = {
             debug: false
         }
     },
-    scene: [Boot,Menu,Guide,Planner,HUD,Simulation]
+    scene: [Boot,Menu,Guide,Planner,HUD,Simulation,Summary]
 };
 
 var game = new Phaser.Game(config);

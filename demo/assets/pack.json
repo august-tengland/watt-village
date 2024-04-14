@@ -68,6 +68,21 @@
         },
         {
           "type": "image",
+          "key": "peterPortrait",
+          "url": "./assets/images/peterPortrait.png"
+        },
+        {
+          "type": "image",
+          "key": "raviPortrait",
+          "url": "./assets/images/raviPortrait.png"
+        },
+        {
+          "type": "image",
+          "key": "mariaPortrait",
+          "url": "./assets/images/mariaPortrait.png"
+        },
+        {
+          "type": "image",
           "key": "plannerBackground",
           "url": "./assets/images/plannerBackground.png"
         },

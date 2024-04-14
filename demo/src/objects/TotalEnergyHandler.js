@@ -276,4 +276,14 @@ export class TotalEnergyHandler {
       return energyPricesPerTimeUnit;
    }
 
+   getStats() {
+    const stats = {
+      buy: this.totalCost,
+      sell: this.totalSelling,
+      save: this.totalSavings,
+    }
+
+    return stats;
+   }
+
  }

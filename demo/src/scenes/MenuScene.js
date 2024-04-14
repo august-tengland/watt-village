@@ -127,8 +127,7 @@ export default class MenuScene extends Phaser.Scene {
 
       this.registry.set("currentDay", currentDay);
       this.registry.set("usingGuide", guide);
-      this.registry.set('guideState', "beforePlanner");
-
+      this.registry.set('guideState', "beforePlanner"); 
 
       this.scene.start('HUDScene');
       if(guide) this.scene.start('SimulationScene');
