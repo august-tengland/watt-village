@@ -40,7 +40,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 1;
+        this.playbackSpeed = 2;
         
         // Controls the time interval for each in-game time unit
         this.updateSpeed = 2000;
@@ -313,7 +313,6 @@ export default class SimulationScene extends Phaser.Scene {
     }
 
     checkSpeedup() {
-        console.log("HELLOOO??");
         const consideredPeople = {
             day1: ['p1'],
             day2: ['p1','p3'],

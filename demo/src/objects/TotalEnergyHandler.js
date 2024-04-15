@@ -288,6 +288,7 @@ export class TotalEnergyHandler {
       buy: this.totalCost,
       sell: this.totalSelling,
       save: this.totalSavings,
+      solarUsages: this.totalSolarUsage
     }
 
     return stats;

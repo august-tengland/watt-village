@@ -91,14 +91,14 @@
     },
     "day2beforePlanner": {
         "1": {
-            "text": "Something about Peter",
+            "text": "Say hi to your new neighbour!\n\nPeter lives in the apartment below you and will share the produced solar power. He doesn't have a electric car so most of his consumptions stems from cooking and washing.\n\nAs more actors join the collective efforts to produce and manage electricity, we start to see signs of an 'energy community' forming.",
             "duration": 2000,
             "position": "general",
             "image": "peterPortrait",
             "finish": false
         },
         "2": {
-            "text": "Something about sharing solar",
+            "text": "In this example, having more participants will also increase the budget for solar panels. With Peters inclusion, the solar capacity is now double.\n\nNOTE however that since you're sharing the solar production, one person's action can impact the others. Think about this when scheduling.",
             "duration": 2000,
             "position": "general",
             "image": null,
@@ -107,14 +107,7 @@
     },
     "day2duringPlanner": {
         "1": {
-            "text": "Something about not knowing what others are going to do",
-            "duration": 2000,
-            "position": "general",
-            "image": null,
-            "finish": false
-        },
-        "2": {
-            "text": "Something about the scheduler",
+            "text": "And another thing! Since Rut cannot be sure how Peter is going to use electricity today, our 'estimated savings' must be taken with a grain of sand. Consider what Peter might do and how those things could impact the available electricity.\n\nGood luck, you're doing great!",
             "duration": 2000,
             "position": "general",
             "image": null,
@@ -123,17 +116,31 @@
     },
     "day3beforePlanner": {
         "1": {
-            "text": "Something about Ravi",
+            "text": "The more the merrier!\n\nThe apartment building next door has also installed solar panels and you've now decided to join forces. As before, produced energy is divided according to demand and, in the case of excess, all participants will equally share the money made from selling.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": false
+        },
+        "2": {
+            "text": "Maria lives in the neighbouring building and, like Rut, has a bunch of schedulable appliances. She also has an electric car that she likes to charge in the daytime while at work.",
+            "duration": 2000,
+            "position": "general",
+            "image": "mariaPortrait",
+            "finish": false
+        },
+        "3": {
+            "text": "Ravi lives in the same apartment. Unlike Maria, he doesn't have an electric car and he cannot run appliances without being home.",
             "duration": 2000,
             "position": "general",
             "image": "raviPortrait",
             "finish": false
         },
-        "2": {
-            "text": "Something more about Maria",
+        "4": {
+            "text": "With more participants and solar panels in the community, the impact of individual consumption becomes less noticeable.\n\nWith this said, energy-intensive activities like charging your car can still have a big impact, so keep this in mind as you go about your final day!",
             "duration": 2000,
             "position": "general",
-            "image": "mariaPortrait",
+            "image": null,
             "finish": true
         }
     }

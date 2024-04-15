@@ -19,6 +19,7 @@ export default class SummaryScene extends Phaser.Scene {
         this.usingGuide = this.registry.get('usingGuide');
         this.totalStats = this.registry.get('totalStats');
         this.dailyGoal = this.registry.get('dailyGoal');
+        this.totalUsages = this.totalStats['total']['solarUsages'];
 
         console.log(this.totalStats);  
         this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
@@ -28,29 +29,33 @@ export default class SummaryScene extends Phaser.Scene {
 
         this.createTooltip();
     }
+    
 
     createTooltip() {
-        this.toolTip =  this.add.rectangle( 0, 0, 250, 50, 0xff0000).setOrigin(0);
-        this.toolTipText = this.add.text( 0, 0, 'This is a white rectangle', { fontFamily: 'Arial', color: '#000' }).setOrigin(0);
+        this.toolTip =  this.add.rectangle( 0, 0, 320, 75, 0x002547).setOrigin(0);
+        this.toolTipText = this.add.text( 0, 0, 'This is a white rectangle', { fontFamily: 'Arial', color: '#FFFFFF' }).setOrigin(0);
         this.toolTip.alpha = 0;
         console.log("test1");
      
         this.input.setPollOnMove();
         this.input.on('gameobjectover', function (pointer, gameObject) {
-            console.log("test2");
+           if(gameObject.y < 900) { // Oh that's ugly
             this.tweens.add({
-              targets: [this.toolTip, this.toolTipText],
-              alpha: {from:0, to:1},
-              repeat: 0,
-              duration: 500
-          });
+                targets: [this.toolTip, this.toolTipText],
+                alpha: {from:0, to:1},
+                repeat: 0,
+                duration: 300
+              });
+           }
         }, this);
     
         this.input.on('gameobjectout', function (pointer, gameObject) {
-            console.log("test3");
+            console.log("test3",gameObject);
             console.log(this);
-            this.scene.toolTip.alpha = 0;
-            this.scene.toolTipText.alpha = 0;
+            if(gameObject.y < 900) { // Oh that's ugly
+                this.scene.toolTip.alpha = 0;
+                this.scene.toolTipText.alpha = 0;
+            }
         });
     }
 
@@ -171,7 +176,7 @@ export default class SummaryScene extends Phaser.Scene {
             ['statsBuy', this.addText(0, 200, `${this.totalStats[individualHandler]['buy'].toFixed(2)}`,20,"#ffffff","Comic Sans MS")],
             ['statsSell', this.addText(0, 200, `${this.totalStats[individualHandler]['sell'].toFixed(2)}`,20,"#ffffff","Comic Sans MS")],
             ['statsSave', this.addText(0, 200, `${this.totalStats[individualHandler]['save'].toFixed(2)}`,20,"#ffffff","Comic Sans MS")],
-            ['statsSolarUsed', this.addText(0, 200, test,20,"#ffffff","Comic Sans MS")],
+            ['statsSolarUsed', this.addText(0, 200, `${this.getSolarUsage(personKey).toFixed(1)}%`,20,"#ffffff","Comic Sans MS")],
             ['statsAvgBuyPrice', this.addText(0, 200, '00.00',20,"#ffffff","Comic Sans MS")],
             ['statsAvgSellPrice', this.addText(0, 200, '00.00',20,"#ffffff","Comic Sans MS")]
         ]);
@@ -186,12 +191,12 @@ export default class SummaryScene extends Phaser.Scene {
         ]);
 
         const valueInfoZonesText = new Map([
-            ['statsBuy', "Something statsBuy"],
-            ['statsSell', "Something statsSell"],
-            ['statsSave', "Something statsSave"],
-            ['statsSolarUsed', "Something statsSolarUsed"],
-            ['statsAvgBuyPrice', "Something statsAvgBuyPrice"],
-            ['statsAvgSellPrice', "Something statsAvgSellPrice"]
+            ['statsBuy', "The amount of money spent\nbuying electricity (in 'sek')"],
+            ['statsSell', "The amount of money made\nselling electricity (in 'sek')"],
+            ['statsSave', "The amount of money saved\ncompared to following an ordinary schedule\nwithout solar panels (in 'sek')"],
+            ['statsSolarUsed', "The fraction of produced energy\nutilized by this person, either\nthrough consumption or selling"],
+            ['statsAvgBuyPrice', "The average price of electricity\n bought (in 'sek/kWh')"],
+            ['statsAvgSellPrice', "The average price of electricity\nsold (in 'sek/kWh')"]
         ]);
 
         Phaser.Display.Align.To.BottomCenter(individualStats['statsContainer'],alignToElement,0,25+extraOffset);
@@ -214,23 +219,31 @@ export default class SummaryScene extends Phaser.Scene {
         for (var [key, zone] of valueInfoZones) {
             const keyCopy = key;
             Phaser.Display.Align.In.RightCenter(zone,valueTextElements.get(keyCopy), 0, 0);
-            console.log("test5",keyCopy);
             zone.on('pointermove', function (pointer) {
                 console.log("test4",keyCopy);
-                this.scene.toolTip.x = pointer.x;
-                this.scene.toolTip.y = pointer.y;
-                this.scene.toolTipText.x = pointer.x + 5;
-                this.scene.toolTipText.y = pointer.y + 5;
+                this.scene.toolTip.x = pointer.x+10;
+                this.scene.toolTip.y = pointer.y+5;
+                this.scene.toolTipText.x = pointer.x + 20;
+                this.scene.toolTipText.y = pointer.y + 15;
                 this.scene.toolTipText.setText(valueInfoZonesText.get(keyCopy));
             });
 
         }
-        Phaser.Display.Align.In.LeftCenter(zone,individualStats['statsContainer'], -80);
 
         return individualStats;
     }
 
-
+    getSolarUsage(personKey) {
+        console.log(this.totalUsages);
+        const totalUsage = this.totalUsages.reduce((partialSum, a) => partialSum + a, 0);
+        var sellingFraction = 0;
+        if (this.currentDay === "day1") sellingFraction = 1.0;
+        else if (this.currentDay === "day2") sellingFraction = 0.5;
+        else if (this.currentDay === "day3" || this.currentDay === "day4") sellingFraction = 0.25;
+        const personIndex = Number(personKey.substring(1));
+        if (totalUsage == 0 ) return 0;
+        else return (this.totalUsages[personIndex] + this.totalUsages[0]*sellingFraction)/totalUsage * 100;
+    }
 
     getSavingsLabel() {
         var dailySavingsString = "Individual Savings: " + this.totalStats['ieh1']['save'].toFixed(2) + "\n";
