@@ -40,10 +40,10 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 32;
+        this.playbackSpeed = 1;
         
         // Controls the time interval for each in-game time unit
-        this.updateSpeed = 500;
+        this.updateSpeed = 2000;
 
         // Controls speed of animations
         this.speedyAnimations = true;
@@ -96,6 +96,7 @@ export default class SimulationScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
+        this.isSpedup = false;
         this.gameTimer.paused = true; // We'll start it after finishing everything else
         
         this.microGameTimer = 0;
@@ -216,7 +217,7 @@ export default class SimulationScene extends Phaser.Scene {
         if(!this.usingGuide || this.guideState==="inactive") {
             this.gameTimer.paused = false;
             this.events.emit('timeChanged',this.registry.values.time);
-            this.events.emit('gamePausedChanged',this.gameTimer.paused);
+            this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
             this.checkSchedules();
             this.updateHandlers();
             this.updateConsumptionLabels();
@@ -241,7 +242,7 @@ export default class SimulationScene extends Phaser.Scene {
     runStart() {
         this.gameTimer.paused = false;
         this.events.emit('timeChanged',this.registry.values.time);
-        this.events.emit('gamePausedChanged',this.gameTimer.paused);
+        this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
         this.checkSchedules();
         this.updateHandlers();
         this.updateConsumptionLabels();
@@ -250,7 +251,7 @@ export default class SimulationScene extends Phaser.Scene {
 
     endDay() {
         this.gameTimer.paused = true;
-        this.events.emit('gamePausedChanged',this.gameTimer.paused);
+        this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
         this.scene.pause('SimulationScene');
         const totalStats = this.getTotalStats();
         this.registry.set("totalStats", totalStats);
@@ -305,9 +306,61 @@ export default class SimulationScene extends Phaser.Scene {
         this.updateConsumptionLabels();
         this.updateInverterLabels();
         this.updateSkyTint(0);
+        this.checkSpeedup();
         if(this.registry.values.time >= this.dayStartingHour*this.tucf+this.dayLength) {
             this.endDay();
         };
+    }
+
+    checkSpeedup() {
+        console.log("HELLOOO??");
+        const consideredPeople = {
+            day1: ['p1'],
+            day2: ['p1','p3'],
+            day3: ['p1','p2','p3','p4']
+        }
+        var doSpeedup = true;
+        const activities = [];
+        for (var [key, person] of this.people) {
+            if(consideredPeople[this.currentDay].includes(key) 
+            && (person.currentActivity != null) 
+            && (!["goToWork","bed"].includes(person.currentActivity.activityType))) {
+                doSpeedup = false;
+                activities.push(person.currentActivity.key);
+            }
+                
+        }
+        if(doSpeedup && !this.isSpedup) {
+            console.log("NOTE!: Speedup = True");
+            this.isSpedup = true;
+            this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
+            this.gameTimer.reset({
+                delay: this.updateSpeed/(6*this.playbackSpeed),
+                callback: this.updateTime,
+                callbackScope: this,
+                loop: true
+            });
+        }
+        else if (!doSpeedup && this.isSpedup){
+            console.log("NOTE!: Speedup = False");
+            this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
+            this.isSpedup = false;
+            this.gameTimer.reset({
+                delay: this.updateSpeed/this.playbackSpeed,
+                callback: this.updateTime,
+                callbackScope: this,
+                loop: true
+            });
+        }
+        //console.log(doSpeedup);
+        //console.log(activities);
+        //console.log(this.gameTimer);
+        // this.gameTimer = this.time.addEvent({
+        //     delay: this.updateSpeed/this.playbackSpeed,
+        //     callback: this.updateTime,
+        //     callbackScope: this,
+        //     loop: true
+        // });
     }
 
     checkSchedules() {
@@ -336,7 +389,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.numMovingCharacters += 1;
         this.setSpeedyAnimations(false);
         this.gameTimer.paused = true;
-        this.events.emit('gamePausedChanged',this.gameTimer.paused);
+        this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
 
     }
 
@@ -345,7 +398,7 @@ export default class SimulationScene extends Phaser.Scene {
         if (this.numMovingCharacters == 0) {
             this.setSpeedyAnimations(true);
             this.gameTimer.paused = false;
-            this.events.emit('gamePausedChanged',this.gameTimer.paused);        }
+            this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);        }
     }
 
     updatePlaybackSpeed() {
@@ -1079,8 +1132,8 @@ createDevices() {
         const consumptionLabels = new Map();
         const labelPostitions = {
             1: {x: 590, y: 673},
-            2: {x: 590, y: 951},
-            3: {x: 1352, y: 673},
+            2: {x: 1352, y: 673},
+            3: {x: 590, y: 951},
             4: {x: 1352, y: 951}
         }
         for (var apartment = 1; apartment <= 4; apartment++) {

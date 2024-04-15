@@ -25,6 +25,7 @@ export class TotalEnergyHandler {
   
   // current values
   totalConsumption;
+  totalSolarUsage;
   currentTotalConsumption;
   currentTotalSolarProduction;
   currentTotalBuying;
@@ -59,6 +60,7 @@ export class TotalEnergyHandler {
     this.totalSolarPanelEffect = this.getTotalSolarPanelEffect();
 
     this.totalConsumption = 0;
+    this.totalSolarUsage = [0,0,0,0,0];
     this.currentTotalConsumption = 0;
     this.currentTotalSolarProduction = 0;
     this.currentTotalBuying = 0;
@@ -198,7 +200,7 @@ export class TotalEnergyHandler {
     
     if (this.currentDayKey === "day1") {
       solarFraction = 1;
-    
+
     } else if (this.currentDayKey === "day2") {
       solarFraction = 0.5;
 
@@ -210,6 +212,8 @@ export class TotalEnergyHandler {
 
     this.scene.events.emit('currentEnergyPricesChanged', this.energyPricesPerTimeUnit['buy'][this.time], this.energyPricesPerTimeUnit['sell'][this.time]);
     var energyDiff = this.currentTotalConsumption - this.currentTotalSolarProduction;
+
+
     // The cost that would have been incurred if no solar production was present
     // What would be the cost if we were running these activities during the most expensive hour (without solar)
 
@@ -222,6 +226,7 @@ export class TotalEnergyHandler {
       this.totalCost += actualCostThisTimeUnit;
 
       for(var [key, ieh] of this.individualEnergyHandlers) {
+        this.totalSolarUsage[ieh.apartment] += this.currentTotalSolarProduction * this.personConsumptionFractions[ieh.apartment-1];
         var actualIndividualCostThisTimeUnit = actualCostThisTimeUnit*this.personConsumptionFractions[ieh.apartment-1];
         ieh.updateTotalCost({
                         'costThisTimeUnit': actualIndividualCostThisTimeUnit,
@@ -230,12 +235,14 @@ export class TotalEnergyHandler {
 
     } else { // If producing more than consuming
 
+      this.totalSolarUsage[0] += -1*energyDiff;
       // The money that was made selling excess electricity
       var SellingThisTimeUnit = -1 * energyDiff * this.energyPricesPerTimeUnit['sell'][this.time];      
 
       this.totalSelling += SellingThisTimeUnit;
-
+       
       for(var [key, ieh] of this.individualEnergyHandlers) {
+        this.totalSolarUsage[ieh.apartment] += this.currentTotalConsumption * this.personConsumptionFractions[ieh.apartment-1]; // Consumption covered entirely by solar
         var individualSellingThisTimeUnit = SellingThisTimeUnit*solarFraction; // Account for apartment size
         ieh.updateTotalCost({
                         'costThisTimeUnit': 0,
@@ -244,7 +251,7 @@ export class TotalEnergyHandler {
     }
     const progression = this.totalConsumption/(this.baseline['estimatedCommunityConsumption']);
     //console.log(this.totalConsumption);
-    console.log(progression);
+    //console.log(this.totalSolarUsage);
     const consumptionBaseline = (this.totalCost-this.totalSelling);
     this.totalSavings = (this.baseline['estimatedCommunityCost'] -consumptionBaseline/progression) * progression;
     this.scene.events.emit('totalStatsChanged', this.totalCost, this.totalSelling, this.totalSavings);

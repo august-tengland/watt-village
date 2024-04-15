@@ -136,11 +136,14 @@ export default class HUDScene extends Phaser.Scene {
       var digitalTime = this.convertTimeUnitsToDigital(time);
       this.valueTextElements.get('time').setText(`${digitalTime['hour']}:${digitalTime['minute']}`);
     }
-    updateTimeHud(isPaused) {
+    updateTimeHud(isPaused, isSpedup) {
       if (isPaused){
         this.HUDTime.setFrame(0)
       } else {
-        this.HUDTime.setFrame(1)
+        if(isSpedup)
+          this.HUDTime.setFrame(2)
+        else 
+          this.HUDTime.setFrame(1)
       }
     }
  

@@ -212,6 +212,15 @@
         },
         {
           "type": "spritesheet",
+          "key": "summaryStats",
+          "url": "./assets/sprites/summaryStats.png",
+          "frameConfig": {
+            "frameWidth": 1204,
+            "frameHeight": 72
+          }
+        },
+        {
+          "type": "spritesheet",
           "key": "startButton",
           "url": "./assets/sprites/startButton.png",
           "frameConfig": {
