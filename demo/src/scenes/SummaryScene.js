@@ -95,9 +95,9 @@ export default class SummaryScene extends Phaser.Scene {
         Phaser.Display.Align.To.BottomCenter(daySummary['metGoalLabel'],daySummary['savingsLabel'],0,0);
 
         daySummary['p1Stats'] = this.createIndividualStats("p1",daySummary['metGoalLabel'],40);
-        if(this.currentDay == "day2")
+        if(this.currentDay == "day3")
             daySummary['p3Stats'] = this.createIndividualStats("p3",daySummary['p1Stats']['statsContainer']);
-        else if(this.currentDay == "day3" || this.currentDay == "day4") {
+        else if(this.currentDay == "day4") {
             daySummary['p2Stats'] = this.createIndividualStats("p2",daySummary['p1Stats']['statsContainer']);
             daySummary['p3Stats'] = this.createIndividualStats("p3",daySummary['p2Stats']['statsContainer']);
             daySummary['p4Stats'] = this.createIndividualStats("p4",daySummary['p3Stats']['statsContainer']);    

@@ -143,5 +143,35 @@
             "image": null,
             "finish": true
         }
+    },
+    "day4beforePlanner": {
+        "1": {
+            "text": "The more the merrier!\n\nThe apartment building next door has also installed solar panels and you've now decided to join forces. As before, produced energy is divided according to demand and, in the case of excess, all participants will equally share the money made from selling.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": false
+        },
+        "2": {
+            "text": "Maria lives in the neighbouring building and, like Rut, has a bunch of schedulable appliances. She also has an electric car that she likes to charge in the daytime while at work.",
+            "duration": 2000,
+            "position": "general",
+            "image": "mariaPortrait",
+            "finish": false
+        },
+        "3": {
+            "text": "Ravi lives in the same apartment. Unlike Maria, he doesn't have an electric car and he cannot run appliances without being home.",
+            "duration": 2000,
+            "position": "general",
+            "image": "raviPortrait",
+            "finish": false
+        },
+        "4": {
+            "text": "With more participants and solar panels in the community, the impact of individual consumption becomes less noticeable.\n\nWith this said, energy-intensive activities like charging your car can still have a big impact, so keep this in mind as you go about your final day!",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
     }
 }

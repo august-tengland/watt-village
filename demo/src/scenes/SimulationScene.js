@@ -40,7 +40,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 2;
+        this.playbackSpeed = 8;
         
         // Controls the time interval for each in-game time unit
         this.updateSpeed = 2000;
@@ -66,8 +66,9 @@ export default class SimulationScene extends Phaser.Scene {
 
         // What is the optimal effect of the solar panels installed on the roof? (per house)
         this.solarPanelEffects = [null, null];
-        if(this.currentDay == "day1") this.solarPanelEffects = [5, 0]; //kWh (per hour)
-        else if (this.currentDay == "day2") this.solarPanelEffects = [10, 0];
+        if(this.currentDay == "day1") this.solarPanelEffects = [0, 0]; //kWh (per hour)
+        else if (this.currentDay == "day2") this.solarPanelEffects = [5, 0];
+        else if (this.currentDay == "day3") this.solarPanelEffects = [10, 0];
         else this.solarPanelEffects = [10, 14];
 
         this.powerlineUpdateFreq = 3;
@@ -315,8 +316,9 @@ export default class SimulationScene extends Phaser.Scene {
     checkSpeedup() {
         const consideredPeople = {
             day1: ['p1'],
-            day2: ['p1','p3'],
-            day3: ['p1','p2','p3','p4']
+            day2: ['p1'],
+            day3: ['p1','p3'],
+            day4: ['p1','p2','p3','p4']
         }
         var doSpeedup = true;
         const activities = [];
@@ -526,17 +528,19 @@ createCars() {
 
 createSolarPanels() {
 
+    if(this.currentDay === "day1") return null; 
+
     var solarPanels = new Map();
 
     solarPanels.set('small1', this.add.image(0, 0, 'solarPanel'));
     Phaser.Display.Align.To.TopLeft(solarPanels.get('small1'),this.houseSmallBackdrop,0,0);
     
-    if(this.currentDay === "day1") return solarPanels; 
+    if(this.currentDay === "day2") return solarPanels; 
 
     solarPanels.set('small2', this.add.image(0, 0, 'solarPanel'));
     Phaser.Display.Align.To.TopRight(solarPanels.get('small2'),this.houseSmallBackdrop,0,0);
     
-    if(this.currentDay === "day2") return solarPanels; 
+    if(this.currentDay === "day3") return solarPanels; 
 
     solarPanels.set('big1', this.add.image(0, 0, 'solarPanel'));
     solarPanels.set('big2', this.add.image(0, 0, 'solarPanel'));
@@ -1219,8 +1223,9 @@ createDevices() {
         const individualEnergyHandlers = new Map();
         const isActive = {
             "day1": {1: true, 2: false, 3: false, 4: false},
-            "day2": {1: true, 2: false, 3: true, 4: false},
-            "day3": {1: true, 2: true, 3: true, 4: true}
+            "day2": {1: true, 2: false, 3: false, 4: false},
+            "day3": {1: true, 2: false, 3: true, 4: false},
+            "day4": {1: true, 2: true, 3: true, 4: true}
         }
 
         for (var apartment = 1; apartment <= 4; apartment++) {
@@ -1245,9 +1250,10 @@ createDevices() {
     createHouseSolarPanelHandlers() {
 
         const isActive = {
-            "day1": {0: true, 1: false},
+            "day1": {0: false, 1: false},
             "day2": {0: true, 1: false},
-            "day3": {0: true, 1: true}
+            "day3": {0: true, 1: false},
+            "day4": {0: true, 1: true}
         }
 
         const houseSolarPanelHandlers = new Map();
@@ -1288,9 +1294,9 @@ createDevices() {
     createHiders() {
 
         const hiders = new Map();
-        if (this.currentDay !== "day3") {
+        if (this.currentDay !== "day4") {
             hiders.set("hh1",this.add.image(1048,410,"houseBigHider").setOrigin(0).setDepth(100));
-            if(this.currentDay === "day1") {
+            if(this.currentDay !== "day3") {
                 hiders.set("ha3",this.add.image(435,692,"apartmentSmallHider").setOrigin(0).setDepth(100));
             }
         } 
@@ -1541,13 +1547,18 @@ createDevices() {
         const allowedPowerlines = {
             day1: {
                 apartment: [0,1],
-                house: [0,1]
+                house: [0,1],
+                type: ['bought','mixed']
             },
             day2: {
+                apartment: [0,1],
+                house: [0,1],
+            },
+            day3: {
                 apartment: [0,1,3],
                 house: [0,1]
             },
-            day3: {
+            day4: {
                 apartment: [0,1,2,3,4],
                 house: [0,1,2]
             },
@@ -1556,7 +1567,8 @@ createDevices() {
         for (const [plName, plValues] of Object.entries(powerlineData)) {
 
             if(allowedPowerlines[this.currentDay]['apartment'].includes(plValues['apartment'])
-               && allowedPowerlines[this.currentDay]['house'].includes(plValues['house'])) {
+               && allowedPowerlines[this.currentDay]['house'].includes(plValues['house'])
+               && (allowedPowerlines[this.currentDay]['type'] == null || allowedPowerlines[this.currentDay]['type'].includes(plValues['type']))) {
 
                 const texture = plValues['orientation'] % 2 == 0 ? 'powerlineIntense' : 'powerlineIntenseRotate';
                 const width = plValues['orientation'] % 2 == 0 ? plValues['length'] : powerlineBaseData['width']; 

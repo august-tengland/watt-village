@@ -182,18 +182,25 @@ export class DataVisualizer {
       var solarFraction = 0; // How much of the available solar power are you expected to claim? 
       
       if (this.currentDayKey === "day1") {
+        solarCapacity = 0;
+        numberPeopleWithCar = 1;
+        numberPeopleNoCar = 0;
+        solarFraction = 1;
+
+      }
+      else if (this.currentDayKey === "day2") {
         solarCapacity = 5;
         numberPeopleWithCar = 1;
         numberPeopleNoCar = 0;
         solarFraction = 1;
 
-      } else if (this.currentDayKey === "day2") {
+      } else if (this.currentDayKey === "day3") {
         solarCapacity = 10;
         numberPeopleWithCar = 1;
         numberPeopleNoCar = 1;
         solarFraction = 0.5;
 
-      } else if (this.currentDayKey === "day3") {
+      } else if (this.currentDayKey === "day4") {
         solarCapacity = 24;
         numberPeopleWithCar = 2;
         numberPeopleNoCar = 2;
