@@ -112,7 +112,7 @@ export default class MenuScene extends Phaser.Scene {
     startGame(level) {
       var currentDay = null;
       var guide = level == 0 ? true : false;
-      guide = false;
+      //guide = false;
 
       if(level == 0 || level == 1) {
         currentDay = "day1";

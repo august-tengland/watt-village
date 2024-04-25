@@ -198,13 +198,13 @@ export class TotalEnergyHandler {
     //var numberPeopleNoCar = 0;
     var solarFraction = 0; // How much of the available solar power are you expected to claim? 
     
-    if (this.currentDayKey === "day1") {
+    if (this.currentDayKey === "day1" || this.currentDayKey === "day2") {
       solarFraction = 1;
 
-    } else if (this.currentDayKey === "day2") {
+    } else if (this.currentDayKey === "day3") {
       solarFraction = 0.5;
 
-    } else if (this.currentDayKey === "day3") {
+    } else if (this.currentDayKey === "day4") {
       solarFraction = 0.25;
     }
 

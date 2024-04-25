@@ -27,6 +27,7 @@ export class Person extends Phaser.GameObjects.Sprite {
     this.currentScene = params.scene;
     this.speed = params.speed;
     this.playbackSpeed = 1;
+    this.speedBoost = 1;
     this.apartment = params.apartment;
 
     this.comingActivity = null;
@@ -129,6 +130,12 @@ export class Person extends Phaser.GameObjects.Sprite {
 
    doPresenceActivity(activity) {
     this.scene.events.emit('personStartedMoving', this.key);
+    console.log(activity);
+    if(activity.activityType == "goToWork" || this.currentActivity.activityType == "goToWork" ) {
+      this.speedBoost  = 1.5;
+    } else {
+      this.speedBoost = 1;
+    }
     if (this.currentActivity != null) {
       var result = this.stopPresenceActivity();
       setTimeout(() => {
@@ -277,15 +284,16 @@ export class Person extends Phaser.GameObjects.Sprite {
   }
 
   moveToXY (x, y, maxTime, points) {
-    if (this.speed === undefined) { this.speed = 60; }
+    var speed = this.speed * this.speedBoost;
+    if (speed === undefined) { speed = 60; }
     if (maxTime === undefined) { maxTime = 0; }
 
     const angle = Math.atan2(y - this.y, x - this.x);
     const dx = this.x - x;
     const dy = this.y - y
-    const time = Math.sqrt(dx * dx + dy * dy) / this.speed * 1000;
-    this.body.setVelocityX((Math.cos(angle) * this.speed));
-    this.body.setVelocityY((Math.sin(angle) * this.speed));
+    const time = Math.sqrt(dx * dx + dy * dy) / speed * 1000;
+    this.body.setVelocityX((Math.cos(angle) * speed));
+    this.body.setVelocityY((Math.sin(angle) * speed));
     this.handleAnimations();
     this.MyTimedEvent = this.currentScene.time.addEvent({ 
                                                   delay: time, 

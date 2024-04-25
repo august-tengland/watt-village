@@ -1,4 +1,3 @@
-
 import { Person } from '../objects/Person.js';
 import { Location } from '../objects/Location.js';
 import { Activity } from '../objects/Activity.js';
@@ -40,7 +39,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.registry.values.time = this.dayStartingHour*this.tucf;
 
         // Controls playback speed of entire gameplay
-        this.playbackSpeed = 8;
+        this.playbackSpeed = 2;
         
         // Controls the time interval for each in-game time unit
         this.updateSpeed = 2000;
@@ -62,7 +61,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.numMovingCharacters = 0;
 
         // Base speed value for all characters
-        this.characterSpeed = 300;
+        this.characterSpeed = 150;
 
         // What is the optimal effect of the solar panels installed on the roof? (per house)
         this.solarPanelEffects = [null, null];
@@ -99,9 +98,7 @@ export default class SimulationScene extends Phaser.Scene {
         });
         this.isSpedup = false;
         this.gameTimer.paused = true; // We'll start it after finishing everything else
-        
-        this.microGameTimer = 0;
-        
+                
         this.events.on('personStartedMoving', this.handlePersonStartedMoving, this);
 
         this.events.on('personStoppedMoving', this.handlePersonStoppedMoving, this);
@@ -223,6 +220,9 @@ export default class SimulationScene extends Phaser.Scene {
             this.updateHandlers();
             this.updateConsumptionLabels();
             this.updateInverterLabels();
+            // setTimeout(() => {
+            //     this.endDay(); // remove later
+            // }, 500);
         } else {
             if(this.guideState==="afterPlanner") {
                 this.updateHandlers();
@@ -248,6 +248,7 @@ export default class SimulationScene extends Phaser.Scene {
         this.updateHandlers();
         this.updateConsumptionLabels();
         this.updateInverterLabels();
+        // this.endDay(); // remove later
     }
 
     endDay() {
@@ -263,12 +264,10 @@ export default class SimulationScene extends Phaser.Scene {
     update () {
 
         this.numUpdates += 1;
-        if(this.gameTimer.paused) this.microGameTimer = 0;
-        else this.microGameTimer += 1;
 
         if(this.numUpdates % this.powerlineUpdateFreq == 0) {
             this.powerlines.forEach(powerline => powerline.handleAnimations());
-            this.updateSkyTint(this.microGameTimer/(this.updateSpeed*0.06));
+            this.updateSkyTint(this.gameTimer.getProgress());
         }
 
         if (this.gameOver)
@@ -299,7 +298,6 @@ export default class SimulationScene extends Phaser.Scene {
 
     updateTime() {
         this.registry.values.time += 1;
-        this.microGameTimer = 0
         this.events.emit('timeChanged',this.registry.values.time);
         this.updateHandlers();
         this.checkSchedules();
@@ -332,7 +330,7 @@ export default class SimulationScene extends Phaser.Scene {
                 
         }
         if(doSpeedup && !this.isSpedup) {
-            console.log("NOTE!: Speedup = True");
+            // console.log("NOTE!: Speedup = True");
             this.isSpedup = true;
             this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
             this.gameTimer.reset({
@@ -343,7 +341,7 @@ export default class SimulationScene extends Phaser.Scene {
             });
         }
         else if (!doSpeedup && this.isSpedup){
-            console.log("NOTE!: Speedup = False");
+            // console.log("NOTE!: Speedup = False");
             this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
             this.isSpedup = false;
             this.gameTimer.reset({
@@ -1123,7 +1121,6 @@ createDevices() {
             } else {
                 schedule = this.scheduleHandler.getSchedule(person.key, this.activities);
             }
-            console.log(key,schedule);
             person.setSchedule(schedule);
         
         };

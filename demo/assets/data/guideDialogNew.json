@@ -1,0 +1,47 @@
+{
+    "day1beforePlanner": {
+        "1": {
+            "text": "Welcome to 'WattVillage', your playground for experiencing an energy community!\n\nClick the 'Schedule' button when you're ready to start scheduling.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day1afterPlanner": {
+        "1": {
+            "text": "It's now time to see Rut go about her daily activities!\n\nClick the 'Start' button to begin the simulation.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day2beforePlanner": {
+        "1": {
+            "text": "Solar panels have been installed in your apartment building!\n\nClick the 'Schedule' button when you're ready to start scheduling.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day3beforePlanner": {
+        "1": {
+            "text": "Say hi to your new neighbour!\n\nClick the 'Schedule' button when you're ready to start scheduling.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    },
+    "day4beforePlanner": {
+        "1": {
+            "text": "More people have joined your energy community!\n\nClick the 'Schedule' button when you're ready to start scheduling.",
+            "duration": 2000,
+            "position": "general",
+            "image": null,
+            "finish": true
+        }
+    }
+}

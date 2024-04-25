@@ -64,6 +64,7 @@ export default class PlannerScene extends Phaser.Scene {
     }
   
     create() {  
+      this.currentDay = this.registry.get("currentDay")
       console.log(this.data.get('activityTracker'));
       this.scene.bringToTop('GuideScene');
       // --- EVENT LISTENERS ----------------
@@ -94,7 +95,7 @@ export default class PlannerScene extends Phaser.Scene {
 
       this.initActivityTracker();
 
-      this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: this.registry.get("currentDay")});
+      this.dataVisualizer = new DataVisualizer({scene: this, currentDayKey: this.currentDay});
 
       this.schedulerHeaders = this.getSchedulerHeaders();
       this.estimateValueLabel = this.getEstimateLabel(); 
@@ -104,7 +105,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.activityTimeValueLabels = this.getActivityTimeValueLabels(this.activityTimeSliders,this.activityDurations);
 
       
-      this.activePolygons = ['energyBuy','energySell','solar']; //['energyBuy','energySell','solar'];
+      this.activePolygons = this.currentDay === "day1" ? ['energyBuy'] : ['energyBuy','energySell','solar']; //['energyBuy','energySell','solar'];
       this.activeSchemas = ['presenceActivity', 'idleActivity']; //['presenceActivity', 'idleActivity'];
       this.schemaLabels = this.createSchemaLabels(this.activityLabels); // Used to track and add/remove 
       this.graphButtons = this.addGraphButtons();
@@ -118,7 +119,7 @@ export default class PlannerScene extends Phaser.Scene {
       this.data.set("estimate", this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));    
       this.updateEstimateLabel(this.data.get("estimate"));  
 
-      if(this.usingGuide && !(this.guideState==="inactive")) {
+      if(this.usingGuide && this.guideState === "duringPlanner") {
         console.log("testing");
         this.scene.launch('GuideScene');
         this.scene.bringToTop('GuideScene');
@@ -189,13 +190,22 @@ export default class PlannerScene extends Phaser.Scene {
         //console.log("no overlap");
         this.registry.set("activityTracker",activityTracker);
         this.registry.set("baseline",this.baseline);
-        const currentDay = this.registry.get("currentDay")
-        if(this.usingGuide && this.guideState === "duringPlanner" && currentDay === "day1") // Scuffed
-          this.registry.set("guideState","afterPlanner");
-        else 
-          this.registry.set("guideState","inactive");
-        this.scene.stop("GuideScene");
-        this.scene.start('SimulationScene');
+        console.log(this);
+        this.game.renderer.snapshotArea(608-50, 300-110, 330+70, 624+140,(image) =>
+          {
+              this.registry.set("currentScheduleImage", image);
+              console.log('snap!');
+              this.events.emit('scheduleSnapshotSet');
+              this.events.emit('planningDone');
+              this.scene.stop("GuideScene");
+              this.scene.start('SimulationScene');
+          });
+        // if(this.usingGuide && this.guideState === "duringPlanner" && currentDay === "day1") // Scuffed
+        //   this.registry.set("guideState","afterPlanner");
+        // else 
+        //   this.registry.set("guideState","inactive");
+        //this.scene.stop("GuideScene");
+        //this.scene.start('SimulationScene');
       }
     }
 
@@ -689,14 +699,24 @@ export default class PlannerScene extends Phaser.Scene {
         idleActivity:     8
       }
 
+      const isDisabled = {
+        day1: ['solar','energySell'],
+        day2: [],
+        day3: [],
+        day4: []
+      }
+
       for (const [graphType, position] of Object.entries(buttonPositions)) {
         const buttonKey = "b1" + graphType;
+        console.log(isDisabled[this.currentDay]);
+        console.log(isDisabled[this.currentDay].includes(buttonKey));
         graphButtons.set(buttonKey,new GraphButton({key: buttonKey,
                                                     graphKey: graphType,
                                                     x: (buttonBasePosition.x + position.x),
                                                     y: (buttonBasePosition.y + position.y),
                                                     scene: this,
                                                     texture: 'graphButtons',
+                                                    isDisabled: isDisabled[this.currentDay].includes(graphType) ? true : false, 
                                                     startingFrameNumber: buttonStartingFrameNumbers[graphType]}).
                                                     setInteractive());
       }
@@ -724,11 +744,19 @@ export default class PlannerScene extends Phaser.Scene {
         idleActivity:     {x: 200, y: 30}
       }
 
+      const isDisabled = {
+        day1: ['solar','energySell'],
+        day2: [],
+        day3: [],
+        day4: []
+      }
+
       for (const [graphType, buttonText] of Object.entries(buttonTexts)) {
         const buttonTextKey = "bt1" + graphType;
+        const textColor = isDisabled[this.currentDay].includes(graphType) ? "#666666" : "#FFFFFF";
         graphButtonTexts.set(buttonTextKey,this.addText(buttonTextBasePosition.x + buttonTextPositions[graphType].x, 
                                                     buttonTextBasePosition.y + buttonTextPositions[graphType].y, 
-                                                    buttonText,16));
+                                                    buttonText,16, 'arial', textColor));
       }
 
       return graphButtonTexts;

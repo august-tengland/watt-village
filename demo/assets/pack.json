@@ -32,6 +32,11 @@
           "url": "./assets/data/guideDialog.json"
         },
         {
+          "type": "json",
+          "key": "guideDialogNewJSON",
+          "url": "./assets/data/guideDialogNew.json"
+        },
+        {
           "type": "image",
           "key": "wattVillageLogo",
           "url": "./assets/images/wattVillageLogo.png"
@@ -213,9 +218,9 @@
         {
           "type": "spritesheet",
           "key": "summaryStats",
-          "url": "./assets/sprites/summaryStats.png",
+          "url": "./assets/sprites/summaryStatsNew.png",
           "frameConfig": {
-            "frameWidth": 1204,
+            "frameWidth": 877,
             "frameHeight": 72
           }
         },

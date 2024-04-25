@@ -1,3 +1,4 @@
+
 export default class SummaryScene extends Phaser.Scene {
 
     constructor() {
@@ -25,15 +26,20 @@ export default class SummaryScene extends Phaser.Scene {
         this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
         this.backdrop = this.add.rectangle(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height,0x000000);
         this.getFadeTween(this.backdrop,true,300,0.5);
-        this.daySummary = this.createSummary();
-
+        setTimeout(() => {
+            this.daySummary = this.createSummary();            
+        }, 500);
         this.createTooltip();
+        console.log(this.registry.get("currentScheduleImage"));
+        //this.add.dom(10, 200, this.registry.get("currentScheduleImage")).setOrigin(0);
+        //this.textures.createCanvas(10,200)
+        //this.add.image(10,200,this.registry.get("currentScheduleImage")).setOrigin(0);
     }
     
 
     createTooltip() {
-        this.toolTip =  this.add.rectangle( 0, 0, 320, 75, 0x002547).setOrigin(0);
-        this.toolTipText = this.add.text( 0, 0, 'This is a white rectangle', { fontFamily: 'Arial', color: '#FFFFFF' }).setOrigin(0);
+        this.toolTip =  this.add.rectangle( 0, 0, 320, 75, 0x002547).setOrigin(0).setDepth(10);
+        this.toolTipText = this.add.text( 0, 0, '', { fontFamily: 'Arial', color: '#FFFFFF' }).setOrigin(0).setDepth(12);
         this.toolTip.alpha = 0;
         console.log("test1");
      
@@ -70,10 +76,13 @@ export default class SummaryScene extends Phaser.Scene {
         const nextDay = "day" + (dayIndex+1); 
         this.registry.set('currentDay',nextDay);
         console.log(this.registry.get('currentDay'));
-        if(this.usingGuide)
+        if(this.usingGuide) {
             this.registry.set('guideState',"beforePlanner");
-
-        this.scene.launch('SimulationScene');
+            this.scene.launch('SimulationScene');
+        } else {
+            this.scene.stop('SimulationScene');
+            this.scene.launch('PlannerScene');
+        }
         this.scene.launch('HUDScene');
         this.scene.stop();
 
@@ -81,12 +90,19 @@ export default class SummaryScene extends Phaser.Scene {
 
     createSummary() {
         const daySummary = new Map();
-        daySummary['container'] = this.add.rectangle(0,0,1400,800,0x0F375D);
+        const tweenTargetsFirst = [];
+        const tweenTargetsSecond = [];
+        const tweenTargetsThird = [];
+        daySummary['container'] = this.add.rectangle(0,0,1200,800,0x0F375D);
+        tweenTargetsFirst.push(daySummary['container']);
+
         const dayCompleteText = "Day " + this.currentDay.substring(3,4) + " Completed";  
-        daySummary['dayCompleteLabel'] = this.addText(0,0,dayCompleteText,32,"#ffffff","Comic Sans MS", "Bold").setOrigin(0);
-        daySummary['savingsLabel'] = this.getSavingsLabel();
-        daySummary['metGoalLabel'] = this.getMetGoalLabel();
-        
+        daySummary['dayCompleteLabel'] = this.addText(0,0,dayCompleteText,32,"#ffffff","Comic Sans MS", "Bold").setOrigin(0).setAlpha(0);
+        daySummary['savingsLabel'] = this.getSavingsLabel().setAlpha(0);
+        daySummary['metGoalLabel'] = this.getMetGoalLabel().setAlpha(0);
+        tweenTargetsSecond.push(daySummary['dayCompleteLabel']);
+        tweenTargetsSecond.push(daySummary['savingsLabel']);
+        tweenTargetsSecond.push(daySummary['metGoalLabel']);
 
 
         Phaser.Display.Align.In.Center(daySummary['container'],this.gamezone, 0,80);
@@ -94,13 +110,13 @@ export default class SummaryScene extends Phaser.Scene {
         Phaser.Display.Align.To.BottomCenter(daySummary['savingsLabel'],daySummary['dayCompleteLabel'],0,60);
         Phaser.Display.Align.To.BottomCenter(daySummary['metGoalLabel'],daySummary['savingsLabel'],0,0);
 
-        daySummary['p1Stats'] = this.createIndividualStats("p1",daySummary['metGoalLabel'],40);
+        daySummary['p1Stats'] = this.createIndividualStats("p1",daySummary['metGoalLabel'],0,40);
         if(this.currentDay == "day3")
-            daySummary['p3Stats'] = this.createIndividualStats("p3",daySummary['p1Stats']['statsContainer']);
+            daySummary['p3Stats'] = this.createIndividualStats("p3",daySummary['p1Stats']['statsContainer'],0,300);
         else if(this.currentDay == "day4") {
-            daySummary['p2Stats'] = this.createIndividualStats("p2",daySummary['p1Stats']['statsContainer']);
-            daySummary['p3Stats'] = this.createIndividualStats("p3",daySummary['p2Stats']['statsContainer']);
-            daySummary['p4Stats'] = this.createIndividualStats("p4",daySummary['p3Stats']['statsContainer']);    
+            daySummary['p2Stats'] = this.createIndividualStats("p2",daySummary['p1Stats']['statsContainer'],0,300);
+            daySummary['p3Stats'] = this.createIndividualStats("p3",daySummary['p2Stats']['statsContainer'],0,600);
+            daySummary['p4Stats'] = this.createIndividualStats("p4",daySummary['p3Stats']['statsContainer'],0,900);    
         }
         
         // Phaser.Display.Align.To.BottomCenter(daySummary['rutStats']['statsContainer'],daySummary['metGoalLabel'],0,20);
@@ -127,17 +143,38 @@ export default class SummaryScene extends Phaser.Scene {
         Phaser.Display.Align.In.BottomCenter(daySummary['replayLevelButton'],daySummary['container'],-100,-20);
         Phaser.Display.Align.In.Center(daySummary['nextLevelButtonLabel'],daySummary['nextLevelButton'], 0,0);
         Phaser.Display.Align.In.Center(daySummary['replayLevelButtonLabel'],daySummary['replayLevelButton'], 0,0);
-        
+
+        tweenTargetsFirst.push(daySummary['nextLevelButton']);
+        tweenTargetsFirst.push(daySummary['replayLevelButton']);
+        tweenTargetsFirst.push(daySummary['nextLevelButtonLabel']);
+        tweenTargetsFirst.push(daySummary['replayLevelButtonLabel']);
+
+        this.tweens.add({
+            targets: tweenTargetsFirst,
+            alpha: {from:0, to:1},
+            repeat: 0,
+            duration: 300
+        });
+        setTimeout(() => {
+            this.tweens.add({
+            targets: tweenTargetsSecond,
+            alpha: {from:0, to:1},
+            repeat: 0,
+            duration: 300
+            })
+        }, 1000);
         return daySummary;
     }
 
-    createIndividualStats(personKey, alignToElement, extraOffset = 0) 
+    createIndividualStats(personKey, alignToElement, extraOffset = 0, tweenExtraDelay = 0) 
     {
+        const tweenDelay = 2000 + tweenExtraDelay;
         var individualName = "";
         var individualHandler = "";
         var containerFrame = null;
         var test = null;
         const individualStats = {};
+        const tweenTargets = []; 
         switch (personKey) {
             case "p1": 
                 individualName = "Rut";
@@ -168,26 +205,28 @@ export default class SummaryScene extends Phaser.Scene {
                 break;
         }
 
-        individualStats['statsContainer'] = this.add.image(0,0,"summaryStats").setFrame(containerFrame);
-
+        individualStats['statsContainer'] = this.add.image(0,0,"summaryStats").setFrame(containerFrame).setAlpha(0);
+        tweenTargets.push(individualStats['statsContainer']);
 
         const valueTextElements = new Map([
-            ['statsName', this.addText(0, 200, (individualName + "'s Stats"),20,"#ffffff","Comic Sans MS")],
-            ['statsBuy', this.addText(0, 200, `${this.totalStats[individualHandler]['buy'].toFixed(2)}`,20,"#ffffff","Comic Sans MS")],
-            ['statsSell', this.addText(0, 200, `${this.totalStats[individualHandler]['sell'].toFixed(2)}`,20,"#ffffff","Comic Sans MS")],
-            ['statsSave', this.addText(0, 200, `${this.totalStats[individualHandler]['save'].toFixed(2)}`,20,"#ffffff","Comic Sans MS")],
-            ['statsSolarUsed', this.addText(0, 200, `${this.getSolarUsage(personKey).toFixed(1)}%`,20,"#ffffff","Comic Sans MS")],
-            ['statsAvgBuyPrice', this.addText(0, 200, '00.00',20,"#ffffff","Comic Sans MS")],
-            ['statsAvgSellPrice', this.addText(0, 200, '00.00',20,"#ffffff","Comic Sans MS")]
+            ['statsName', this.addText(0, 200, (individualName + "'s Stats"),20,"#ffffff","Comic Sans MS").setAlpha(0)],
+            ['statsBuy', this.addText(0, 200, `${this.totalStats[individualHandler]['buy'].toFixed(2)}`,20,"#ffffff","Comic Sans MS").setAlpha(0)],
+            ['statsSell', this.addText(0, 200, `${this.totalStats[individualHandler]['sell'].toFixed(2)}`,20,"#ffffff","Comic Sans MS").setAlpha(0)],
+            ['statsSave', this.addText(0, 200, `${this.totalStats[individualHandler]['save'].toFixed(2)}`,20,"#ffffff","Comic Sans MS").setAlpha(0)],
+            ['statsSolarUsed', this.addText(0, 200, `${this.getSolarUsage(personKey).toFixed(1)}%`,20,"#ffffff","Comic Sans MS").setAlpha(0)],
+            //['statsAvgBuyPrice', this.addText(0, 200, '00.00',20,"#ffffff","Comic Sans MS")],
+            //['statsAvgSellPrice', this.addText(0, 200, '00.00',20,"#ffffff","Comic Sans MS")]
         ]);
+
+        valueTextElements.forEach(value => tweenTargets.push(value)); 
 
         const valueInfoZones = new Map([
             ['statsBuy', this.add.zone(0,0,100,50).setInteractive()],
             ['statsSell', this.add.zone(0,0,100,50).setInteractive()],
             ['statsSave', this.add.zone(0,0,100,50).setInteractive()],
             ['statsSolarUsed', this.add.zone(0,0,100,50).setInteractive()],
-            ['statsAvgBuyPrice', this.add.zone(0,0,100,50).setInteractive()],
-            ['statsAvgSellPrice', this.add.zone(0,0,100,50).setInteractive()]
+            //['statsAvgBuyPrice', this.add.zone(0,0,100,50).setInteractive()],
+            //['statsAvgSellPrice', this.add.zone(0,0,100,50).setInteractive()]
         ]);
 
         const valueInfoZonesText = new Map([
@@ -195,8 +234,8 @@ export default class SummaryScene extends Phaser.Scene {
             ['statsSell', "The amount of money made\nselling electricity (in 'sek')"],
             ['statsSave', "The amount of money saved\ncompared to following an ordinary schedule\nwithout solar panels (in 'sek')"],
             ['statsSolarUsed', "The fraction of produced energy\nutilized by this person, either\nthrough consumption or selling"],
-            ['statsAvgBuyPrice', "The average price of electricity\n bought (in 'sek/kWh')"],
-            ['statsAvgSellPrice', "The average price of electricity\nsold (in 'sek/kWh')"]
+            //['statsAvgBuyPrice', "The average price of electricity\n bought (in 'sek/kWh')"],
+            //['statsAvgSellPrice', "The average price of electricity\nsold (in 'sek/kWh')"]
         ]);
 
         Phaser.Display.Align.To.BottomCenter(individualStats['statsContainer'],alignToElement,0,25+extraOffset);
@@ -211,9 +250,18 @@ export default class SummaryScene extends Phaser.Scene {
         
         Phaser.Display.Align.In.LeftCenter(valueTextElements.get('statsSolarUsed'),individualStats['statsContainer'], -745);
         
-        Phaser.Display.Align.In.LeftCenter(valueTextElements.get('statsAvgBuyPrice'),individualStats['statsContainer'], -912);
+        //Phaser.Display.Align.In.LeftCenter(valueTextElements.get('statsAvgBuyPrice'),individualStats['statsContainer'], -912);
         
-        Phaser.Display.Align.In.LeftCenter(valueTextElements.get('statsAvgSellPrice'),individualStats['statsContainer'], -1080);
+        //Phaser.Display.Align.In.LeftCenter(valueTextElements.get('statsAvgSellPrice'),individualStats['statsContainer'], -1080);
+
+        setTimeout(() => {
+            this.tweens.add({
+            targets: tweenTargets,
+            alpha: {from:0, to:1},
+            repeat: 0,
+            duration: 300
+            })
+        }, tweenDelay);
 
         
         for (var [key, zone] of valueInfoZones) {
@@ -237,9 +285,9 @@ export default class SummaryScene extends Phaser.Scene {
         console.log(this.totalUsages);
         const totalUsage = this.totalUsages.reduce((partialSum, a) => partialSum + a, 0);
         var sellingFraction = 0;
-        if (this.currentDay === "day1") sellingFraction = 1.0;
-        else if (this.currentDay === "day2") sellingFraction = 0.5;
-        else if (this.currentDay === "day3" || this.currentDay === "day4") sellingFraction = 0.25;
+        if (this.currentDay === "day1" || this.currentDay === "day2") sellingFraction = 1.0;
+        else if (this.currentDay === "day3") sellingFraction = 0.5;
+        else if (this.currentDay === "day4") sellingFraction = 0.25;
         const personIndex = Number(personKey.substring(1));
         if (totalUsage == 0 ) return 0;
         else return (this.totalUsages[personIndex] + this.totalUsages[0]*sellingFraction)/totalUsage * 100;

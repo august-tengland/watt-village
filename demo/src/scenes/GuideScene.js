@@ -28,8 +28,7 @@ export default class GuideScene extends Phaser.Scene {
 // ---- GUIDE METHODS -----------------------------------------
 // *********************************************************************
     getGuideDialog() {
-        const json = this.cache.json.get('guideDialogJSON');
-        console.log(json);
+        const json = this.cache.json.get('guideDialogNewJSON');
         const guideDialogData = json[this.currentDay + this.guideState];
         if(guideDialogData == null) console.error("Error: Couldn't load dialog data with key" + (this.currentDay + this.guideState))
         return guideDialogData;
@@ -52,10 +51,15 @@ export default class GuideScene extends Phaser.Scene {
         const guide = this.guide;
         if(finish) {
             if (this.guideState === "beforePlanner") {
-                if(this.currentDay === "day1" || this.currentDay === "day2")
-                    this.registry.set("guideState","duringPlanner"); 
+                // if(this.currentDay === "day1" || this.currentDay === "day2")
+                //     this.registry.set("guideState","duringPlanner"); 
+                // else
+                //     this.registry.set("guideState","inactive");
+                if(this.currentDay === "day1")
+                    this.registry.set("guideState","afterPlanner"); 
                 else
                     this.registry.set("guideState","inactive");
+                console.log(this.registry.get("guideState"));
                 this.scene.stop('SimulationScene');
                 this.scene.start('PlannerScene');
             }
@@ -123,10 +127,11 @@ export default class GuideScene extends Phaser.Scene {
         const textMargin = 40;
         const nextButtonMargin = 20;
         const guidePosition = {
-            'beforePlanner': {x:1920/2,y:1080/2},
+            'beforePlanner': this.currentDay === "day4" ?  {x:1920/2 + 200,y:1080/2} : {x:1920/2 + 400,y:1080/2},//{x:1920/2,y:1080/2},
             'duringPlanner': {x:1920/2 + 400,y:1080/2},
             'afterPlanner': {x:1920/2 + 400,y:1080/2},
         }
+        
         guide['dimensions'] = {x: guidePosition[this.guideState]['x'], y: guidePosition[this.guideState]['y'], width: 700, height:400};
         guide['container'] = this.add.image(guide['dimensions']['x'],
                                                 guide['dimensions']['y'],
@@ -154,7 +159,7 @@ export default class GuideScene extends Phaser.Scene {
                                         .on('pointerout', () => this.enterGuideBackButtonRestState())
                                         .setOrigin(0).setDepth(125).setAlpha(0);
 
-        guide['nextButtonLabel'] = this.addText(0,0,"Next",20,"#ffffff","Bold").setOrigin(0).setDepth(130);
+        guide['nextButtonLabel'] = this.addText(0,0,"",20,"#ffffff","Bold").setOrigin(0).setDepth(130);
         guide['backButtonLabel'] = this.addText(0,0,"Back",20,"#ffffff","Bold").setOrigin(0).setDepth(130).setAlpha(0);
         guide['image'] = this.add.image(0,0,"rutPortrait").setOrigin(0,1).setDepth(130).setAlpha(0);
         guide['imageTextureKey'] = null;

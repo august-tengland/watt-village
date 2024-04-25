@@ -11,7 +11,10 @@ export default class HUDScene extends Phaser.Scene {
   
     create() {
 
-    console.log("is this called?");
+    
+    this.planningDone = false;
+    this.scheduleSnapshot = null;
+
     this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
 
     this.HUDIndividualStats = this.add.image(20, 20, 'HUDIndividualStats');
@@ -87,6 +90,8 @@ export default class HUDScene extends Phaser.Scene {
     
     Phaser.Display.Align.In.TopCenter(this.valueTextElements.get('time'),this.HUDTime, 0, -55);
 
+    this.scheduleButton = this.createScheduleButton();
+
       // create events
       const simulation = this.scene.get('SimulationScene');
       const planner = this.scene.get('PlannerScene');
@@ -96,6 +101,9 @@ export default class HUDScene extends Phaser.Scene {
       //simulation.events.on('currentProductionChanged', this.updateCurrentSolarProduction, this);
       simulation.events.on('currentEnergyPricesChanged', this.updateEnergyPrices, this);
       simulation.events.on('gamePausedChanged', this.updateTimeHud, this);
+
+      planner.events.on('scheduleSnapshotSet', this.createScheduleSnapshot, this);
+      planner.events.on('planningDone', this.setPlanningDone, this);
 
       this.dailyGoal = this.fetchDailyGoal(this.registry.get("currentDay"));
       this.updateGoalHud(this.dailyGoal);
@@ -145,6 +153,65 @@ export default class HUDScene extends Phaser.Scene {
         else 
           this.HUDTime.setFrame(1)
       }
+    }
+
+    createScheduleButton() {
+      const scheduleButton = {};
+      scheduleButton['button'] = this.add.image(0,0,"guideNextButton")
+        .setInteractive()
+        .on('pointerdown', () => this.toggleScheduleVisible())
+        .on('pointerover', () => this.enterScheduleButtonHoverState())
+        .on('pointerout', () => this.enterScheduleButtonRestState())
+        .setOrigin(0).setDepth(125).setAlpha(0);
+      
+      scheduleButton['Value'] = false;
+      scheduleButton['label'] = this.addText(0,0,"View Schedule",20,"#ffffff","Arial","Bold").setOrigin(0).setDepth(130).setAlpha(0);
+      
+      Phaser.Display.Align.To.BottomLeft(scheduleButton['button'],this.HUDIndividualStats,0,20);
+      Phaser.Display.Align.In.Center(scheduleButton['label'],scheduleButton['button']);
+      
+      return scheduleButton;
+    }
+
+    toggleScheduleVisible() {
+      this.scheduleButton['Value'] = !this.scheduleButton['Value'];
+      if(this.scheduleButton['Value']) {
+        this.snapImage.setAlpha(1);
+        this.scheduleButton['label'].setText("Hide Schedule");
+      }
+      else {
+        this.snapImage.setAlpha(0);
+        this.scheduleButton['label'].setText("Show Schedule");
+      }
+    }
+
+    enterScheduleButtonHoverState() {
+      this.scheduleButton['button'].setTint(0x169ac5,0x169ac5,0x9addf3,0x9addf3);
+    }
+
+    enterScheduleButtonRestState() {
+        this.scheduleButton['button'].clearTint();
+    }
+
+    createScheduleSnapshot() {
+      const scheduleImage = this.registry.get("currentScheduleImage");
+      console.log(this.textures);
+      if(this.textures.exists('snap')) {
+        const snap = this.textures.get('snap');
+        snap.clear();
+        snap.draw(0, 0, scheduleImage);
+      } else {
+        const snap = this.textures.createCanvas ('snap', scheduleImage.width, scheduleImage.height);
+        snap.draw(0, 0, scheduleImage);
+      }
+      this.snapImage = this.add.image(300, 200, 'snap').setOrigin(0).setAlpha(0);
+      Phaser.Display.Align.To.BottomLeft(this.snapImage,this.scheduleButton['button'],0,20);
+    }
+
+    setPlanningDone() {
+      this.planningDone = true;
+      this.scheduleButton['button'].setAlpha(1);
+      this.scheduleButton['label'].setAlpha(1);
     }
  
     updateGoalHud(goal) {
