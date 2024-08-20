@@ -92,7 +92,7 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     enterPlayButtonHoverState(buttonId) {
-      console.log(buttonId);
+      //console.log(buttonId);
       if(buttonId === "btn0") {
         this.playButton.setTint(0x169ac5,0x169ac5,0x9addf3,0x9addf3);
       } else {
@@ -112,7 +112,7 @@ export default class MenuScene extends Phaser.Scene {
     startGame(level) {
       var currentDay = null;
       var guide = level == 0 ? true : false;
-      //guide = false;
+      //guide = true;
 
       if(level == 0 || level == 1) {
         currentDay = "day1";

@@ -165,7 +165,7 @@ export class DataVisualizer {
 
     getPredictedSavings(activitySchedule, baseline) {
       const estimate = this.getCostPrediction(activitySchedule, true);
-      console.log(estimate,baseline);
+      //console.log(estimate,baseline);
       return  baseline['estimatedIndividualCost']- estimate['estimatedIndividualCost'];
     }
 
@@ -248,7 +248,7 @@ export class DataVisualizer {
         } else {
           totalSolarProduction += solarCapacity*this.solarSchedule[hour];
           const energyDifference = consumptionArray[hour] - solarCapacity*this.solarSchedule[hour]*solarFraction; //Assume you have access to X%
-          console.log(energyDifference);
+          //console.log(energyDifference);
           if(energyDifference>0) {
             estimatedTotalCost += energyDifference * this.energyPrices['buy'][hour]/100;
           } else {
@@ -262,9 +262,9 @@ export class DataVisualizer {
       estimate['estimatedCommunityConsumption'] = numberPeopleWithCar*estimate['estimatedIndividualConsumption'] 
                                                   + numberPeopleNoCar*estimate['estimatedIndividualConsumptionNoCar'];
 
-      console.log(estimate['estimatedIndividualConsumption']);
-      console.log(estimate['estimatedIndividualConsumptionNoCar']);
-      console.log(estimate['estimatedCommunityConsumption']);
+      //console.log(estimate['estimatedIndividualConsumption']);
+      //console.log(estimate['estimatedIndividualConsumptionNoCar']);
+      //console.log(estimate['estimatedCommunityConsumption']);
 
       const noCarUsageFraction = estimate['estimatedIndividualConsumptionNoCar'] / estimate['estimatedIndividualConsumption'];  
 

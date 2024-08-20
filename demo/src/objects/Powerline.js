@@ -27,7 +27,7 @@ export class Powerline extends Phaser.GameObjects.TileSprite  {
     }
 
     update() {
-        console.log("called?");
+        //console.log("called?");
     }
 
     handleAnimations() {

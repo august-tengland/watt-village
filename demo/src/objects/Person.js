@@ -130,7 +130,7 @@ export class Person extends Phaser.GameObjects.Sprite {
 
    doPresenceActivity(activity) {
     this.scene.events.emit('personStartedMoving', this.key);
-    console.log(activity);
+    //console.log(activity);
     if(activity.activityType == "goToWork" || this.currentActivity.activityType == "goToWork" ) {
       this.speedBoost  = 1.5;
     } else {

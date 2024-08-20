@@ -54,8 +54,8 @@ export default class SimulationScene extends Phaser.Scene {
         this.usingGuide = this.registry.get('usingGuide');
         this.guideState = this.registry.get('guideState');
 
-        console.log(this.currentDay);
-        console.log(this.guideState);
+        //console.log(this.currentDay);
+        //console.log(this.guideState);
 
         // Used to keep track of whether timer should be on or off (i.e. "speedup")
         this.numMovingCharacters = 0;
@@ -97,6 +97,7 @@ export default class SimulationScene extends Phaser.Scene {
             loop: true
         });
         this.isSpedup = false;
+        this.doSpeedup = false;
         this.gameTimer.paused = true; // We'll start it after finishing everything else
                 
         this.events.on('personStartedMoving', this.handlePersonStartedMoving, this);
@@ -229,7 +230,6 @@ export default class SimulationScene extends Phaser.Scene {
                 this.updateConsumptionLabels();
                 this.updateInverterLabels();
             }
-            console.log("testing");
             this.scene.launch('GuideScene');
             this.scene.bringToTop('GuideScene');
             const guide = this.scene.get('GuideScene');
@@ -312,15 +312,21 @@ export default class SimulationScene extends Phaser.Scene {
     }
 
     checkSpeedup() {
+
         const consideredPeople = {
             day1: ['p1'],
             day2: ['p1'],
             day3: ['p1','p3'],
             day4: ['p1','p2','p3','p4']
         }
+
         var doSpeedup = true;
         const activities = [];
+        
         for (var [key, person] of this.people) {
+            if(key === "p1") {
+                //console.log(person.currentActivity);
+            }
             if(consideredPeople[this.currentDay].includes(key) 
             && (person.currentActivity != null) 
             && (!["goToWork","bed"].includes(person.currentActivity.activityType))) {
@@ -329,7 +335,8 @@ export default class SimulationScene extends Phaser.Scene {
             }
                 
         }
-        if(doSpeedup && !this.isSpedup) {
+        //console.log(doSpeedup);
+        if(this.doSpeedup && !this.isSpedup) {
             // console.log("NOTE!: Speedup = True");
             this.isSpedup = true;
             this.events.emit('gamePausedChanged',this.gameTimer.paused,this.isSpedup);
@@ -351,6 +358,8 @@ export default class SimulationScene extends Phaser.Scene {
                 loop: true
             });
         }
+
+        this.doSpeedup = doSpeedup;
         //console.log(doSpeedup);
         //console.log(activities);
         //console.log(this.gameTimer);
@@ -370,7 +379,7 @@ export default class SimulationScene extends Phaser.Scene {
             if(person.schedule.has(timeString)) {
                 const activityArray = person.schedule.get(timeString);
                 activityArray.forEach(activityObject => {
-                    console.log("person",key,"doing activity:",activityObject['activity'], "with duration:", activityObject['duration']);
+                    //console.log("person",key,"doing activity:",activityObject['activity'], "with duration:", activityObject['duration']);
                     person.doActivity(timeInt, activityObject['activity'], activityObject['duration']);
                 })
             }

@@ -195,7 +195,7 @@ export default class HUDScene extends Phaser.Scene {
 
     createScheduleSnapshot() {
       const scheduleImage = this.registry.get("currentScheduleImage");
-      console.log(this.textures);
+      //console.log(this.textures);
       if(this.textures.exists('snap')) {
         const snap = this.textures.get('snap');
         snap.clear();

@@ -19,7 +19,7 @@ export default class PlannerScene extends Phaser.Scene {
     }
   
     init() {
-      console.log("when is this called?");
+      //console.log("when is this called?");
       this.usingGuide = this.registry.get('usingGuide');
       this.guideState = this.registry.get('guideState');
       
@@ -65,7 +65,7 @@ export default class PlannerScene extends Phaser.Scene {
   
     create() {  
       this.currentDay = this.registry.get("currentDay")
-      console.log(this.data.get('activityTracker'));
+      //console.log(this.data.get('activityTracker'));
       this.scene.bringToTop('GuideScene');
       // --- EVENT LISTENERS ----------------
       this.events.on('graphButtonPressed', this.handleGraphButtonPressed, this);
@@ -118,7 +118,8 @@ export default class PlannerScene extends Phaser.Scene {
       this.events.emit('componentsCreated');
       this.data.set("estimate", this.dataVisualizer.getPredictedSavings(this.data.get('activityTracker'),this.baseline));    
       this.updateEstimateLabel(this.data.get("estimate"));  
-
+      console.log(this.usingGuide);
+      console.log(this.guideState);
       if(this.usingGuide && this.guideState === "duringPlanner") {
         console.log("testing");
         this.scene.launch('GuideScene');
@@ -190,11 +191,11 @@ export default class PlannerScene extends Phaser.Scene {
         //console.log("no overlap");
         this.registry.set("activityTracker",activityTracker);
         this.registry.set("baseline",this.baseline);
-        console.log(this);
+        //console.log(this);
         this.game.renderer.snapshotArea(608-50, 300-110, 330+70, 624+140,(image) =>
           {
               this.registry.set("currentScheduleImage", image);
-              console.log('snap!');
+              //console.log('snap!');
               this.events.emit('scheduleSnapshotSet');
               this.events.emit('planningDone');
               this.scene.stop("GuideScene");
@@ -520,11 +521,11 @@ export default class PlannerScene extends Phaser.Scene {
         const startTime = activityTracker[timeSlider.name]["startTime"];
         const duration = activityTracker[timeSlider.name]["duration"];
         const timeString = this.convertActivityTimeToDigital(startTime,duration);
-        console.log("activityValueLabelKey:" + activityValueLabelKey);
-        console.log("startTime:" + startTime);
-        console.log("duration:" + duration);
-        console.log("activityTracker:", activityTracker);
-        console.log("timeString:" + timeString);
+        //console.log("activityValueLabelKey:" + activityValueLabelKey);
+        //console.log("startTime:" + startTime);
+        //console.log("duration:" + duration);
+        //console.log("activityTracker:", activityTracker);
+        //console.log("timeString:" + timeString);
         timeValueLabels.get(activityValueLabelKey).setText(timeString);
       }
       return timeValueLabels;
@@ -708,8 +709,8 @@ export default class PlannerScene extends Phaser.Scene {
 
       for (const [graphType, position] of Object.entries(buttonPositions)) {
         const buttonKey = "b1" + graphType;
-        console.log(isDisabled[this.currentDay]);
-        console.log(isDisabled[this.currentDay].includes(buttonKey));
+        //(isDisabled[this.currentDay]);
+        //console.log(isDisabled[this.currentDay].includes(buttonKey));
         graphButtons.set(buttonKey,new GraphButton({key: buttonKey,
                                                     graphKey: graphType,
                                                     x: (buttonBasePosition.x + position.x),

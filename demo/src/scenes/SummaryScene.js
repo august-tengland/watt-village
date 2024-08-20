@@ -22,7 +22,7 @@ export default class SummaryScene extends Phaser.Scene {
         this.dailyGoal = this.registry.get('dailyGoal');
         this.totalUsages = this.totalStats['total']['solarUsages'];
 
-        console.log(this.totalStats);  
+        //console.log(this.totalStats);  
         this.gamezone = this.add.zone(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height);
         this.backdrop = this.add.rectangle(this.scale.width/2, this.scale.height/2, this.scale.width, this.scale.height,0x000000);
         this.getFadeTween(this.backdrop,true,300,0.5);
@@ -30,7 +30,7 @@ export default class SummaryScene extends Phaser.Scene {
             this.daySummary = this.createSummary();            
         }, 500);
         this.createTooltip();
-        console.log(this.registry.get("currentScheduleImage"));
+        //console.log(this.registry.get("currentScheduleImage"));
         //this.add.dom(10, 200, this.registry.get("currentScheduleImage")).setOrigin(0);
         //this.textures.createCanvas(10,200)
         //this.add.image(10,200,this.registry.get("currentScheduleImage")).setOrigin(0);
@@ -41,7 +41,7 @@ export default class SummaryScene extends Phaser.Scene {
         this.toolTip =  this.add.rectangle( 0, 0, 320, 75, 0x002547).setOrigin(0).setDepth(10);
         this.toolTipText = this.add.text( 0, 0, '', { fontFamily: 'Arial', color: '#FFFFFF' }).setOrigin(0).setDepth(12);
         this.toolTip.alpha = 0;
-        console.log("test1");
+        //console.log("test1");
      
         this.input.setPollOnMove();
         this.input.on('gameobjectover', function (pointer, gameObject) {
@@ -56,8 +56,8 @@ export default class SummaryScene extends Phaser.Scene {
         }, this);
     
         this.input.on('gameobjectout', function (pointer, gameObject) {
-            console.log("test3",gameObject);
-            console.log(this);
+            //console.log("test3",gameObject);
+           //console.log(this);
             if(gameObject.y < 900) { // Oh that's ugly
                 this.scene.toolTip.alpha = 0;
                 this.scene.toolTipText.alpha = 0;
@@ -75,7 +75,7 @@ export default class SummaryScene extends Phaser.Scene {
         const dayIndex = Number(this.currentDay.substring(3,4));
         const nextDay = "day" + (dayIndex+1); 
         this.registry.set('currentDay',nextDay);
-        console.log(this.registry.get('currentDay'));
+        //console.log(this.registry.get('currentDay'));
         if(this.usingGuide) {
             this.registry.set('guideState',"beforePlanner");
             this.scene.launch('SimulationScene');
@@ -268,7 +268,7 @@ export default class SummaryScene extends Phaser.Scene {
             const keyCopy = key;
             Phaser.Display.Align.In.RightCenter(zone,valueTextElements.get(keyCopy), 0, 0);
             zone.on('pointermove', function (pointer) {
-                console.log("test4",keyCopy);
+                //console.log("test4",keyCopy);
                 this.scene.toolTip.x = pointer.x+10;
                 this.scene.toolTip.y = pointer.y+5;
                 this.scene.toolTipText.x = pointer.x + 20;
@@ -282,7 +282,7 @@ export default class SummaryScene extends Phaser.Scene {
     }
 
     getSolarUsage(personKey) {
-        console.log(this.totalUsages);
+        //console.log(this.totalUsages);
         const totalUsage = this.totalUsages.reduce((partialSum, a) => partialSum + a, 0);
         var sellingFraction = 0;
         if (this.currentDay === "day1" || this.currentDay === "day2") sellingFraction = 1.0;

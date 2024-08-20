@@ -20,7 +20,7 @@ export default class GuideScene extends Phaser.Scene {
                 this.guide = this.createGuide();
             },1000);
         } else {
-            console.log("guide not started (unexpected)");
+            //console.log("guide not started (unexpected)");
         }
     }
 
@@ -28,7 +28,7 @@ export default class GuideScene extends Phaser.Scene {
 // ---- GUIDE METHODS -----------------------------------------
 // *********************************************************************
     getGuideDialog() {
-        const json = this.cache.json.get('guideDialogNewJSON');
+        const json = this.cache.json.get('guideDialogJSON'); // Change if running in interview scenario
         const guideDialogData = json[this.currentDay + this.guideState];
         if(guideDialogData == null) console.error("Error: Couldn't load dialog data with key" + (this.currentDay + this.guideState))
         return guideDialogData;
@@ -51,15 +51,15 @@ export default class GuideScene extends Phaser.Scene {
         const guide = this.guide;
         if(finish) {
             if (this.guideState === "beforePlanner") {
-                // if(this.currentDay === "day1" || this.currentDay === "day2")
-                //     this.registry.set("guideState","duringPlanner"); 
-                // else
-                //     this.registry.set("guideState","inactive");
-                if(this.currentDay === "day1")
-                    this.registry.set("guideState","afterPlanner"); 
+                if(!(this.currentDay === "day4"))
+                    this.registry.set("guideState","duringPlanner"); 
                 else
                     this.registry.set("guideState","inactive");
-                console.log(this.registry.get("guideState"));
+                //if(this.currentDay === "day1")
+                //    this.registry.set("guideState","afterPlanner"); 
+                //else
+                //    this.registry.set("guideState","inactive");
+                //console.log(this.registry.get("guideState"));
                 this.scene.stop('SimulationScene');
                 this.scene.start('PlannerScene');
             }
@@ -77,7 +77,7 @@ export default class GuideScene extends Phaser.Scene {
             }
         } else {
             guide['finish'] = false;
-            console.log(guide);
+            //console.log(guide);
             guide['counter'] += increment;
             const nextGuideSnippet = guide['data'][guide['counter']];
 
@@ -144,7 +144,7 @@ export default class GuideScene extends Phaser.Scene {
         guide['text'] = this.addText(0,0,"",20,"#ffffff","normal").setOrigin(0).setDepth(125);
         guide['text'].style.wordWrapUseAdvanced = true;
         guide['text'].style.wordWrapWidth = guide['dimensions']['width']-textMargin*2;
-        console.log(guide['text'].style);
+        //console.log(guide['text'].style);
         guide['nextButton'] = this.add.image(0,0,"guideNextButton")
                                         .setInteractive()
                                         .on('pointerdown', () => this.updateGuide(1,guide['finish']))

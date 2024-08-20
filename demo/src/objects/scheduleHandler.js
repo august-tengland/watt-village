@@ -39,7 +39,7 @@ export class ScheduleHandler {
                 });
             }
         }
-        console.log(scheduleDataPerTimeUnit);
+        //console.log(scheduleDataPerTimeUnit);
 
         return scheduleDataPerTimeUnit;
     }
@@ -117,7 +117,7 @@ export class ScheduleHandler {
         const bedStartTime = 24 * this.tucf + 1;
         this.setMapValue(schedule,bedStartTime.toString(),bedActivity,bedActivity.minDuration);
 
-        console.log("test:",schedule);
+        //console.log("test:",schedule);
 
         return schedule;
     }
@@ -137,7 +137,7 @@ export class ScheduleHandler {
         } else if(ateKey === "morningRoutine") {
             const fridgeActivity = activityMap.get("a1fridge");
             activities.push([startTime,fridgeActivity,fridgeActivity.minDuration]);
-            startTime += 1; // Spend one time unit checking the fridge
+            startTime += 2; // Spend two time unit checking the fridge
             const dinnerTableActivity = activityMap.get("a1dinnerTable");
             activities.push([startTime,dinnerTableActivity,dinnerTableActivity.minDuration]);
             startTime += 1; // Spend one time unit eating breakfast
@@ -153,9 +153,9 @@ export class ScheduleHandler {
                 startTime = startTime+24*this.tucf;
             }
             const overflow = startTime+activity.minDuration-(this.startTime+24*this.tucf);
-            console.log("under:",underflow/this.tucf);
-            console.log("over:",overflow/this.tucf);
-            console.log("duration:",activity.minDuration);
+            //console.log("under:",underflow/this.tucf);
+            //console.log("over:",overflow/this.tucf);
+            //console.log("duration:",activity.minDuration);
 
             if (overflow > 0) {
                 activities.push([this.startTime, activity, overflow]);
