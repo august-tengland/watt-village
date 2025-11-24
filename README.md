@@ -1,4 +1,4 @@
-### WattVillage: A webb-based Community Energy Simulator
+### WattVillage: A webb-based Serious Game and Community Energy Simulator 
 
 Created as part of Masters Thesis in Computer Science.
 
